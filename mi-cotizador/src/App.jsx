@@ -50,6 +50,11 @@ const CAMA_BAJA_COMBOS = {
 
 const CAMA_ALTA_LARGOS = ['16ft', '20ft', '22ft', '24ft', '32ft', '42ft'];
 const CAMA_ALTA_CAPS = ['6t', '9t', '10t'];
+const VOLTEO_COMBOS = {
+  '60in': ['10ft', '12ft', '14ft'],
+  '76in': ['10ft', '12ft', '14ft', '16ft'],
+  '82in': ['10ft', '12ft', '14ft', '16ft']
+};
 
 const getCapacidadesCamaBaja = (anchoId, largoId) => {
   let caps = [];
@@ -193,8 +198,10 @@ const DEFAULT_DB = {
     { id: 'polvo', nombre: 'Pintura en Polvo (Powder Coating)', precio: 18000 }
   ],
   luces: [
-    { id: 'estandar', nombre: 'Luces LED Estándar USA', precio: 0 },
-    { id: 'especial', nombre: 'Paquete Especial (Full LED)', precio: 4500 }
+    { id: 'estandar_usa', nombre: 'Luces LED Estándar USA', precio: 0 },
+    { id: 'especial_usa', nombre: 'Paquete Especial USA (Full LED)', precio: 4500 },
+    { id: 'estandar_mexico', nombre: 'Luces LED Estándar México', precio: 0 },
+    { id: 'especial_mexico', nombre: 'Paquete Especial México (Full LED)', precio: 4500 }
   ],
   colores: [
     { id: 'gris', nombre: 'Gris Grafito', hex: '#374151' },
@@ -324,10 +331,14 @@ function CotizadorNube() {
   const [rodado, setRodado] = useState({ capacidad: '6t', suspension: 'torflex', llanta: '16in_14', cantFrenos: 2, llantaExtra: 0, portaExtra: 1 });
   const [carroceria, setCarroceria] = useState({ techo: 'completo', frente: 'cachucha', redila: 'ptr_abierta', puertaInt: 'fija', cantPtasInt: 1, puertaTras: 'libro', puertaPiloto: true, puertaPilotoAncho: 40, plexiglass: false, rackPacas: false, ventEst: false, ventCirc: false, polverasEspeciales: false, puertaPerroCachucha: false });
   const [monturero, setMonturero] = useState({ tipo: 'ninguno', basesMontura: 3, tubosCobija: 1, puertaPerro: false, paredLarga: 85.5, paredCorta: 40 });
-  const [acabados, setAcabados] = useState({ piso: 'madera', pintura: 'polvo', mismoColorTecho: false, color: 'gris', luces: 'estandar', bodyLitros: 0, pinturaLitros: 0, techoLitros: 0, cajasPolvo: 0, cajaHtas: 'ninguna' });
-  const [accesorios, setAccesorios] = useState({ lucesInteriores: 0 });
+const [acabados, setAcabados] = useState({ piso: 'madera', pintura: 'polvo', mismoColorTecho: false, color: 'gris', luces: 'estandar_usa', bodyLitros: 0, pinturaLitros: 0, techoLitros: 0, cajasPolvo: 0, cajaHtas: 'ninguna' });  const [accesorios, setAccesorios] = useState({ lucesInteriores: 0 });
   const [camaBajaOpts, setCamaBajaOpts] = useState({ rampas: 'ninguna', fenderReforzado: false, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, luzPortaplaca: false });
-
+const [volteoOpts, setVolteoOpts] = useState({ 
+    sistemaElevacion: 'hidraulico', // hidraulico, electrico, ambos
+    puertaTrasera: 'libro',         // libro, dompe, sencilla, libro_dompe
+    fenderReforzado: false,
+    luzPortaplaca: false
+  });
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -496,8 +507,7 @@ function CotizadorNube() {
     setRodado({ capacidad: '6t', suspension: 'torflex', llanta: '16in_14', cantFrenos: 2, llantaExtra: 0, portaExtra: 1 });
     setCarroceria({ techo: 'completo', frente: 'cachucha', redila: 'ptr_abierta', puertaInt: 'fija', cantPtasInt: 1, puertaTras: 'libro', puertaPiloto: true, puertaPilotoAncho: 40, plexiglass: false, rackPacas: false, ventEst: false, ventCirc: false, polverasEspeciales: false, puertaPerroCachucha: false });
     setMonturero({ tipo: 'ninguno', basesMontura: 3, tubosCobija: 1, puertaPerro: false, paredLarga: 85.5, paredCorta: 40 });
-    setAcabados({ piso: 'madera', pintura: 'polvo', mismoColorTecho: false, color: 'gris', luces: 'estandar', bodyLitros: 0, pinturaLitros: 0, techoLitros: 0, cajasPolvo: 0, cajaHtas: 'ninguna' });
-    setAccesorios({ lucesInteriores: 0 });
+    setAcabados({ piso: 'madera', pintura: 'polvo', mismoColorTecho: false, color: 'gris', luces: market === 'usa' ? 'estandar_usa' : 'estandar_mexico', bodyLitros: 0, pinturaLitros: 0, techoLitros: 0, cajasPolvo: 0, cajaHtas: 'ninguna' });    setAccesorios({ lucesInteriores: 0 });
     setCamaBajaOpts({ rampas: 'ninguna', fenderReforzado: false, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, luzPortaplaca: false });
     setNotification({ type: 'success', message: 'Cotizador listo para una nueva cotización.' });
   };
@@ -568,45 +578,34 @@ function CotizadorNube() {
     setConfirmDialog({ title: 'Eliminar Cotización', message: `¿Seguro que deseas borrar la cotización con folio ${cotId} del historial?`, action: 'DELETE_COTIZACION', payload: { id: cotId } });
   };
 
-  const handleWhatsAppPDF = async () => {
-    const nombreC = cliente.nombre ? cliente.nombre.replace(/\s+/g, '_') : 'Cliente';
-    const elemento = document.getElementById('ticket-cotizacion'); 
-    if (!elemento) return;
-
-    if (!window.html2pdf) {
-      setNotification({ type: 'success', message: 'Descargando creador de PDF, por favor espera un par de segundos...' });
-      try {
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-      } catch (e) {
-        setNotification({ type: 'error', message: 'Error cargando PDF. Usa el botón Imprimir para guardarlo.' });
-        return;
-      }
-    }
-
-    const opt = {
-      margin:       0.2,
-      filename:     `Cotizacion_AMACSA_${nombreC}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
+  const handleWhatsAppPDF = () => {
+    const totalFinalAMostrar = formatoMoneda(calcularTotalActual());
+    const texto = `Hola ${cliente.nombre || ''}, te comparto el resumen de tu cotización por un Remolque AMACSA ${tipoRemolque.replace('_', ' ').toUpperCase()}.\n\n*Total:* ${totalFinalAMostrar}\n\nTe envío el archivo PDF adjunto con todas las especificaciones a detalle. ¡Quedo a tus órdenes!`;
     
-    try {
-        await window.html2pdf().set(opt).from(elemento).save();
-        const total = formatoMoneda(calcularTotalActual());
-        const texto = `Hola ${cliente.nombre || ''}, te comparto el resumen de tu cotización por un Remolque AMACSA ${tipoRemolque.replace('_', ' ').toUpperCase()}.\n\n*Total:* ${total}\n\nTe envío el archivo PDF adjunto con todas las especificaciones a detalle. ¡Quedo a tus órdenes!`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
-        setNotification(null);
-    } catch(err) {
-        console.error("Error PDF:", err);
-        setNotification({ type: 'error', message: 'Hubo un error al generar el documento PDF.' });
+    // 1. Limpiamos el teléfono (quitamos letras, espacios, guiones)
+    // Si no hay teléfono ingresado, el número quedará vacío.
+    const numeroLimpio = cliente.telefono ? cliente.telefono.replace(/\D/g, '') : '';
+    
+    // 2. Construimos el enlace inteligente
+    // Si hay un número, abrimos el chat directo. Si no, abrimos WhatsApp general con el texto preparado.
+    let linkWhatsApp = '';
+    if (numeroLimpio) {
+        // Agregamos el prefijo '52' por defecto (México) si el número tiene 10 dígitos
+        // Si ingresas un número de USA (10 dígitos), WhatsApp suele requerir el código de país.
+        // Aquí asumimos México (+52) por defecto si metes 10 dígitos. 
+        const numeroFinal = numeroLimpio.length === 10 ? `52${numeroLimpio}` : numeroLimpio;
+        linkWhatsApp = `https://wa.me/${numeroFinal}?text=${encodeURIComponent(texto)}`;
+    } else {
+        linkWhatsApp = `https://wa.me/?text=${encodeURIComponent(texto)}`;
     }
+    
+    // 3. Abrimos WhatsApp AL INSTANTE en una nueva pestaña
+    window.open(linkWhatsApp, '_blank');
+    
+    // 4. Lanzamos la ventana de Guardar como PDF
+    setTimeout(() => {
+      window.print();
+    }, 500); 
   };
 
   // --- MATEMÁTICAS EN TIEMPO REAL ---
@@ -620,9 +619,16 @@ function CotizadorNube() {
   if (tipoRemolque === 'cama_alta') { if (oCap.id === '6t') cantEjes = 2; if (oCap.id === '9t') cantEjes = 3; if (oCap.id === '10t') cantEjes = 2; } 
   else { if (['850kg', '1_5t', '1_5t_3500', '1_5t_5200', '3t'].includes(oCap.id)) cantEjes = 1; else if (['9t', '10t'].includes(oCap.id)) cantEjes = 3; }
 
-  useEffect(() => {
-    if (market === 'usa') { setTipoRemolque('ganadero'); setAcople(prev => ({ ...prev, sujetaCadenas: true, cadena: 'ganso_38' })); } 
-    else if (market === 'mexico') { setIsSpecialClient(false); }
+ useEffect(() => {
+    if (market === 'usa') { 
+      setTipoRemolque('ganadero'); 
+      setAcople(prev => ({ ...prev, sujetaCadenas: true, cadena: 'ganso_38' })); 
+      setAcabados(prev => ({ ...prev, luces: 'estandar_usa' }));
+    } 
+    else if (market === 'mexico') { 
+      setIsSpecialClient(false); 
+      setAcabados(prev => ({ ...prev, luces: 'estandar_mexico' }));
+    }
   }, [market]);
 
   useEffect(() => {
@@ -667,11 +673,48 @@ function CotizadorNube() {
       if (!['madera', 'lamina_madera'].includes(acabados.piso)) setAcabados(prev => ({ ...prev, piso: 'madera' }));
       const currentJalon = db.jalones?.find(j => j.id === acople.jalon);
       if (currentJalon && !['ganso_normal', 'ganso_facil', 'argolla'].includes(currentJalon.id)) { setAcople(prev => ({ ...prev, jalon: 'ganso_facil' })); }
+    
+    } else if (tipoRemolque === 'volteo') {
+      // 1. Validar combinaciones de Ancho y Largo para Volteo
+      if (!VOLTEO_COMBOS[dim.ancho]) {
+        setDim(prev => ({ ...prev, ancho: '76in', largo: '12ft' }));
+      } else if (!VOLTEO_COMBOS[dim.ancho].includes(dim.largo)) {
+        setDim(prev => ({ ...prev, largo: VOLTEO_COMBOS[dim.ancho][0] }));
+      }
+
+      // 2. Validar Capacidades según el Ancho elegido
+      if (dim.ancho === '60in') {
+        if (!['1_5t', '3t', '6t'].includes(rodado.capacidad)) setRodado(prev => ({ ...prev, capacidad: '3t' }));
+      } else {
+        // Para 76in y 82in solo se permite de 3 o 6 toneladas
+        if (!['3t', '6t'].includes(rodado.capacidad)) setRodado(prev => ({ ...prev, capacidad: '3t' }));
+      }
+
+      // 3. Forzar Gato de 12,000 lbs obligado para volteos
+      if (acople.gato !== 'manual_12k') {
+        setAcople(prev => ({ ...prev, gato: 'manual_12k' }));
+      }
+      // Si es capacidad de 6 toneladas, por defecto asignamos 2 gatos de 12k
+      if (rodado.capacidad === '6t' && acople.cantGatos < 2) {
+        setAcople(prev => ({ ...prev, cantGatos: 2 }));
+      }
+
+      // 4. Caja de Herramientas OBLIGATORIA (No permitimos 'ninguna')
+      if (acabados.cajaHtas === 'ninguna') {
+        setAcabados(prev => ({ ...prev, cajaHtas: 'std' }));
+      }
+
+      // 5. Si lleva llanta de refacción (llantaExtra > 0), obligamos a que lleve portaextra
+      if (rodado.llantaExtra > 0 && rodado.portaExtra < 1) {
+        setRodado(prev => ({ ...prev, portaExtra: 1 }));
+      }
+
     } else {
       const GANADERO_CAPS = ['3t', '6t', '7t', '9t', '10t'];
       if (!GANADERO_CAPS.includes(rodado.capacidad)) setRodado(prev => ({ ...prev, capacidad: '6t' }));
     }
-  }, [tipoRemolque, dim.ancho, dim.largo, rodado.capacidad, carroceria.redila, db.jalones, acople.jalon]);
+    // Aseguramos que el efecto escuche los cambios clave del volteo
+  }, [tipoRemolque, dim.ancho, dim.largo, rodado.capacidad, carroceria.redila, db.jalones, acople.jalon, rodado.llantaExtra]);
 
   useEffect(() => {
     if (carroceria.cantPtasInt > maxPuertasInt) setCarroceria(prev => ({ ...prev, cantPtasInt: maxPuertasInt }));
@@ -685,7 +728,7 @@ function CotizadorNube() {
         let cajas = 0;
         if (acabados.pintura === 'polvo') { if (l <= 16) cajas = 0.75; else if (l <= 20) cajas = 1; else if (l <= 23) cajas = 1.5; else if (l <= 32) cajas = 2; else if (l <= 36) cajas = 2.5; else cajas = 3; }
         if (isSpecialClient && market === 'usa') {
-          setAcabados(prev => ({ ...prev, pintura: 'liquida', luces: 'especial', cajasPolvo: 0 }));
+          setAcabados(prev => ({ ...prev, pintura: 'liquida', luces: 'especial_usa', cajasPolvo: 0 }));
           setCarroceria(prev => ({ ...prev, polverasEspeciales: true }));
           setRodado(prev => ({ ...prev, suspension: 'torflex' }));
           setAccesorios(prev => ({ ...prev, lucesInteriores: prev.lucesInteriores > 0 ? prev.lucesInteriores : 1 }));
@@ -715,19 +758,18 @@ function CotizadorNube() {
     if (tipoRemolque === 'cama_alta' && rodado.capacidad === '10t' && rodado.llanta !== '17_5in') setRodado(prev => ({...prev, llanta: '17_5in'}));
   }, [rodado.llantaExtra, rodado.portaExtra, tipoRemolque, rodado.capacidad, rodado.llanta]);
 
-  const anchosDisponibles = tipoRemolque === 'cama_baja' ? db.anchos?.filter(a => Object.keys(CAMA_BAJA_COMBOS).includes(a.id)) || [] : tipoRemolque === 'cama_alta' ? db.anchos?.filter(a => a.id === '96in') || [] : db.anchos?.filter(a => !['50in', '75in', '76in', '82in'].includes(a.id)) || [];
-  const largosDisponibles = tipoRemolque === 'cama_baja' && CAMA_BAJA_COMBOS[dim.ancho] ? db.largos?.filter(l => CAMA_BAJA_COMBOS[dim.ancho].includes(l.id)) || [] : tipoRemolque === 'cama_alta' ? db.largos?.filter(l => CAMA_ALTA_LARGOS.includes(l.id)) || [] : db.largos?.filter(l => l.valor >= 16) || [];
-  const capacidadesDisponibles = tipoRemolque === 'cama_baja' ? db.capacidades?.filter(c => getCapacidadesCamaBaja(dim.ancho, dim.largo).includes(c.id)) || [] : tipoRemolque === 'cama_alta' ? db.capacidades?.filter(c => CAMA_ALTA_CAPS.includes(c.id)) || [] : db.capacidades?.filter(c => ['3t', '6t', '7t', '9t', '10t'].includes(c.id)) || [];
-  const jalonesDisponibles = tipoRemolque === 'cama_baja' ? db.jalones?.filter(j => j.tipo !== 'ganso') || [] : tipoRemolque === 'cama_alta' ? db.jalones?.filter(j => ['ganso_normal', 'ganso_facil', 'argolla'].includes(j.id)) || [] : db.jalones || [];
-  const gatosDisponibles = tipoRemolque === 'cama_baja' ? db.gatos?.filter(g => { const cap = rodado.capacidad; if (cap === '850kg') return g.id === 'tubo_2k'; if (['1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return g.id === 'normal_2k'; if (cap === '3t') return ['normal_2k', 'manual_7k'].includes(g.id); if (cap === '4t') return g.id === 'manual_7k'; if (cap === '6t') return ['manual_7k', 'manual_12k'].includes(g.id); return true; }) || [] : tipoRemolque === 'cama_alta' ? db.gatos?.filter(g => ['manual_12k', 'hidraulico_sencillo', 'hidraulico_bomba'].includes(g.id)) || [] : db.gatos?.filter(g => (isSpecialClient || g.id !== 'hidraulico_bomba') && !['tubo_2k','normal_2k','manual_7k','manual_12k'].includes(g.id)) || [];
-  const suspensionesDisponibles = tipoRemolque === 'cama_baja' ? db.suspension?.filter(s => ['susp_1_5t', 'susp_3t', 'susp_6t'].includes(s.id)) || [] : db.suspension?.filter(s => ['muelle', 'torflex'].includes(s.id)) || [];
+  const anchosDisponibles = tipoRemolque === 'volteo' ? db.anchos?.filter(a => ['60in', '76in', '82in'].includes(a.id)) || [] : tipoRemolque === 'cama_baja' ? db.anchos?.filter(a => Object.keys(CAMA_BAJA_COMBOS).includes(a.id)) || [] : tipoRemolque === 'cama_alta' ? db.anchos?.filter(a => a.id === '96in') || [] : db.anchos?.filter(a => !['50in', '75in', '76in', '82in'].includes(a.id)) || [];
+  const largosDisponibles = tipoRemolque === 'volteo' && VOLTEO_COMBOS[dim.ancho] ? db.largos?.filter(l => VOLTEO_COMBOS[dim.ancho].includes(l.id)) || [] : tipoRemolque === 'cama_baja' && CAMA_BAJA_COMBOS[dim.ancho] ? db.largos?.filter(l => CAMA_BAJA_COMBOS[dim.ancho].includes(l.id)) || [] : tipoRemolque === 'cama_alta' ? db.largos?.filter(l => CAMA_ALTA_LARGOS.includes(l.id)) || [] : db.largos?.filter(l => l.valor >= 16) || [];
+  const capacidadesDisponibles = tipoRemolque === 'volteo' ? db.capacidades?.filter(c => dim.ancho === '60in' ? ['1_5t', '3t', '6t'].includes(c.id) : ['3t', '6t'].includes(c.id)) || [] : tipoRemolque === 'cama_baja' ? db.capacidades?.filter(c => getCapacidadesCamaBaja(dim.ancho, dim.largo).includes(c.id)) || [] : tipoRemolque === 'cama_alta' ? db.capacidades?.filter(c => CAMA_ALTA_CAPS.includes(c.id)) || [] : db.capacidades?.filter(c => ['3t', '6t', '7t', '9t', '10t'].includes(c.id)) || [];
+  const jalonesDisponibles = tipoRemolque === 'volteo' ? db.jalones?.filter(j => ['bumper_2', 'bumper_2_516', 'bumper_ajustable_2', 'bumper_ajustable_2_516', 'argolla', 'ganso_normal', 'ganso_facil'].includes(j.id)) || [] : tipoRemolque === 'cama_baja' ? db.jalones?.filter(j => j.tipo !== 'ganso') || [] : tipoRemolque === 'cama_alta' ? db.jalones?.filter(j => ['ganso_normal', 'ganso_facil', 'argolla'].includes(j.id)) || [] : db.jalones || [];
+  const gatosDisponibles = tipoRemolque === 'volteo' ? db.gatos?.filter(g => g.id === 'manual_12k') || [] : tipoRemolque === 'cama_baja' ? db.gatos?.filter(g => { const cap = rodado.capacidad; if (cap === '850kg') return g.id === 'tubo_2k'; if (['1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return g.id === 'normal_2k'; if (cap === '3t') return ['normal_2k', 'manual_7k'].includes(g.id); if (cap === '4t') return g.id === 'manual_7k'; if (cap === '6t') return ['manual_7k', 'manual_12k'].includes(g.id); return true; }) || [] : tipoRemolque === 'cama_alta' ? db.gatos?.filter(g => ['manual_12k', 'hidraulico_sencillo', 'hidraulico_bomba'].includes(g.id)) || [] : db.gatos?.filter(g => (isSpecialClient || g.id !== 'hidraulico_bomba') && !['tubo_2k','normal_2k','manual_7k','manual_12k'].includes(g.id)) || [];
+  const suspensionesDisponibles = tipoRemolque === 'volteo' ? db.suspension?.filter(s => ['susp_1_5t', 'susp_3t', 'susp_6t'].includes(s.id)) || [] : tipoRemolque === 'cama_baja' ? db.suspension?.filter(s => ['susp_1_5t', 'susp_3t', 'susp_6t'].includes(s.id)) || [] : db.suspension?.filter(s => ['muelle', 'torflex'].includes(s.id)) || [];
   const llantasDisponibles = tipoRemolque === 'cama_baja' ? db.llantas?.filter(l => { const cap = rodado.capacidad; if (['850kg', '1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return ['700_15', '225_75_15', 'ninguna'].includes(l.id); if (cap === '3t') return ['700_15', '235_80_16', 'ninguna'].includes(l.id); if (cap === '4t') return ['225_75_15', 'ninguna'].includes(l.id); if (cap === '6t') return ['235_80_16', '235_80_16_14', 'ninguna'].includes(l.id); return true; }) || [] : tipoRemolque === 'cama_alta' ? db.llantas?.filter(l => rodado.capacidad === '10t' ? ['17_5in', 'ninguna'].includes(l.id) : ['235_80_16', '16in_10', '16in_14', '235_80_16_14', 'ninguna'].includes(l.id)) || [] : db.llantas?.filter(l => ['16in_10', '16in_14', '235_80_16_14', '17_5in', 'ninguna'].includes(l.id)) || [];
-  const pisosDisponibles = tipoRemolque === 'cama_baja' ? db.pisos?.filter(p => ['madera', 'duela_laminada'].includes(p.id)) || [] : tipoRemolque === 'cama_alta' ? db.pisos?.filter(p => ['madera', 'lamina_madera'].includes(p.id)) || [] : db.pisos?.filter(p => ['madera', 'hule_liso', 'hule_anti'].includes(p.id)) || [];
+  const pisosDisponibles = tipoRemolque === 'volteo' ? db.pisos?.filter(p => ['madera', 'lamina_madera'].includes(p.id)) || [] : tipoRemolque === 'cama_baja' ? db.pisos?.filter(p => ['madera', 'duela_laminada'].includes(p.id)) || [] : tipoRemolque === 'cama_alta' ? db.pisos?.filter(p => ['madera', 'lamina_madera'].includes(p.id)) || [] : db.pisos?.filter(p => ['madera', 'hule_liso', 'hule_anti'].includes(p.id)) || [];
   const redilasDisponibles = tipoRemolque === 'cama_baja' ? db.redilas?.filter(r => ['sin_redila', 'ptr_abierta_2', 'ptr_abierta_3', 'ptr_abierta_4', 'cerrada_2', 'cerrada_3', 'cerrada_4'].includes(r.id)) || [] : db.redilas?.filter(r => ['ptr_abierta', 'cerrada'].includes(r.id)) || [];
   const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => { if (r.id === 'ninguna' || r.id === 'puerta_rampa') return true; const is82 = dim.ancho === '82in'; if (r.id === 'rampa_1_5m') return is82 && carroceria.redila === 'sin_redila'; if (r.id === 'rampa_39') return is82 && carroceria.redila !== 'sin_redila'; return false; }) || [] : tipoRemolque === 'cama_alta' ? db.rampas?.filter(r => ['recto_rampas', 'cola_4', 'cola_5'].includes(r.id)) || [] : [];
-
   const oLargo = getObj(db.largos, dim.largo); const oAncho = getObj(db.anchos, dim.ancho); const oJalon = getObj(db.jalones, acople.jalon); const oCadena = getObj(db.cadenas, acople.cadena); const oGato = getObj(db.gatos, acople.gato); const oSusp = getObj(db.suspension, rodado.suspension); const oLlantas = getObj(db.llantas, rodado.llanta); const oTecho = getObj(db.techos, carroceria.techo); const oRedila = getObj(db.redilas, carroceria.redila); const oPInt = getObj(db.puertasInteriores, carroceria.puertaInt); const oPTras = getObj(db.puertasTraseras, carroceria.puertaTras); const oPiso = getObj(db.pisos, acabados.piso); const oMont = getObj(db.montureros, monturero.tipo); const oPint = getObj(db.pinturas, acabados.pintura); const oLuces = getObj(db.luces, acabados.luces); const oRampa = db.rampas?.find(r => r.id === camaBajaOpts.rampas) || {precio: 0};
-
+  const lucesDisponibles = db.luces?.filter(l => market === 'usa' ? l.id.includes('_usa') : l.id.includes('_mexico')) || [];
   const anchoEnPies = (oAncho.valor || 0) / 12;
   const areaSqFt = (oLargo.valor || 0) * anchoEnPies;
   const costoPisoTotal = areaSqFt * (oPiso.precioSqFt || oPiso.precio || 0) * (oPiso.id === 'madera' ? 2 : 1);
@@ -762,9 +804,18 @@ function CotizadorNube() {
 
   let marcaEje = rodado.suspension === 'torflex' ? 'IMPORTADO TORFLEX' : (capacidadLbs === '10,000 LBS' ? 'LIPPERT' : 'DEXTER');
   let medidasEje = '';
-  if (tipoRemolque === 'cama_alta') { if (oCap.id === '10t') medidasEje = 'C/F 48" Doble Rodado'; else medidasEje = 'C/F 67"'; } 
-  else { if (rodado.suspension === 'torflex') medidasEje = (oAncho.valor >= 78) ? 'C/F 78.5' : 'C/F 60.5'; else if (capacidadLbs === '10,000 LBS') medidasEje = 'C/F HF=91 OB=68.25'; else { if (oAncho.valor === 60) medidasEje = 'C/F HF=76 OB=60.5'; else if (oAncho.valor === 72 && capacidadLbs === '8,000 LBS') medidasEje = 'C/F HF=87.88 OB=72.5'; else if (oAncho.valor === 72) medidasEje = 'C/F HF=76 OB=60.5'; else medidasEje = 'C/F HF=93.25 OB=78.5'; } }
-  
+  if (tipoRemolque === 'cama_alta') { 
+    if (oCap.id === '10t') medidasEje = 'C/F 48" Doble Rodado'; else medidasEje = 'C/F 67"'; 
+  } else if (tipoRemolque === 'volteo') {
+    // REGLAS EXACTAS DE VOLTEO (58", 74", 80")
+    if (dim.ancho === '60in') medidasEje = 'C/F 58"';
+    else if (dim.ancho === '76in') medidasEje = 'C/F 74"';
+    else if (dim.ancho === '82in') medidasEje = 'C/F 80"';
+  } else { 
+    if (rodado.suspension === 'torflex') medidasEje = (oAncho.valor >= 78) ? 'C/F 78.5' : 'C/F 60.5'; 
+    else if (capacidadLbs === '10,000 LBS') medidasEje = 'C/F HF=91 OB=68.25'; 
+    else { if (oAncho.valor === 60) medidasEje = 'C/F HF=76 OB=60.5'; else if (oAncho.valor === 72 && capacidadLbs === '8,000 LBS') medidasEje = 'C/F HF=87.88 OB=72.5'; else if (oAncho.valor === 72) medidasEje = 'C/F HF=76 OB=60.5'; else medidasEje = 'C/F HF=93.25 OB=78.5'; } 
+  }
   const nombreEjeCompleto = `EJE ${marcaEje} ${capacidadLbs} ${medidasEje}`;
   const calcLargoPulgadas = (oLargo.valor || 0) * 12;
   const cableAzulMts = rodado.cantFrenos > 0 ? (calcLargoPulgadas + 96 + (rodado.cantFrenos * oAncho.valor)) * 0.0254 : 0;
@@ -850,7 +901,7 @@ function CotizadorNube() {
       {/* HEADER PRINCIPAL */}
       <header className="bg-slate-900 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-md print:hidden">
         <div className="flex items-center space-x-3">
-          <div className="relative h-10 flex items-center justify-center min-w-[40px] bg-slate-800 rounded-lg p-1"><img src="https://amacsa.com.mx/wp-content/uploads/2025/02/Amacsa-1.png" alt="AMACSA Logo" className="h-full object-contain relative z-10" onError={(e) => e.target.style.opacity = '0'}/></div>
+          <div className="relative h-10 flex items-center justify-center min-w-[40px] bg-slate-800 rounded-lg p-1"><img src="/logo_amacsa.png" alt="AMACSA" className="h-12 object-contain" /></div>
           <div><h1 className="text-xl font-black tracking-wider leading-tight text-white">AMACSA</h1><p className="text-xs text-amber-500 font-bold tracking-widest uppercase">ERP Ventas</p></div>
         </div>
         <div className="flex items-center space-x-3">
@@ -1010,10 +1061,11 @@ function CotizadorNube() {
                 </div>
                 {market === 'mexico' ? (
                     <div className="p-1.5 bg-slate-200 rounded-xl flex flex-wrap sm:flex-nowrap items-center shadow-inner gap-1">
-                        <button onClick={() => setTipoRemolque('ganadero')} className={`flex-1 py-3 px-2 rounded-lg font-black text-sm flex items-center justify-center transition-all ${tipoRemolque === 'ganadero' ? 'bg-white shadow text-amber-700' : 'text-slate-500 hover:text-slate-700'}`}>Ganadero</button>
-                        <button onClick={() => setTipoRemolque('cama_baja')} className={`flex-1 py-3 px-2 rounded-lg font-black text-sm flex items-center justify-center transition-all ${tipoRemolque === 'cama_baja' ? 'bg-white shadow text-indigo-700' : 'text-slate-500 hover:text-slate-700'}`}>Cama Baja</button>
-                        <button onClick={() => setTipoRemolque('cama_alta')} className={`flex-1 py-3 px-2 rounded-lg font-black text-sm flex items-center justify-center transition-all ${tipoRemolque === 'cama_alta' ? 'bg-white shadow text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}>Cama Alta</button>
-                    </div>
+    <button onClick={() => setTipoRemolque('ganadero')} className={`flex-1 py-3 px-2 rounded-lg font-black text-sm flex items-center justify-center transition-all ${tipoRemolque === 'ganadero' ? 'bg-white shadow text-amber-700' : 'text-slate-500 hover:text-slate-700'}`}>Ganadero</button>
+    <button onClick={() => setTipoRemolque('cama_baja')} className={`flex-1 py-3 px-2 rounded-lg font-black text-sm flex items-center justify-center transition-all ${tipoRemolque === 'cama_baja' ? 'bg-white shadow text-indigo-700' : 'text-slate-500 hover:text-slate-700'}`}>Cama Baja</button>
+    <button onClick={() => setTipoRemolque('cama_alta')} className={`flex-1 py-3 px-2 rounded-lg font-black text-sm flex items-center justify-center transition-all ${tipoRemolque === 'cama_alta' ? 'bg-white shadow text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}>Cama Alta</button>
+    <button onClick={() => setTipoRemolque('volteo')} className={`flex-1 py-3 px-2 rounded-lg font-black text-sm flex items-center justify-center transition-all ${tipoRemolque === 'volteo' ? 'bg-white shadow text-red-700' : 'text-slate-500 hover:text-slate-700'}`}>Volteo</button>
+</div>
                 ) : (
                     <div className="p-1.5 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 opacity-60"><span className="font-black text-sm text-slate-500">Ganadero (Única opción para USA)</span></div>
                 )}
@@ -1086,8 +1138,9 @@ function CotizadorNube() {
               </div>
             </div>
 
-            <div className={`p-5 rounded-xl shadow-sm border ${tipoRemolque === 'cama_baja' ? 'bg-indigo-50 border-indigo-200' : tipoRemolque === 'cama_alta' ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
-              <h2 className={`text-lg font-black flex items-center mb-4 ${tipoRemolque === 'cama_baja' ? 'text-indigo-900' : tipoRemolque === 'cama_alta' ? 'text-emerald-900' : 'text-amber-900'}`}><Shield className={`w-5 h-5 mr-2 ${tipoRemolque === 'cama_baja' ? 'text-indigo-600' : tipoRemolque === 'cama_alta' ? 'text-emerald-600' : 'text-amber-600'}`}/> 3. Estructura {tipoRemolque === 'cama_baja' ? 'Cama Baja' : tipoRemolque === 'cama_alta' ? 'Cama Alta' : 'Ganadera'}</h2>
+            <div className={`p-5 rounded-xl shadow-sm border ${tipoRemolque === 'cama_baja' ? 'bg-indigo-50 border-indigo-200' : tipoRemolque === 'cama_alta' ? 'bg-emerald-50 border-emerald-200' : tipoRemolque === 'volteo' ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
+              <h2 className={`text-lg font-black flex items-center mb-4 ${tipoRemolque === 'cama_baja' ? 'text-indigo-900' : tipoRemolque === 'cama_alta' ? 'text-emerald-900' : tipoRemolque === 'volteo' ? 'text-red-900' : 'text-amber-900'}`}><Shield className={`w-5 h-5 mr-2 ${tipoRemolque === 'cama_baja' ? 'text-indigo-600' : tipoRemolque === 'cama_alta' ? 'text-emerald-600' : tipoRemolque === 'volteo' ? 'text-red-600' : 'text-amber-600'}`}/> 3. Estructura {tipoRemolque === 'cama_baja' ? 'Cama Baja' : tipoRemolque === 'cama_alta' ? 'Cama Alta' : tipoRemolque === 'volteo' ? 'Volteo' : 'Ganadera'}</h2>
+              
               {tipoRemolque === 'ganadero' && (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
@@ -1126,6 +1179,48 @@ function CotizadorNube() {
                     {carroceria.frente === 'cachucha' && (<label className="flex items-center space-x-2 cursor-pointer font-medium text-sm text-amber-900"><input type="checkbox" checked={carroceria.puertaPerroCachucha} onChange={() => toggle(setCarroceria, 'puertaPerroCachucha')} className="w-4 h-4 text-amber-600"/> <span>Puerta Perro Cachucha</span></label>)}
                     {isSpecialClient && market==='usa' && (<label className="flex items-center space-x-2 cursor-pointer font-medium text-sm text-amber-900"><input type="checkbox" checked={carroceria.polverasEspeciales} onChange={() => toggle(setCarroceria, 'polverasEspeciales')} className="w-4 h-4 text-amber-600"/> <span>Polveras Especiales USA</span></label>)}
                   </div>
+                </>
+              )}
+              
+              {tipoRemolque === 'volteo' && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                      <div>
+                         <label className="text-xs font-bold text-red-700 uppercase block mb-1">Sistema de Elevación</label>
+                         <select value={volteoOpts.sistemaElevacion} onChange={e => setVolteoOpts({...volteoOpts, sistemaElevacion: e.target.value})} className="w-full p-2 border border-red-300 rounded-md font-bold text-red-900 bg-white">
+                            <option value="hidraulico">Hidráulico</option>
+                            <option value="electrico">Eléctrico</option>
+                            <option value="ambos">Ambos Sistemas (Dual)</option>
+                         </select>
+                      </div>
+                      <div>
+                         <label className="text-xs font-bold text-red-700 uppercase block mb-1">Puerta Trasera</label>
+                         <select value={volteoOpts.puertaTrasera} onChange={e => setVolteoOpts({...volteoOpts, puertaTrasera: e.target.value})} className="w-full p-2 border border-red-300 rounded-md font-bold text-red-900 bg-white">
+                            <option value="libro">Tipo Libro (Granero)</option>
+                            <option value="dompe">Tipo Dompe</option>
+                            <option value="sencilla">Puerta Sencilla (Especial)</option>
+                            <option value="libro_dompe">Combinada (Libro + Dompe)</option>
+                         </select>
+                      </div>
+                  </div>
+                  <div className="flex items-end pb-2 gap-4 border-t border-red-200 pt-4">
+                      <label className="flex items-center space-x-2 cursor-pointer font-medium text-sm text-red-900 bg-white px-3 py-1.5 rounded border border-red-200 shadow-sm">
+                          <input type="checkbox" checked={volteoOpts.fenderReforzado} onChange={() => setVolteoOpts({...volteoOpts, fenderReforzado: !volteoOpts.fenderReforzado})} className="w-4 h-4 text-red-600"/> <span>Fender Reforzado</span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer font-medium text-sm text-red-900 bg-white px-3 py-1.5 rounded border border-red-200 shadow-sm">
+                          <input type="checkbox" checked={volteoOpts.luzPortaplaca} onChange={() => setVolteoOpts({...volteoOpts, luzPortaplaca: !volteoOpts.luzPortaplaca})} className="w-4 h-4 text-red-600"/> <span>Luz Portaplaca opcional</span>
+                      </label>
+                  </div>
+                </>
+              )}
+
+              {['cama_baja', 'cama_alta'].includes(tipoRemolque) && (
+                <>
+                   {tipoRemolque === 'cama_baja' && ( <div className="mb-4"><label className="text-xs font-bold text-indigo-700 uppercase block mb-1">Redila Plataforma</label><select value={carroceria.redila} onChange={e => setCarroceria({...carroceria, redila: e.target.value})} className="w-full sm:w-1/2 p-2 border border-indigo-300 rounded-md font-bold">{redilasDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div> )}
+                   <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t ${tipoRemolque === 'cama_alta' ? 'border-emerald-200' : 'border-indigo-200'}`}>
+                     <div><label className={`text-xs font-bold uppercase block mb-1 ${tipoRemolque === 'cama_alta' ? 'text-emerald-700' : 'text-indigo-700'}`}>Rampas / Cola de Pato</label><select value={camaBajaOpts.rampas} onChange={e => setCamaBajaOpts({...camaBajaOpts, rampas: e.target.value})} className={`w-full p-2 border rounded-md font-bold ${tipoRemolque === 'cama_alta' ? 'border-emerald-300 text-emerald-900' : 'border-indigo-300 text-indigo-900'}`}>{rampasDisponibles.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}</select></div>
+                     {tipoRemolque === 'cama_baja' && ( <div className="flex items-end pb-2"><label className="flex items-center space-x-2 cursor-pointer font-medium text-sm text-indigo-900 bg-white px-3 py-1.5 rounded border border-indigo-200 shadow-sm"><input type="checkbox" checked={camaBajaOpts.fenderReforzado} onChange={() => toggle(setCamaBajaOpts, 'fenderReforzado')} className="w-4 h-4 text-indigo-600"/> <span>Fender Reforzado</span></label></div> )}
+                   </div>
                 </>
               )}
               {['cama_baja', 'cama_alta'].includes(tipoRemolque) && (
@@ -1171,8 +1266,7 @@ function CotizadorNube() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                 <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Piso</label><select value={acabados.piso} onChange={e => setAcabados({...acabados, piso: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md">{pisosDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
                 <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Caja Htas</label><select value={acabados.cajaHtas} onChange={e => setAcabados({...acabados, cajaHtas: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md">{(!acople.gato.includes('hidraulico')) && <option value="ninguna">Sin Caja</option>}<option value="std">Estándar</option><option value="grande">Grande</option></select></div>
-                <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Luces</label><select value={acabados.luces} disabled={isSpecialClient && market==='usa'} onChange={e => setAcabados({...acabados, luces: e.target.value})} className={`w-full p-2 border border-slate-300 rounded-md ${isSpecialClient && market==='usa' ? 'bg-slate-100 font-bold' : ''}`}>{db.luces.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
-              </div>
+                <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Luces</label><select value={acabados.luces} disabled={isSpecialClient && market==='usa'} onChange={e => setAcabados({...acabados, luces: e.target.value})} className={`w-full p-2 border border-slate-300 rounded-md ${isSpecialClient && market==='usa' ? 'bg-slate-100 font-bold' : ''}`}>{lucesDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>              </div>
 
               {acabados.luces === 'especial' && ['cama_baja', 'cama_alta'].includes(tipoRemolque) && (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1210,7 +1304,7 @@ function CotizadorNube() {
                   {/* MEMBRETE */}
                   <div className="hidden print:flex items-center justify-between mb-8 border-b-2 border-slate-800 pb-4">
                     <div className="flex items-center space-x-4">
-                      <img src="https://amacsa.com.mx/wp-content/uploads/2025/02/Amacsa-1.png" alt="AMACSA" className="h-12 object-contain" />
+                      <img src="/logo_amacsa.png" alt="AMACSA" className="h-12 object-contain" />
                       <div>
                         <h1 className="text-xl font-black text-slate-900 leading-none mb-1">ADEMES Y MAQUINARIA DE CUAUHTÉMOC S.A. DE C.V.</h1>
                         <p className="text-xs text-slate-600 font-bold">Sucursal Campo 6 1/2, Cuauhtémoc, Chihuahua.</p>
@@ -1246,6 +1340,9 @@ function CotizadorNube() {
                           {tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' && <li>• Monturero: <span className="font-bold">{oMont.nombre} {monturero.puertaPerro ? '(Incluye Puerta Perro)' : ''}</span></li>}
                           {['cama_baja', 'cama_alta'].includes(tipoRemolque) && camaBajaOpts.rampas !== 'ninguna' && <li>• Accesos: <span className="font-bold">{oRampa.nombre}</span></li>}
                           {tipoRemolque === 'cama_baja' && camaBajaOpts.fenderReforzado && <li>• Fender: <span className="font-bold">Fender Reforzado Especial</span></li>}
+                          {tipoRemolque === 'volteo' && <li>• Elevación: <span className="font-bold capitalize">{volteoOpts.sistemaElevacion}</span></li>}
+                          {tipoRemolque === 'volteo' && <li>• Puerta Trasera: <span className="font-bold capitalize">{volteoOpts.puertaTrasera.replace('_', ' ')}</span></li>}
+                          {tipoRemolque === 'volteo' && volteoOpts.fenderReforzado && <li>• Fender: <span className="font-bold">Fender Reforzado Especial</span></li>}
                         </ul>
                       </div>
                     </div>
