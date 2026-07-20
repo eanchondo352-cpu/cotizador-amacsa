@@ -317,7 +317,7 @@ function CotizadorNube() {
   const [market, setMarket] = useState('usa'); 
   const [tipoRemolque, setTipoRemolque] = useState('ganadero');
   const [isSpecialClient, setIsSpecialClient] = useState(true);
-  
+  const [tipoGanadero, setTipoGanadero] = useState('ganso');
   const [isAppUnlocked, setIsAppUnlocked] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', username: '', password: '', role: 'sales' });
   const [notification, setNotification] = useState(null);
@@ -619,7 +619,8 @@ const [volteoOpts, setVolteoOpts] = useState({
   if (tipoRemolque === 'cama_alta') { if (oCap.id === '6t') cantEjes = 2; if (oCap.id === '9t') cantEjes = 3; if (oCap.id === '10t') cantEjes = 2; } 
   else { if (['850kg', '1_5t', '1_5t_3500', '1_5t_5200', '3t'].includes(oCap.id)) cantEjes = 1; else if (['9t', '10t'].includes(oCap.id)) cantEjes = 3; }
 
- useEffect(() => {
+// 1. Este es el control del Mercado (USA vs México) que tenías antes
+  useEffect(() => {
     if (market === 'usa') { 
       setTipoRemolque('ganadero'); 
       setAcople(prev => ({ ...prev, sujetaCadenas: true, cadena: 'ganso_38' })); 
@@ -630,6 +631,17 @@ const [volteoOpts, setVolteoOpts] = useState({
       setAcabados(prev => ({ ...prev, luces: 'estandar_mexico' }));
     }
   }, [market]);
+
+  // 2. Este es el control NUEVO para el tipo de frente del Ganadero
+  useEffect(() => {
+    if (tipoRemolque === 'ganadero') {
+      if (tipoGanadero === 'redondo') {
+        setCarroceria(prev => ({ ...prev, frente: 'ninguno' }));
+      } else {
+        setCarroceria(prev => ({ ...prev, frente: 'cachucha' }));
+      }
+    }
+  }, [tipoRemolque, tipoGanadero]);
 
   useEffect(() => {
     if (tipoRemolque === 'cama_baja') {
@@ -1051,24 +1063,65 @@ const [volteoOpts, setVolteoOpts] = useState({
           </div>
         </div>
       ) : (
-        /* VISTA DE COTIZADOR */
         <main className="max-w-[1400px] mx-auto p-4 sm:p-6 flex flex-col xl:flex-row gap-6 print:block">
           <div className="w-full xl:w-2/3 space-y-6 print:hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* BOTONES USA / MEXICO (INTACTOS) */}
                 <div className="p-1.5 bg-slate-200 rounded-xl flex items-center shadow-inner">
                     <button onClick={() => setMarket('usa')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'usa' ? 'bg-white shadow text-blue-900' : 'text-slate-500 hover:text-slate-700'}`}><Globe className="w-4 h-4 mr-2"/> USA</button>
                     <button onClick={() => setMarket('mexico')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'mexico' ? 'bg-white shadow text-green-700' : 'text-slate-500 hover:text-slate-700'}`}><Globe className="w-4 h-4 mr-2"/> MÉXICO</button>
                 </div>
-                {market === 'mexico' ? (
-                    <div className="p-1.5 bg-slate-200 rounded-xl flex flex-wrap sm:flex-nowrap items-center shadow-inner gap-1">
-    <button onClick={() => setTipoRemolque('ganadero')} className={`flex-1 py-3 px-2 rounded-lg font-black text-sm flex items-center justify-center transition-all ${tipoRemolque === 'ganadero' ? 'bg-white shadow text-amber-700' : 'text-slate-500 hover:text-slate-700'}`}>Ganadero</button>
-    <button onClick={() => setTipoRemolque('cama_baja')} className={`flex-1 py-3 px-2 rounded-lg font-black text-sm flex items-center justify-center transition-all ${tipoRemolque === 'cama_baja' ? 'bg-white shadow text-indigo-700' : 'text-slate-500 hover:text-slate-700'}`}>Cama Baja</button>
-    <button onClick={() => setTipoRemolque('cama_alta')} className={`flex-1 py-3 px-2 rounded-lg font-black text-sm flex items-center justify-center transition-all ${tipoRemolque === 'cama_alta' ? 'bg-white shadow text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}>Cama Alta</button>
-    <button onClick={() => setTipoRemolque('volteo')} className={`flex-1 py-3 px-2 rounded-lg font-black text-sm flex items-center justify-center transition-all ${tipoRemolque === 'volteo' ? 'bg-white shadow text-red-700' : 'text-slate-500 hover:text-slate-700'}`}>Volteo</button>
-</div>
-                ) : (
-                    <div className="p-1.5 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 opacity-60"><span className="font-black text-sm text-slate-500">Ganadero (Única opción para USA)</span></div>
-                )}
+
+                {/* NUEVAS TARJETAS VISUALES DE REMOLQUES */}
+                <div className={`grid gap-3 ${market === 'mexico' ? 'grid-cols-2 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-2 max-w-md'}`}>
+                    
+                    {/* 1. Ganadero Ganso (Visible siempre) */}
+                    <button onClick={() => { setTipoRemolque('ganadero'); setTipoGanadero('ganso'); }} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'bg-amber-50 border-amber-500 shadow-md' : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow'}`}>
+                        <div className="h-12 w-full flex items-center justify-center mb-2 relative">
+                            <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'text-amber-600' : 'text-slate-500'}`} />
+                            <img src="/img_ganso.png" alt="Ganso" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                        </div>
+                        <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'text-amber-800' : 'text-slate-600'}`}>Ganadero<br/>Ganso</span>
+                    </button>
+
+                    {/* 2. Ganadero Redondo (Visible siempre) */}
+                    <button onClick={() => { setTipoRemolque('ganadero'); setTipoGanadero('redondo'); }} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'bg-amber-50 border-amber-500 shadow-md' : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow'}`}>
+                        <div className="h-12 w-full flex items-center justify-center mb-2 relative">
+                            <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'text-amber-600' : 'text-slate-500'}`} />
+                            <img src="/img_redondo.png" alt="Redondo" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                        </div>
+                        <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'text-amber-800' : 'text-slate-600'}`}>Ganadero<br/>Redondo</span>
+                    </button>
+
+                    {/* EXCLUSIVOS DE MÉXICO */}
+                    {market === 'mexico' && (
+                        <>
+                            <button onClick={() => setTipoRemolque('cama_baja')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'cama_baja' ? 'bg-indigo-50 border-indigo-500 shadow-md' : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow'}`}>
+                                <div className="h-12 w-full flex items-center justify-center mb-2 relative">
+                                    <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'cama_baja' ? 'text-indigo-600' : 'text-slate-500'}`} />
+                                    <img src="/img_camabaja.png" alt="Cama Baja" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                                </div>
+                                <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'cama_baja' ? 'text-indigo-800' : 'text-slate-600'}`}>Cama<br/>Baja</span>
+                            </button>
+
+                            <button onClick={() => setTipoRemolque('cama_alta')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'cama_alta' ? 'bg-emerald-50 border-emerald-500 shadow-md' : 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow'}`}>
+                                <div className="h-12 w-full flex items-center justify-center mb-2 relative">
+                                    <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'cama_alta' ? 'text-emerald-600' : 'text-slate-500'}`} />
+                                    <img src="/img_camaalta.png" alt="Cama Alta" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                                </div>
+                                <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'cama_alta' ? 'text-emerald-800' : 'text-slate-600'}`}>Cama<br/>Alta</span>
+                            </button>
+
+                            <button onClick={() => setTipoRemolque('volteo')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'volteo' ? 'bg-red-50 border-red-500 shadow-md' : 'bg-white border-slate-200 hover:border-red-300 hover:shadow'}`}>
+                                <div className="h-12 w-full flex items-center justify-center mb-2 relative">
+                                    <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'volteo' ? 'text-red-600' : 'text-slate-500'}`} />
+                                    <img src="/img_volteo.png" alt="Volteo" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                                </div>
+                                <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'volteo' ? 'text-red-800' : 'text-slate-600'}`}>Remolque<br/>Volteo</span>
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
 
             {market === 'usa' && tipoRemolque === 'ganadero' && (
