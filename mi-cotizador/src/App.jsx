@@ -297,13 +297,16 @@ function CotizadorNube() {
   const [loginUser, setLoginUser] = useState('');
   const [loginPass, setLoginPass] = useState('');
   const [loginError, setLoginError] = useState('');
-
+  const [folio, setFolio] = useState('');
+  const [fechaCotizacion, setFechaCotizacion] = useState(new Date().toISOString().split('T')[0]);
+  const [fechaEntrega, setFechaEntrega] = useState('');
   const [db, setDb] = useState(DEFAULT_DB);
   const [users, setUsers] = useState(DEFAULT_USERS);
   const [logs, setLogs] = useState([]);
   const [cotizaciones, setCotizaciones] = useState([]);
-
+  const [esHojaDiseno, setEsHojaDiseno] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => {
+    
     try { const saved = localStorage.getItem('amacsa_current_user'); return saved ? JSON.parse(saved) : null; }
     catch { return null; }
   });
@@ -324,7 +327,7 @@ function CotizadorNube() {
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [adminUnlockPrompt, setAdminUnlockPrompt] = useState(false);
   const [adminUnlockPass, setAdminUnlockPass] = useState('');
-
+  const [mostrarExtras, setMostrarExtras] = useState(false);
   const [cliente, setCliente] = useState({ nombre: '', telefono: '', anticipo: 0, descuentoPct: 0, ajusteRedondeo: 0 });
   const [dim, setDim] = useState({ largo: '20ft', ancho: '84in' });
   const [acople, setAcople] = useState({ jalon: 'ganso_facil', cadena: 'ganso_38', sujetaCadenas: true, gato: 'manual', cantGatos: 1, cargadorSolar: false, cargador110: false });
@@ -332,7 +335,9 @@ function CotizadorNube() {
   const [carroceria, setCarroceria] = useState({ techo: 'completo', frente: 'cachucha', redila: 'ptr_abierta', puertaInt: 'fija', cantPtasInt: 1, puertaTras: 'libro', puertaPiloto: true, puertaPilotoAncho: 40, plexiglass: false, rackPacas: false, ventEst: false, ventCirc: false, polverasEspeciales: false, puertaPerroCachucha: false });
   const [monturero, setMonturero] = useState({ tipo: 'ninguno', basesMontura: 3, tubosCobija: 1, puertaPerro: false, paredLarga: 85.5, paredCorta: 40 });
 const [acabados, setAcabados] = useState({ piso: 'madera', pintura: 'polvo', mismoColorTecho: false, color: 'gris', luces: 'estandar_usa', bodyLitros: 0, pinturaLitros: 0, techoLitros: 0, cajasPolvo: 0, cajaHtas: 'ninguna' });  const [accesorios, setAccesorios] = useState({ lucesInteriores: 0 });
-  const [camaBajaOpts, setCamaBajaOpts] = useState({ rampas: 'ninguna', fenderReforzado: false, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, luzPortaplaca: false });
+const [extrasCustom, setExtrasCustom] = useState([]); 
+  const [inputExtra, setInputExtra] = useState({ nombre: '', precio: '' });  
+const [camaBajaOpts, setCamaBajaOpts] = useState({ rampas: 'ninguna', fenderReforzado: false, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, luzPortaplaca: false });
 const [volteoOpts, setVolteoOpts] = useState({ 
     sistemaElevacion: 'hidraulico', // hidraulico, electrico, ambos
     puertaTrasera: 'libro',         // libro, dompe, sencilla, libro_dompe
@@ -527,7 +532,8 @@ const [volteoOpts, setVolteoOpts] = useState({
     const totalCarroceria = oTecho.precio + oRedila.precio + (oPInt.precio * carroceria.cantPtasInt) + oPTras.precio + (carroceria.frente === 'cachucha' ? getExtraPrice('frenteCachucha') : carroceria.frente === 'canasta' ? getExtraPrice('frenteCanasta') : 0) + (carroceria.plexiglass && piesPlexi > 0 ? Math.ceil(piesPlexi / 46.5) * getExtraPrice('hojaPlexiglass') : 0) + (carroceria.rackPacas ? getExtraPrice('rackPacas') : 0) + (carroceria.ventEst * getExtraPrice('ventEst')) + (carroceria.ventCirc * getExtraPrice('ventCirc')) + (carroceria.polverasEspeciales ? getExtraPrice('polverasEspeciales') : 0) + (carroceria.puertaPerroCachucha ? getExtraPrice('puertaPerroCachucha') : 0);
     const totalMonturero = tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' ? oMont.precio + (monturero.basesMontura * getExtraPrice('basesMontura')) + (monturero.tubosCobija * getExtraPrice('tubosCobija')) + (monturero.puertaPerro ? getExtraPrice('puertaPerroLateral') : 0) : 0;
     const totalAcabados = oPint.precio + oLuces.precio + (accesorios.lucesInteriores * getExtraPrice('lucesInteriores')) + (acabados.bodyLitros * getExtraPrice('litroBody')) + ((acabados.pinturaLitros + acabados.techoLitros) * getExtraPrice('litroPintura')) + (acabados.cajaHtas === 'std' ? getExtraPrice('cajaHtasStd') : acabados.cajaHtas === 'grande' ? getExtraPrice('cajaHtasGrande') : 0);
-    const subtotalNeto = getExtraPrice('precioBase') + oLargo.precio + oAncho.precio + oJalon.precio + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : oRedila.precio) + totalMonturero + totalAcabados + (['cama_baja', 'cama_alta'].includes(tipoRemolque) ? oRampa.precio : 0) + (tipoRemolque === 'cama_baja' && camaBajaOpts.fenderReforzado ? getExtraPrice('fenderReforzado') : 0) + (['cama_baja', 'cama_alta'].includes(tipoRemolque) && camaBajaOpts.luzPortaplaca ? getExtraPrice('luzPortaplaca') : 0);
+    const totalExtrasCustom = extrasCustom.reduce((sum, item) => sum + (Number(item.precio) || 0), 0);
+    const subtotalNeto = getExtraPrice('precioBase') + oLargo.precio + oAncho.precio + oJalon.precio + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : oRedila.precio) + totalMonturero + totalAcabados + (['cama_baja', 'cama_alta'].includes(tipoRemolque) ? oRampa.precio : 0) + (tipoRemolque === 'cama_baja' && camaBajaOpts.fenderReforzado ? getExtraPrice('fenderReforzado') : 0) + (['cama_baja', 'cama_alta'].includes(tipoRemolque) && camaBajaOpts.luzPortaplaca ? getExtraPrice('luzPortaplaca') : 0)+ totalExtrasCustom;
     const subtotalDescuento = subtotalNeto * (1 - (cliente.descuentoPct || 0) / 100);
     const subtotalIva = market === 'usa' ? 0 : subtotalDescuento * 0.16;
     return subtotalDescuento + subtotalIva + (cliente.ajusteRedondeo || 0);
@@ -925,6 +931,14 @@ const [volteoOpts, setVolteoOpts] = useState({
                 {isAppUnlocked ? <><Unlock className="w-4 h-4"/> <span className="hidden md:inline">Cerrar Catálogo</span></> : <><Lock className="w-4 h-4"/> <span className="hidden md:inline">Panel Historial</span></>}
               </button>
               <button onClick={() => window.print()} className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-sm font-bold transition text-white"><Printer className="w-4 h-4"/> <span>Imprimir</span></button>
+             <button 
+    onClick={() => { 
+        setEsHojaDiseno(true); 
+        setTimeout(() => { window.print(); setEsHojaDiseno(false); }, 100); 
+    }} 
+    className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm transition-all mr-3">
+    🖨️ Hoja de Diseño
+</button>
             </>
           ) : (
             <button onClick={() => setView('cotizador')} className="flex items-center space-x-1 bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm font-bold transition text-white"><Save className="w-4 h-4"/> <span>Volver a Ventas</span></button>
@@ -1148,9 +1162,25 @@ const [volteoOpts, setVolteoOpts] = useState({
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Descuento (%)</label><div className="relative"><input type="number" min="0" max="100" value={cliente.descuentoPct || ''} onChange={e => setCliente({...cliente, descuentoPct: parseFloat(e.target.value) || 0})} className="w-full p-2 border border-slate-300 rounded-md font-black text-red-600 text-center" placeholder="0" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">%</span></div></div>
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Ajuste / Redondeo</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={cliente.ajusteRedondeo || ''} onChange={e => setCliente({...cliente, ajusteRedondeo: parseFloat(e.target.value) || 0})} className="w-full p-2 pl-7 border border-slate-300 rounded-md font-black text-purple-700" placeholder="0" /></div></div>
                 <div className="md:col-span-5 border-t border-slate-100 pt-3 mt-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Anticipo (MXN)</label><div className="relative max-w-[200px]"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={cliente.anticipo || ''} onChange={e => setCliente({...cliente, anticipo: parseFloat(e.target.value) || 0})} className="w-full p-2 pl-7 border border-slate-300 rounded-md font-black text-green-700 bg-green-50" placeholder="0" /></div></div>
+               {/* Fila de Folio y Fechas (Ya con espacio correcto) */}
+<div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-slate-200">
+    <div>
+        <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Folio de Diseño</label>
+        <input type="text" value={folio} onChange={(e) => setFolio(e.target.value)} placeholder="Ej. JP-015" className="w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" />
+    </div>
+    <div>
+        <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Fecha de Cotización</label>
+        <input type="date" value={fechaCotizacion} onChange={(e) => setFechaCotizacion(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" />
+    </div>
+    <div>
+        <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Entrega Estimada</label>
+        <input type="date" value={fechaEntrega} onChange={(e) => setFechaEntrega(e.target.value)} className="w-full bg-amber-50 border-2 border-amber-200 text-amber-900 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 focus:bg-white transition-colors" />
+    </div>
+</div>
+
               </div>
             </div>
-
+             
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
               <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><Disc className="w-5 h-5 mr-2 text-blue-600"/> 1. Dimensiones y Acoplamiento</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -1319,14 +1349,15 @@ const [volteoOpts, setVolteoOpts] = useState({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                 <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Piso</label><select value={acabados.piso} onChange={e => setAcabados({...acabados, piso: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md">{pisosDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
                 <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Caja Htas</label><select value={acabados.cajaHtas} onChange={e => setAcabados({...acabados, cajaHtas: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md">{(!acople.gato.includes('hidraulico')) && <option value="ninguna">Sin Caja</option>}<option value="std">Estándar</option><option value="grande">Grande</option></select></div>
-                <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Luces</label><select value={acabados.luces} disabled={isSpecialClient && market==='usa'} onChange={e => setAcabados({...acabados, luces: e.target.value})} className={`w-full p-2 border border-slate-300 rounded-md ${isSpecialClient && market==='usa' ? 'bg-slate-100 font-bold' : ''}`}>{lucesDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>              </div>
+                <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Luces</label><select value={acabados.luces} disabled={isSpecialClient && market==='usa'} onChange={e => setAcabados({...acabados, luces: e.target.value})} className={`w-full p-2 border border-slate-300 rounded-md ${isSpecialClient && market==='usa' ? 'bg-slate-100 font-bold' : ''}`}>{lucesDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+              </div>
 
               {acabados.luces === 'especial' && ['cama_baja', 'cama_alta'].includes(tipoRemolque) && (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                   <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">Óvalos Rojos</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.ovaloRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
-                   <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">3/4" Rojos</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.tresCuartosRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
-                   <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">3/4" Ámbar</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.tresCuartosAmbar}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
-                   <div className="flex items-end pb-0.5"><label className="flex items-center space-x-2 cursor-pointer font-bold text-[13px] text-blue-900 bg-white px-3 py-1.5 rounded border border-blue-300 w-full justify-center shadow-sm"><input type="checkbox" checked={camaBajaOpts.luzPortaplaca} onChange={() => toggle(setCamaBajaOpts, 'luzPortaplaca')} className="w-4 h-4 text-blue-600"/> <span>Luz Portaplaca</span></label></div>
+                  <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">Óvalos Rojos</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.ovaloRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
+                  <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">3/4" Rojos</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.tresCuartosRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
+                  <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">3/4" Ámbar</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.tresCuartosAmbar}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
+                  <div className="flex items-end pb-0.5"><label className="flex items-center space-x-2 cursor-pointer font-bold text-[13px] text-blue-900 bg-white px-3 py-1.5 rounded border border-blue-300 w-full justify-center shadow-sm"><input type="checkbox" checked={camaBajaOpts.luzPortaplaca} onChange={() => toggle(camaBajaOpts, 'luzPortaplaca')} className="w-4 h-4 text-blue-600"/> <span>Luz Portaplaca</span></label></div>
                 </div>
               )}
 
@@ -1345,10 +1376,46 @@ const [volteoOpts, setVolteoOpts] = useState({
                 )}
               </div>
             </div>
-          </div>
 
+            {/* --- EXTRAS ESPECIALES DESPLEGABLES --- */}
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mt-6 print:hidden">
+                <button onClick={() => setMostrarExtras(!mostrarExtras)} className="w-full text-left flex justify-between items-center group">
+                    <h2 className="text-lg font-black text-slate-800 flex items-center"><Plus className="w-5 h-5 mr-2 text-blue-600"/> Extras Especiales (Fuera de Catálogo)</h2>
+                    <span className="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200 transition group-hover:bg-blue-100">{mostrarExtras ? 'Ocultar' : 'Agregar Extra'}</span>
+                </button>
+                
+                {mostrarExtras && (
+                    <div className="mt-4 pt-4 border-t border-slate-100">
+                        <div className="flex flex-col sm:flex-row gap-3 mb-3">
+                            <input type="text" value={inputExtra.nombre} onChange={e => setInputExtra({...inputExtra, nombre: e.target.value})} placeholder="Descripción... (Ej. Llantas Michelin)" className="flex-1 p-2 border border-slate-300 rounded-md font-medium text-sm" />
+                            <div className="relative w-full sm:w-40">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
+                                <input type="number" value={inputExtra.precio} onChange={e => setInputExtra({...inputExtra, precio: e.target.value})} placeholder="0.00" className="w-full p-2 pl-7 border border-slate-300 rounded-md font-bold text-sm text-blue-700" />
+                            </div>
+                            <button onClick={() => { if(inputExtra.nombre) { setExtrasCustom([...extrasCustom, { id: Date.now(), nombre: inputExtra.nombre, precio: inputExtra.precio }]); setInputExtra({nombre: '', precio: ''}); } }} className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-md font-bold transition flex items-center justify-center shadow-sm">Añadir</button>
+                        </div>
+                        
+                        {extrasCustom.length > 0 && (
+                            <div className="space-y-2 mt-4 pt-4 border-t border-slate-100">
+                                {extrasCustom.map(ext => (
+                                    <div key={ext.id} className="flex justify-between items-center bg-slate-50 p-2.5 rounded border border-slate-200 text-sm">
+                                        <span className="font-bold text-slate-700">• {ext.nombre}</span>
+                                        <div className="flex items-center space-x-4">
+                                            <span className="font-black text-blue-700">{formatoMoneda(Number(ext.precio))}</span>
+                                            <button onClick={() => setExtrasCustom(extrasCustom.filter(e => e.id !== ext.id))} className="text-red-500 hover:bg-red-100 p-1.5 rounded transition"><Trash2 className="w-4 h-4"/></button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+          </div> {/* <--- CIERRA LA COLUMNA IZQUIERDA PERFECTAMENTE */}
+
+          {/* ====== COLUMNA DERECHA (TICKET) ====== */}
           <div className="w-full xl:w-1/3 print:w-full print:block">
-            {/* ENVOLTORIO STICKY CON SCROLL INTERNO PARA SOLUCIONAR TICKET LARGO */}
             <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto pb-8 pr-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
               
               {activeTab === 'cotizacion' && (
@@ -1364,24 +1431,34 @@ const [volteoOpts, setVolteoOpts] = useState({
                       </div>
                     </div>
                     <div className="text-right">
-                      <h2 className="text-xl font-black tracking-widest text-slate-800">COTIZACIÓN</h2>
-                      <p className="text-xs font-bold text-slate-500">{new Date().toLocaleDateString('es-MX')}</p>
+                      <h2 className="text-xl font-black tracking-widest text-slate-800">
+                        {esHojaDiseno ? 'HOJA DE DISEÑO' : 'COTIZACIÓN'}
+                      </h2>
+                      <p className="text-xs font-bold text-slate-500 mt-1">Fecha: {fechaCotizacion}</p>
                     </div>
                   </div>
 
-                  <h2 className="text-2xl font-black mb-6 border-b-4 border-slate-900 pb-2 uppercase flex items-center text-slate-800 print:hidden"><FileText className="w-6 h-6 mr-3"/> Cotización Oficial</h2>
+                  <h2 className="text-2xl font-black mb-6 border-b-4 border-slate-900 pb-2 uppercase flex items-center text-slate-800 print:hidden"><FileText className="w-6 h-6 mr-3"/> {esHojaDiseno ? 'HOJA DE DISEÑO (INTERNO)' : 'COTIZACIÓN OFICIAL'}</h2>
                   
+                  {/* ====== DATOS DE LA ORDEN HORIZONTALES (ENCABEZADO) ====== */}
+                  {(cliente.nombre || cliente.telefono || (esHojaDiseno && (folio || fechaEntrega))) && (
+                    <div className="p-4 bg-slate-50 print:bg-transparent print:border-y-2 print:border-x-0 print:border-slate-800 print:py-3 print:px-0 print:mb-6 print:rounded-none rounded-lg border border-slate-200 mb-6">
+                      <h3 className="font-bold text-slate-800 mb-2 uppercase tracking-wider text-[10px]">
+                        {esHojaDiseno ? 'Datos de la Orden' : 'Datos del Cliente'}
+                      </h3>
+                      <ul className="flex flex-col sm:flex-row print:flex-row flex-wrap gap-x-8 gap-y-2 text-slate-700 print:text-slate-900 text-xs">
+                        {cliente.nombre && <li>• Cliente: <span className="font-bold">{cliente.nombre}</span></li>}
+                        {cliente.telefono && !esHojaDiseno && <li>• Teléfono: <span className="font-bold">{cliente.telefono}</span></li>}
+                        {esHojaDiseno && folio && <li>• Folio de Diseño: <span className="font-black text-blue-700 print:text-slate-900">{folio}</span></li>}
+                        {esHojaDiseno && fechaEntrega && <li>• Entrega Estimada: <span className="font-black text-amber-600 print:text-slate-900">{fechaEntrega}</span></li>}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* ====== ESPECIFICACIONES A 2 COLUMNAS ====== */}
                   <div className="grid grid-cols-1 print:grid-cols-2 gap-4 text-sm mb-6 print:mb-2">
                     <div className="space-y-4">
-                      {(cliente.nombre || cliente.telefono) && (
-                        <div className="p-4 bg-slate-50 print:border-0 print:p-0 print:mb-2 rounded-lg border border-slate-200">
-                          <h3 className="font-bold text-slate-800 mb-2 uppercase tracking-wider text-[10px]">Datos del Cliente</h3>
-                          <ul className="space-y-1 text-slate-700 print:text-slate-900 text-xs">
-                            {cliente.nombre && <li>• Nombre Comercial: <span className="font-bold">{cliente.nombre}</span></li>}
-                            {cliente.telefono && <li>• Teléfono de Contacto: <span className="font-bold">{cliente.telefono}</span></li>}
-                          </ul>
-                        </div>
-                      )}
+                      
                       <div className="p-4 bg-slate-50 print:border-0 print:p-0 print:mb-2 rounded-lg border border-slate-200">
                         <h3 className="font-bold text-slate-800 mb-2 uppercase tracking-wider text-[10px]">Estructura y Carrocería</h3>
                         <ul className="space-y-1 text-slate-700 print:text-slate-900 text-xs">
@@ -1413,6 +1490,7 @@ const [volteoOpts, setVolteoOpts] = useState({
                           <li>• Color: <span className="font-bold uppercase">{db.colores?.find(c => c.id === acabados.color)?.nombre || 'Estándar'}</span></li>
                         </ul>
                       </div>
+                      
                       <div className="p-4 bg-blue-50 print:bg-transparent print:border-0 print:p-0 rounded-lg border border-blue-100">
                         <h3 className="font-bold text-blue-900 print:text-slate-800 mb-2 uppercase tracking-wider text-[10px]">Extras e Inclusiones</h3>
                         <ul className="space-y-1 text-blue-800 print:text-slate-900 text-xs">
@@ -1430,32 +1508,43 @@ const [volteoOpts, setVolteoOpts] = useState({
                           {carroceria.polverasEspeciales && <li>• Polveras Estilo USA</li>}
                           <li>• {oLuces.nombre} {acabados.luces === 'especial' && ['cama_baja', 'cama_alta'].includes(tipoRemolque) ? `(${camaBajaOpts.ovaloRojo}x Óvalo, ${camaBajaOpts.tresCuartosRojo}x 3/4" R, ${camaBajaOpts.tresCuartosAmbar}x 3/4" A)` : ''}</li>
                           {acabados.cajaHtas !== 'ninguna' && <li>• Caja de Herramientas ({acabados.cajaHtas === 'std' ? 'Estándar' : 'Grande'})</li>}
+                          
+                          {/* EXTRAS PERSONALIZADOS */}
+                          {extrasCustom.map(ext => (
+                              <li key={ext.id}>• Extra Especial: <span className="font-bold">{ext.nombre}</span> {!esHojaDiseno && <span className="text-slate-400 font-medium ml-1">(+ {formatoMoneda(Number(ext.precio))})</span>}</li>
+                          ))}
                         </ul>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="mt-6 pt-4 border-t-2 border-slate-800 bg-slate-900 print:bg-transparent print:border-slate-300 print:-mx-0 print:px-0 -mx-6 px-6 pb-6 rounded-b-xl text-white print:text-slate-900 print:shadow-none print:mt-2 print:pt-2">
-                    <div className="flex justify-between text-slate-300 print:text-slate-700 font-bold mb-1 text-[11px] print:mb-0"><span>Subtotal Neto</span><span>{formatoMoneda(subtotalNeto)}</span></div>
-                    {cliente.descuentoPct > 0 && ( <div className="flex justify-between text-red-400 print:text-red-700 font-bold mb-1 text-[11px] print:mb-0"><span>Descuento Comercial ({cliente.descuentoPct}%)</span><span>- {formatoMoneda(subtotalNeto - subtotalDescuento)}</span></div> )}
-                    {market !== 'usa' && ( <div className="flex justify-between text-slate-400 print:text-slate-600 font-bold mb-2 text-[11px] print:mb-0"><span>I.V.A. (16%)</span><span>{formatoMoneda(subtotalIva)}</span></div> )}
-                    {cliente.ajusteRedondeo !== 0 && ( <div className="flex justify-between text-purple-400 print:text-purple-700 font-bold mb-3 text-[11px] print:mb-0"><span>Ajuste / Redondeo</span><span>{cliente.ajusteRedondeo > 0 ? '+' : ''} {formatoMoneda(cliente.ajusteRedondeo)}</span></div> )}
 
-                    <div className="text-[10px] font-bold tracking-widest text-green-500 print:text-slate-500 uppercase mb-1 border-t border-slate-700 print:border-slate-300 pt-2 print:mt-1">Precio Final {market === 'usa' ? '(Tasa 0% IVA)' : '(IVA Incluido)'}</div>
-                    <div className={`flex justify-between font-black mt-1 ${Number(cliente.anticipo) > 0 ? 'text-2xl mb-2' : 'text-3xl'} items-center print:text-2xl print:mb-1`}>
-                      <span>TOTAL</span>
-                      <span className={`${market === 'usa' ? 'text-green-400' : 'text-white'} print:text-slate-900`}>{formatoMoneda(totalFinal)}</span>
-                    </div>
+                  {/* Ocultar precios si es hoja de diseño */}
+                  {!esHojaDiseno && (
+                    <>
+                      <div className="mt-6 pt-4 border-t-2 border-slate-800 bg-slate-900 print:bg-transparent print:border-slate-300 print:-mx-0 print:px-0 -mx-6 px-6 pb-6 rounded-b-xl text-white print:text-slate-900 print:shadow-none print:mt-2 print:pt-2">
+                        <div className="flex justify-between text-slate-300 print:text-slate-700 font-bold mb-1 text-[11px] print:mb-0"><span>Subtotal Neto</span><span>{formatoMoneda(subtotalNeto)}</span></div>
+                        {cliente.descuentoPct > 0 && ( <div className="flex justify-between text-red-400 print:text-red-700 font-bold mb-1 text-[11px] print:mb-0"><span>Descuento Comercial ({cliente.descuentoPct}%)</span><span>- {formatoMoneda(subtotalNeto - subtotalDescuento)}</span></div> )}
+                        {market !== 'usa' && ( <div className="flex justify-between text-slate-400 print:text-slate-600 font-bold mb-2 text-[11px] print:mb-0"><span>I.V.A. (16%)</span><span>{formatoMoneda(subtotalIva)}</span></div> )}
+                        {cliente.ajusteRedondeo !== 0 && ( <div className="flex justify-between text-purple-400 print:text-purple-700 font-bold mb-3 text-[11px] print:mb-0"><span>Ajuste / Redondeo</span><span>{cliente.ajusteRedondeo > 0 ? '+' : ''} {formatoMoneda(cliente.ajusteRedondeo)}</span></div> )}
 
-                    {Number(cliente.anticipo) > 0 && (
-                      <>
-                        <div className="flex justify-between text-slate-300 print:text-slate-700 font-bold mb-1 text-xs border-t border-slate-700 print:border-slate-300 pt-2 print:pt-1"><span>Anticipo</span><span className="text-amber-400 print:text-slate-800">{formatoMoneda(Number(cliente.anticipo))}</span></div>
-                        <div className="flex justify-between font-black mt-1 text-xl items-center print:text-lg"><span>Saldo Pendiente</span><span className="text-white print:text-slate-900">{formatoMoneda(saldoPendiente)}</span></div>
-                      </>
-                    )}
-                    <p className="text-slate-400 print:text-slate-500 text-[9px] mt-4 text-center print:mt-2">Cotización válida por 15 días. Sujeta a cambios de ingeniería y planta. Razón Social: Ademes y Maquinaria de Cuauhtémoc S.A. de C.V.</p>
-                    <div className="hidden print:block mt-6 pt-2 border-t border-slate-300 text-center mx-auto w-48"><p className="text-[11px] font-bold text-slate-800">{currentUser?.name}</p><p className="text-[9px] text-slate-500">Representante de Ventas AMACSA</p></div>
-                  </div>
+                        <div className="text-[10px] font-bold tracking-widest text-green-500 print:text-slate-500 uppercase mb-1 border-t border-slate-700 print:border-slate-300 pt-2 print:mt-1">Precio Final {market === 'usa' ? '(Tasa 0% IVA)' : '(IVA Incluido)'}</div>
+                        <div className={`flex justify-between font-black mt-1 ${Number(cliente.anticipo) > 0 ? 'text-2xl mb-2' : 'text-3xl'} items-center print:text-2xl print:mb-1`}>
+                          <span>TOTAL</span>
+                          <span className={`${market === 'usa' ? 'text-green-400' : 'text-white'} print:text-slate-900`}>{formatoMoneda(totalFinal)}</span>
+                        </div>
+
+                        {Number(cliente.anticipo) > 0 && (
+                          <>
+                            <div className="flex justify-between text-slate-300 print:text-slate-700 font-bold mb-1 text-xs border-t border-slate-700 print:border-slate-300 pt-2 print:pt-1"><span>Anticipo</span><span className="text-amber-400 print:text-slate-800">{formatoMoneda(Number(cliente.anticipo))}</span></div>
+                            <div className="flex justify-between font-black mt-1 text-xl items-center print:text-lg"><span>Saldo Pendiente</span><span className="text-white print:text-slate-900">{formatoMoneda(saldoPendiente)}</span></div>
+                          </>
+                        )}
+                        <p className="text-slate-400 print:text-slate-500 text-[9px] mt-4 text-center print:mt-2">Cotización válida por 15 días. Sujeta a cambios de ingeniería y planta. Razón Social: Ademes y Maquinaria de Cuauhtémoc S.A. de C.V.</p>
+                      </div>
+
+                      <div className="hidden print:block mt-6 pt-2 border-t border-slate-300 text-center mx-auto w-48"><p className="text-[11px] font-bold text-slate-800">{currentUser?.name}</p><p className="text-[9px] text-slate-500">Representante de Ventas AMACSA</p></div>
+                    </>
+                  )}
                 </div>
               )}
               
