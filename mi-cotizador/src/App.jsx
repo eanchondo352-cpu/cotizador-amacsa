@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, FileText, Printer, Settings, Save, Plus, Trash2, Shield, Disc, DoorOpen, Layers, Zap, Lightbulb, Lock, Unlock, LogOut, ClipboardList, Star, Users, History, User, Key, Database, Globe, RefreshCw, Send } from 'lucide-react';
+import { AlertTriangle, Truck, FileText, Printer, Settings, Save, Plus, Trash2, Shield, Disc, DoorOpen, Layers, Zap, Lightbulb, Lock, Unlock, LogOut, ClipboardList, Star, Users, History, User, Key, Database, Globe, RefreshCw, Send } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
@@ -670,16 +670,47 @@ function CotizadorNube() {
     }
   }, [market]);
 
-  // 2. Este es el control NUEVO para el tipo de frente del Ganadero
+  // 2. Control Inteligente para Frente, Gatos, Jalones y Monturero del Ganadero
   useEffect(() => {
     if (tipoRemolque === 'ganadero') {
-      if (tipoGanadero === 'redondo') {
-        setCarroceria(prev => ({ ...prev, frente: 'ninguno' }));
-      } else {
-        setCarroceria(prev => ({ ...prev, frente: 'cachucha' }));
-      }
+      setCarroceria(prev => ({ ...prev, frente: tipoGanadero === 'redondo' ? 'ninguno' : 'cachucha' }));
+      
+      setAcople(prev => {
+          let nuevoGato = prev.gato;
+          let nuevoJalon = prev.jalon;
+
+          if (tipoGanadero === 'redondo' && nuevoJalon.includes('ganso')) {
+              nuevoJalon = 'bumper_ajustable_2_516'; 
+          } else if (tipoGanadero === 'ganso' && !nuevoJalon.includes('ganso')) {
+              nuevoJalon = 'ganso_facil'; 
+          }
+
+          if (market === 'usa') {
+              if (!['manual_12k', 'hidraulico_sencillo', 'hidraulico_bomba'].includes(nuevoGato)) nuevoGato = 'manual_12k';
+          } else {
+              if (tipoGanadero === 'redondo') {
+                  if (['3t', '2t_5200', '2t_6200'].includes(rodado.capacidad)) {
+                      nuevoGato = 'normal_2k';
+                  } else {
+                      if (!['manual_7k', 'manual_12k'].includes(nuevoGato)) nuevoGato = 'manual_7k';
+                  }
+              } else {
+                  if (['tubo_2k', 'normal_2k', 'manual_7k', 'manual_12k'].includes(nuevoGato)) nuevoGato = 'manual';
+              }
+          }
+          
+          return (prev.gato !== nuevoGato || prev.jalon !== nuevoJalon) ? { ...prev, gato: nuevoGato, jalon: nuevoJalon } : prev;
+      });
+
+      // NUEVO: Regla 3 - Monturero Redondo USA (Bloquear Diagonal)
+      setMonturero(prev => {
+          if (tipoGanadero === 'redondo' && market === 'usa' && prev.tipo === 'diagonal') {
+              return { ...prev, tipo: 'ninguno' };
+          }
+          return prev;
+      });
     }
-  }, [tipoRemolque, tipoGanadero]);
+  }, [tipoRemolque, tipoGanadero, rodado.capacidad, market]);
 
   useEffect(() => {
     if (tipoRemolque === 'cama_baja') {
@@ -758,7 +789,11 @@ function CotizadorNube() {
       if (rodado.llantaExtra > 0 && rodado.portaExtra < 1) {
         setRodado(prev => ({ ...prev, portaExtra: 1 }));
       }
-
+// 6. Ligar la suspensión exactamente a la capacidad elegida
+        let suspCorrecta = rodado.capacidad === '1_5t' ? 'susp_1_5t' : (rodado.capacidad === '6t' ? 'susp_6t' : 'susp_3t');
+        if (rodado.suspension !== suspCorrecta) {
+          setRodado(prev => ({ ...prev, suspension: suspCorrecta }));
+        }
     } else {
 const GANADERO_CAPS = ['2t_5200', '2t_6200', '3t', '4t_5200', '4t_6200', '6t', '7t', '9t', '10t'];
     }
@@ -819,13 +854,27 @@ const GANADERO_CAPS = ['2t_5200', '2t_6200', '3t', '4t_5200', '4t_6200', '6t', '
       if (['2t_5200', '2t_6200', '4t_5200', '4t_6200'].includes(c.id)) return acople.jalon.includes('ganso') && rodado.suspension === 'muelle_drop';
       return ['3t', '6t', '7t', '9t', '10t'].includes(c.id);
   }) || [];
-  const jalonesDisponibles = tipoRemolque === 'volteo' ? db.jalones?.filter(j => ['bumper_2', 'bumper_2_516', 'bumper_ajustable_2', 'bumper_ajustable_2_516', 'argolla', 'ganso_normal', 'ganso_facil'].includes(j.id)) || [] : tipoRemolque === 'cama_baja' ? db.jalones?.filter(j => j.tipo !== 'ganso') || [] : tipoRemolque === 'cama_alta' ? db.jalones?.filter(j => ['ganso_normal', 'ganso_facil', 'argolla'].includes(j.id)) || [] : db.jalones || [];
-  const gatosDisponibles = tipoRemolque === 'volteo' ? db.gatos?.filter(g => g.id === 'manual_12k') || [] : tipoRemolque === 'cama_baja' ? db.gatos?.filter(g => { const cap = rodado.capacidad; if (cap === '850kg') return g.id === 'tubo_2k'; if (['1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return g.id === 'normal_2k'; if (cap === '3t') return ['normal_2k', 'manual_7k'].includes(g.id); if (cap === '4t') return g.id === 'manual_7k'; if (cap === '6t') return ['manual_7k', 'manual_12k'].includes(g.id); return true; }) || [] : tipoRemolque === 'cama_alta' ? db.gatos?.filter(g => ['manual_12k', 'hidraulico_sencillo', 'hidraulico_bomba'].includes(g.id)) || [] : db.gatos?.filter(g => (isSpecialClient || g.id !== 'hidraulico_bomba') && !['tubo_2k','normal_2k','manual_7k','manual_12k'].includes(g.id)) || [];
-const suspensionesDisponibles = tipoRemolque === 'volteo' ? db.suspension?.filter(s => ['susp_1_5t', 'susp_3t', 'susp_6t'].includes(s.id)) || [] : tipoRemolque === 'cama_baja' ? db.suspension?.filter(s => ['susp_1_5t', 'susp_3t', 'susp_6t'].includes(s.id)) || [] : db.suspension?.filter(s => ['muelle', 'torflex', 'muelle_drop'].includes(s.id)) || [];
+const jalonesDisponibles = tipoRemolque === 'volteo' ? db.jalones?.filter(j => ['bumper_2', 'bumper_2_516', 'bumper_ajustable_2', 'bumper_ajustable_2_516', 'argolla', 'ganso_normal', 'ganso_facil'].includes(j.id)) || [] : tipoRemolque === 'cama_baja' ? db.jalones?.filter(j => j.tipo !== 'ganso') || [] : tipoRemolque === 'cama_alta' ? db.jalones?.filter(j => ['ganso_normal', 'ganso_facil', 'argolla'].includes(j.id)) || [] : (tipoRemolque === 'ganadero' && tipoGanadero === 'redondo') ? db.jalones?.filter(j => j.tipo !== 'ganso') || [] : db.jalones || [];
+  const gatosDisponibles = tipoRemolque === 'volteo' ? db.gatos?.filter(g => g.id === 'manual_12k') || [] : tipoRemolque === 'cama_baja' ? db.gatos?.filter(g => { const cap = rodado.capacidad; if (cap === '850kg') return g.id === 'tubo_2k'; if (['1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return g.id === 'normal_2k'; if (cap === '3t') return ['normal_2k', 'manual_7k'].includes(g.id); if (cap === '4t') return g.id === 'manual_7k'; if (cap === '6t') return ['manual_7k', 'manual_12k'].includes(g.id); return true; }) || [] : tipoRemolque === 'cama_alta' ? db.gatos?.filter(g => ['manual_12k', 'hidraulico_sencillo', 'hidraulico_bomba'].includes(g.id)) || [] : db.gatos?.filter(g => {
+      if (market === 'usa') return ['manual_12k', 'hidraulico_sencillo', 'hidraulico_bomba'].includes(g.id);
+      if (!isSpecialClient && g.id === 'hidraulico_bomba') return false;
+      if (carroceria.frente === 'ninguno') {
+          if (['3t', '2t_5200', '2t_6200'].includes(rodado.capacidad)) return g.id === 'normal_2k';
+          return ['manual_7k', 'manual_12k'].includes(g.id);
+      }
+      return !['tubo_2k', 'normal_2k', 'manual_7k', 'manual_12k'].includes(g.id);
+  }) || [];
+  const suspensionesDisponibles = ['volteo', 'cama_baja'].includes(tipoRemolque) ? db.suspension?.filter(s => {
+      if (['850kg', '1_5t'].includes(rodado.capacidad)) return s.id === 'susp_1_5t';
+      if (['3t', '4t'].includes(rodado.capacidad)) return s.id === 'susp_3t';
+      if (rodado.capacidad === '6t') return s.id === 'susp_6t';
+      return false;
+  }) || [] : db.suspension?.filter(s => ['muelle', 'torflex', 'muelle_drop'].includes(s.id)) || [];
   const llantasDisponibles = tipoRemolque === 'cama_baja' ? db.llantas?.filter(l => { const cap = rodado.capacidad; if (['850kg', '1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return ['700_15', '225_75_15', 'ninguna'].includes(l.id); if (cap === '3t') return ['700_15', '235_80_16', 'ninguna'].includes(l.id); if (cap === '4t') return ['225_75_15', 'ninguna'].includes(l.id); if (cap === '6t') return ['235_80_16', '235_80_16_14', 'ninguna'].includes(l.id); return true; }) || [] : tipoRemolque === 'cama_alta' ? db.llantas?.filter(l => rodado.capacidad === '10t' ? ['17_5in', 'ninguna'].includes(l.id) : ['235_80_16', '16in_10', '16in_14', '235_80_16_14', 'ninguna'].includes(l.id)) || [] : db.llantas?.filter(l => ['16in_10', '16in_14', '235_80_16_14', '17_5in', 'ninguna'].includes(l.id)) || [];
   const pisosDisponibles = tipoRemolque === 'volteo' ? db.pisos?.filter(p => ['madera', 'lamina_madera'].includes(p.id)) || [] : tipoRemolque === 'cama_baja' ? db.pisos?.filter(p => ['madera', 'duela_laminada'].includes(p.id)) || [] : tipoRemolque === 'cama_alta' ? db.pisos?.filter(p => ['madera', 'lamina_madera'].includes(p.id)) || [] : db.pisos?.filter(p => ['madera', 'hule_liso', 'hule_anti'].includes(p.id)) || [];
 const redilasDisponibles = tipoRemolque === 'cama_baja' ? db.redilas?.filter(r => ['sin_redila', 'ptr_abierta_2', 'ptr_abierta_3', 'ptr_abierta_4', 'cerrada_2', 'cerrada_3', 'cerrada_4'].includes(r.id)) || [] : db.redilas?.filter(r => ['ptr_abierta', 'cerrada', 'combinada'].includes(r.id)) || [];
-  const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => { if (r.id === 'ninguna' || r.id === 'puerta_rampa') return true; const is82 = dim.ancho === '82in'; if (r.id === 'rampa_1_5m') return is82 && carroceria.redila === 'sin_redila'; if (r.id === 'rampa_39') return is82 && carroceria.redila !== 'sin_redila'; return false; }) || [] : tipoRemolque === 'cama_alta' ? db.rampas?.filter(r => ['recto_rampas', 'cola_4', 'cola_5'].includes(r.id)) || [] : [];
+const monturerosDisponibles = (tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'usa') ? db.montureros?.filter(m => ['ninguno', 'recto_3', 'recto_4'].includes(m.id)) || [] : db.montureros || [];
+const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => { if (r.id === 'ninguna' || r.id === 'puerta_rampa') return true; const is82 = dim.ancho === '82in'; if (r.id === 'rampa_1_5m') return is82 && carroceria.redila === 'sin_redila'; if (r.id === 'rampa_39') return is82 && carroceria.redila !== 'sin_redila'; return false; }) || [] : tipoRemolque === 'cama_alta' ? db.rampas?.filter(r => ['recto_rampas', 'cola_4', 'cola_5'].includes(r.id)) || [] : [];
   const oLargo = getObj(db.largos, dim.largo); const oAncho = getObj(db.anchos, dim.ancho); const oJalon = getObj(db.jalones, acople.jalon); const oCadena = getObj(db.cadenas, acople.cadena); const oGato = getObj(db.gatos, acople.gato); const oSusp = getObj(db.suspension, rodado.suspension); const oLlantas = getObj(db.llantas, rodado.llanta); const oTecho = getObj(db.techos, carroceria.techo); const oRedila = getObj(db.redilas, carroceria.redila); const oPInt = getObj(db.puertasInteriores, carroceria.puertaInt); const oPTras = getObj(db.puertasTraseras, carroceria.puertaTras); const oPiso = getObj(db.pisos, acabados.piso); const oMont = getObj(db.montureros, monturero.tipo); const oPint = getObj(db.pinturas, acabados.pintura); const oLuces = getObj(db.luces, acabados.luces); const oRampa = db.rampas?.find(r => r.id === camaBajaOpts.rampas) || {precio: 0};
   const lucesDisponibles = db.luces?.filter(l => market === 'usa' ? l.id.includes('_usa') : l.id.includes('_mexico')) || [];
   const anchoEnPies = (oAncho.valor || 0) / 12;
@@ -1411,7 +1460,7 @@ const redilasDisponibles = tipoRemolque === 'cama_baja' ? db.redilas?.filter(r =
               <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                 <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><DoorOpen className="w-5 h-5 mr-2 text-blue-600"/> 4. Monturero</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <select value={monturero.tipo} onChange={e => setMonturero({...monturero, tipo: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium">{db.montureros.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select>
+<select value={monturero.tipo} onChange={e => setMonturero({...monturero, tipo: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium">{monturerosDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select>
                   {(monturero.tipo !== 'ninguno' || carroceria.frente === 'cachucha') && (<label className="flex items-center space-x-2 cursor-pointer font-medium"><input type="checkbox" checked={monturero.puertaPerro} onChange={() => toggle(setMonturero, 'puertaPerro')} className="w-4 h-4 text-blue-600"/> <span>Incluir Puerta Perro Lateral</span></label>)}
                 </div>
                 {monturero.tipo === 'diagonal' && (
