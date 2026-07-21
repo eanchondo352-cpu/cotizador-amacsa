@@ -163,6 +163,8 @@ const DEFAULT_DB = {
   techos: [
     { id: 'sin_techo', nombre: 'Sin Techo', precio: 0 },
     { id: 'medio', nombre: 'Medio Techo', precio: 8500 },
+    { id: 'media_especial', nombre: 'Media Especial', precio: 9500 },
+    { id: 'tres_cuartos', nombre: 'Techo 3/4', precio: 11500 },
     { id: 'completo', nombre: 'Techo Completo', precio: 14500 }
   ],
   jalones: [
@@ -328,7 +330,7 @@ function CotizadorNube() {
   const [adminUnlockPrompt, setAdminUnlockPrompt] = useState(false);
   const [adminUnlockPass, setAdminUnlockPass] = useState('');
   const [mostrarExtras, setMostrarExtras] = useState(false);
-  const [cliente, setCliente] = useState({ nombre: '', telefono: '', anticipo: 0, descuentoPct: 0, ajusteRedondeo: 0 });
+  const [cliente, setCliente] = useState({ nombre: '', telefono: '', anticipo: 0, descuentoPct: 0, ajusteRedondeo: 0, cantidad: 1 });
   const [dim, setDim] = useState({ largo: '20ft', ancho: '84in' });
   const [acople, setAcople] = useState({ jalon: 'ganso_facil', cadena: 'ganso_38', sujetaCadenas: true, gato: 'manual', cantGatos: 1, cargadorSolar: false, cargador110: false });
   const [rodado, setRodado] = useState({ capacidad: '6t', suspension: 'torflex', llanta: '16in_14', cantFrenos: 2, llantaExtra: 0, portaExtra: 1 });
@@ -533,7 +535,7 @@ const [volteoOpts, setVolteoOpts] = useState({
     const totalMonturero = tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' ? oMont.precio + (monturero.basesMontura * getExtraPrice('basesMontura')) + (monturero.tubosCobija * getExtraPrice('tubosCobija')) + (monturero.puertaPerro ? getExtraPrice('puertaPerroLateral') : 0) : 0;
     const totalAcabados = oPint.precio + oLuces.precio + (accesorios.lucesInteriores * getExtraPrice('lucesInteriores')) + (acabados.bodyLitros * getExtraPrice('litroBody')) + ((acabados.pinturaLitros + acabados.techoLitros) * getExtraPrice('litroPintura')) + (acabados.cajaHtas === 'std' ? getExtraPrice('cajaHtasStd') : acabados.cajaHtas === 'grande' ? getExtraPrice('cajaHtasGrande') : 0);
     const totalExtrasCustom = extrasCustom.reduce((sum, item) => sum + (Number(item.precio) || 0), 0);
-    const subtotalNeto = getExtraPrice('precioBase') + oLargo.precio + oAncho.precio + oJalon.precio + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : oRedila.precio) + totalMonturero + totalAcabados + (['cama_baja', 'cama_alta'].includes(tipoRemolque) ? oRampa.precio : 0) + (tipoRemolque === 'cama_baja' && camaBajaOpts.fenderReforzado ? getExtraPrice('fenderReforzado') : 0) + (['cama_baja', 'cama_alta'].includes(tipoRemolque) && camaBajaOpts.luzPortaplaca ? getExtraPrice('luzPortaplaca') : 0)+ totalExtrasCustom;
+    const subtotalNeto = (getExtraPrice('precioBase') + oLargo.precio + oAncho.precio + oJalon.precio + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : oRedila.precio) + totalMonturero + totalAcabados + (['cama_baja', 'cama_alta'].includes(tipoRemolque) ? oRampa.precio : 0) + (tipoRemolque === 'cama_baja' && camaBajaOpts.fenderReforzado ? getExtraPrice('fenderReforzado') : 0) + (['cama_baja', 'cama_alta'].includes(tipoRemolque) && camaBajaOpts.luzPortaplaca ? getExtraPrice('luzPortaplaca') : 0)+ totalExtrasCustom) * (cliente.cantidad || 1);
     const subtotalDescuento = subtotalNeto * (1 - (cliente.descuentoPct || 0) / 100);
     const subtotalIva = market === 'usa' ? 0 : subtotalDescuento * 0.16;
     return subtotalDescuento + subtotalIva + (cliente.ajusteRedondeo || 0);
@@ -1163,20 +1165,24 @@ const [volteoOpts, setVolteoOpts] = useState({
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Ajuste / Redondeo</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={cliente.ajusteRedondeo || ''} onChange={e => setCliente({...cliente, ajusteRedondeo: parseFloat(e.target.value) || 0})} className="w-full p-2 pl-7 border border-slate-300 rounded-md font-black text-purple-700" placeholder="0" /></div></div>
                 <div className="md:col-span-5 border-t border-slate-100 pt-3 mt-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Anticipo (MXN)</label><div className="relative max-w-[200px]"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={cliente.anticipo || ''} onChange={e => setCliente({...cliente, anticipo: parseFloat(e.target.value) || 0})} className="w-full p-2 pl-7 border border-slate-300 rounded-md font-black text-green-700 bg-green-50" placeholder="0" /></div></div>
                {/* Fila de Folio y Fechas (Ya con espacio correcto) */}
-<div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-slate-200">
-    <div>
-        <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Folio de Diseño</label>
-        <input type="text" value={folio} onChange={(e) => setFolio(e.target.value)} placeholder="Ej. JP-015" className="w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" />
-    </div>
-    <div>
-        <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Fecha de Cotización</label>
-        <input type="date" value={fechaCotizacion} onChange={(e) => setFechaCotizacion(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" />
-    </div>
-    <div>
-        <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Entrega Estimada</label>
-        <input type="date" value={fechaEntrega} onChange={(e) => setFechaEntrega(e.target.value)} className="w-full bg-amber-50 border-2 border-amber-200 text-amber-900 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 focus:bg-white transition-colors" />
-    </div>
-</div>
+<div className="col-span-full grid grid-cols-1 md:grid-cols-4 gap-6 mt-6 pt-6 border-t border-slate-200">
+                    <div>
+                        <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Cantidad de Remolques</label>
+                        <input type="number" min="1" value={cliente.cantidad || 1} onChange={(e) => setCliente({...cliente, cantidad: parseInt(e.target.value) || 1})} className="w-full bg-blue-50 border-2 border-blue-200 text-blue-900 font-black rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors" />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Folio de Diseño</label>
+                        <input type="text" value={folio} onChange={(e) => setFolio(e.target.value)} placeholder="Ej. JP-015" className="w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Fecha de Cotización</label>
+                        <input type="date" value={fechaCotizacion} onChange={(e) => setFechaCotizacion(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Entrega Estimada</label>
+                        <input type="date" value={fechaEntrega} onChange={(e) => setFechaEntrega(e.target.value)} className="w-full bg-amber-50 border-2 border-amber-200 text-amber-900 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 focus:bg-white transition-colors" />
+                    </div>
+                </div>
 
               </div>
             </div>
@@ -1440,7 +1446,7 @@ const [volteoOpts, setVolteoOpts] = useState({
 
                   <h2 className="text-2xl font-black mb-6 border-b-4 border-slate-900 pb-2 uppercase flex items-center text-slate-800 print:hidden"><FileText className="w-6 h-6 mr-3"/> {esHojaDiseno ? 'HOJA DE DISEÑO (INTERNO)' : 'COTIZACIÓN OFICIAL'}</h2>
                   
-                  {/* ====== DATOS DE LA ORDEN HORIZONTALES (ENCABEZADO) ====== */}
+                  {/* ====== DATOS DE LA ORDEN (ENCABEZADO HORIZONTAL) ====== */}
                   {(cliente.nombre || cliente.telefono || (esHojaDiseno && (folio || fechaEntrega))) && (
                     <div className="p-4 bg-slate-50 print:bg-transparent print:border-y-2 print:border-x-0 print:border-slate-800 print:py-3 print:px-0 print:mb-6 print:rounded-none rounded-lg border border-slate-200 mb-6">
                       <h3 className="font-bold text-slate-800 mb-2 uppercase tracking-wider text-[10px]">
@@ -1449,73 +1455,56 @@ const [volteoOpts, setVolteoOpts] = useState({
                       <ul className="flex flex-col sm:flex-row print:flex-row flex-wrap gap-x-8 gap-y-2 text-slate-700 print:text-slate-900 text-xs">
                         {cliente.nombre && <li>• Cliente: <span className="font-bold">{cliente.nombre}</span></li>}
                         {cliente.telefono && !esHojaDiseno && <li>• Teléfono: <span className="font-bold">{cliente.telefono}</span></li>}
-                        {esHojaDiseno && folio && <li>• Folio de Diseño: <span className="font-black text-blue-700 print:text-slate-900">{folio}</span></li>}
+                        <li>• Cantidad: <span className="font-black text-blue-700 print:text-slate-900">{cliente.cantidad || 1} Remolque(s)</span></li>
+                        {esHojaDiseno && folio && <li>• Folio: <span className="font-black text-blue-700 print:text-slate-900">{folio}</span></li>}
                         {esHojaDiseno && fechaEntrega && <li>• Entrega Estimada: <span className="font-black text-amber-600 print:text-slate-900">{fechaEntrega}</span></li>}
                       </ul>
                     </div>
                   )}
 
-                  {/* ====== ESPECIFICACIONES A 2 COLUMNAS ====== */}
-                  <div className="grid grid-cols-1 print:grid-cols-2 gap-4 text-sm mb-6 print:mb-2">
-                    <div className="space-y-4">
+                  {/* ====== ESPECIFICACIONES (NUEVO ORDEN) ====== */}
+                  <div className="p-4 bg-white print:p-0 rounded-lg border border-slate-200 print:border-0 mb-6">
+                    <h3 className="font-bold text-slate-800 mb-4 uppercase tracking-wider text-[10px] print:hidden">Especificaciones del Remolque</h3>
+                    <ul className="space-y-3 text-slate-700 print:text-slate-900 text-xs">
+                      <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Tipo y Tamaño:</span><br className="print:hidden"/> Remolque {tipoRemolque === 'ganadero' ? 'Ganadero' : tipoRemolque === 'cama_alta' ? 'Cama Alta' : tipoRemolque === 'volteo' ? 'Volteo' : 'Cama Baja'} AMACSA {oLargo.valor}' Largo x {oAncho.valor}" Ancho</li>
                       
-                      <div className="p-4 bg-slate-50 print:border-0 print:p-0 print:mb-2 rounded-lg border border-slate-200">
-                        <h3 className="font-bold text-slate-800 mb-2 uppercase tracking-wider text-[10px]">Estructura y Carrocería</h3>
-                        <ul className="space-y-1 text-slate-700 print:text-slate-900 text-xs">
-                          {tipoRemolque === 'ganadero' && <li>• Techo: <span className="font-bold">{oTecho.nombre}</span></li>}
-                          {tipoRemolque === 'ganadero' && carroceria.frente !== 'ninguno' && <li>• Frente: <span className="font-bold capitalize">{carroceria.frente}</span></li>}
-                          {tipoRemolque !== 'cama_alta' && <li>• Redila: <span className="font-bold">{oRedila.nombre}</span></li>}
-                          {tipoRemolque === 'ganadero' && <li>• Puertas Interiores: <span className="font-bold">{carroceria.cantPtasInt}x {oPInt.nombre}</span></li>}
-                          {tipoRemolque === 'ganadero' && <li>• Puerta Trasera: <span className="font-bold">{oPTras.nombre}</span></li>}
-                          {tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' && <li>• Monturero: <span className="font-bold">{oMont.nombre} {monturero.puertaPerro ? '(Incluye Puerta Perro)' : ''}</span></li>}
-                          {['cama_baja', 'cama_alta'].includes(tipoRemolque) && camaBajaOpts.rampas !== 'ninguna' && <li>• Accesos: <span className="font-bold">{oRampa.nombre}</span></li>}
-                          {tipoRemolque === 'cama_baja' && camaBajaOpts.fenderReforzado && <li>• Fender: <span className="font-bold">Fender Reforzado Especial</span></li>}
-                          {tipoRemolque === 'volteo' && <li>• Elevación: <span className="font-bold capitalize">{volteoOpts.sistemaElevacion}</span></li>}
-                          {tipoRemolque === 'volteo' && <li>• Puerta Trasera: <span className="font-bold capitalize">{volteoOpts.puertaTrasera.replace('_', ' ')}</span></li>}
-                          {tipoRemolque === 'volteo' && volteoOpts.fenderReforzado && <li>• Fender: <span className="font-bold">Fender Reforzado Especial</span></li>}
-                        </ul>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div className="p-4 bg-slate-50 print:border-0 print:p-0 print:mb-2 rounded-lg border border-slate-200">
-                        <h3 className="font-bold text-slate-800 mb-2 uppercase tracking-wider text-[10px]">Especificaciones Principales</h3>
-                        <ul className="space-y-1 text-slate-700 print:text-slate-900 text-xs">
-                          <li>• Remolque {tipoRemolque === 'ganadero' ? 'Ganadero' : tipoRemolque === 'cama_alta' ? 'Cama Alta' : 'Cama Baja'} AMACSA {oLargo.valor}' Largo x {oAncho.valor}" Ancho</li>
-                          <li>• Capacidad: <span className="font-bold">{oCap.nombre}</span></li>
-                          <li>• Acoplamiento: <span className="font-bold">{oJalon.nombre}</span></li>
-                          <li>• Suspensión: <span className="font-bold">{oSusp.nombre}</span></li>
-                          <li>• Rodado: <span className="font-bold">{oLlantas.nombre}</span></li>
-                          <li>• Piso: <span className="font-bold">{oPiso.nombre}</span></li>
-                          <li>• Color: <span className="font-bold uppercase">{db.colores?.find(c => c.id === acabados.color)?.nombre || 'Estándar'}</span></li>
-                        </ul>
-                      </div>
+                      <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Capacidad y Ejes:</span><br className="print:hidden"/> <span className="font-bold">{oCap.nombre}</span> — {oSusp.nombre} — Llantas {oLlantas.nombre} {rodado.cantFrenos > 0 ? `(${rodado.cantFrenos}x Ejes c/Frenos)` : ''}</li>
                       
-                      <div className="p-4 bg-blue-50 print:bg-transparent print:border-0 print:p-0 rounded-lg border border-blue-100">
-                        <h3 className="font-bold text-blue-900 print:text-slate-800 mb-2 uppercase tracking-wider text-[10px]">Extras e Inclusiones</h3>
-                        <ul className="space-y-1 text-blue-800 print:text-slate-900 text-xs">
-                          {market === 'usa' ? ( <li>• Cadena de Seguridad: <span className="font-bold">Ganso 3/8 x 35"</span></li> ) : ( acople.cadena !== 'ninguna' && <li>• Cadena de Seguridad: <span className="font-bold">{oCadena.nombre}</span></li> )}
-                          {acople.sujetaCadenas && <li>• Sistema Sujeta Cadenas</li>}
-                          <li>• <span className="font-bold">{acople.cantGatos}x</span> {oGato.nombre}</li>
-                          {acople.cargadorSolar && <li>• Cargador Solar Integrado</li>}
-                          {acople.cargador110 && <li>• Cargador 110v Integrado</li>}
-                          {rodado.cantFrenos > 0 && <li>• <span className="font-bold">{rodado.cantFrenos}x</span> Ejes con Frenos Eléctricos</li>}
-                          {rodado.llantaExtra > 0 && <li>• <span className="font-bold">{rodado.llantaExtra}x</span> Llanta de Refacción</li>}
-                          {Number(rodado.portaExtra) > 0 && <li>• <span className="font-bold">{Number(rodado.portaExtra)}x</span> Porta Extra Especial</li>}
-                          {tipoRemolque === 'ganadero' && carroceria.puertaPiloto && <li>• Puerta Piloto Lateral ({carroceria.puertaPilotoAncho}")</li>}
-                          {tipoRemolque === 'ganadero' && carroceria.plexiglass && <li>• Sistema de Plexiglass (Todas las rejillas)</li>}
-                          {tipoRemolque === 'ganadero' && carroceria.rackPacas && <li>• Rack Superior para Pacas</li>}
-                          {carroceria.polverasEspeciales && <li>• Polveras Estilo USA</li>}
-                          <li>• {oLuces.nombre} {acabados.luces === 'especial' && ['cama_baja', 'cama_alta'].includes(tipoRemolque) ? `(${camaBajaOpts.ovaloRojo}x Óvalo, ${camaBajaOpts.tresCuartosRojo}x 3/4" R, ${camaBajaOpts.tresCuartosAmbar}x 3/4" A)` : ''}</li>
-                          {acabados.cajaHtas !== 'ninguna' && <li>• Caja de Herramientas ({acabados.cajaHtas === 'std' ? 'Estándar' : 'Grande'})</li>}
-                          
-                          {/* EXTRAS PERSONALIZADOS */}
+                      <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Tipo de Jalón:</span><br className="print:hidden"/> <span className="font-bold">{oJalon.nombre}</span> {market === 'usa' ? '(Ganso 3/8 x 35")' : (acople.cadena !== 'ninguna' ? `(${oCadena.nombre})` : '')} {acople.sujetaCadenas ? '+ Sujeta Cadenas' : ''}</li>
+                      
+                      {tipoRemolque !== 'cama_alta' && <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Redila:</span><br className="print:hidden"/> <span className="font-bold">{oRedila.nombre}</span></li>}
+                      
+                      <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Piso:</span><br className="print:hidden"/> <span className="font-bold">{oPiso.nombre}</span></li>
+                      
+                      <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Gato (Elevación):</span><br className="print:hidden"/> <span className="font-bold">{acople.cantGatos}x {oGato.nombre}</span> {acople.cargadorSolar ? '+ Cargador Solar' : ''} {acople.cargador110 ? '+ Cargador 110v' : ''}</li>
+                      
+                      {tipoRemolque === 'ganadero' && <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Puertas:</span><br className="print:hidden"/> <span className="font-bold">Interiores:</span> {carroceria.cantPtasInt}x {oPInt.nombre} &nbsp;|&nbsp; <span className="font-bold">Trasera:</span> {oPTras.nombre} {carroceria.puertaPiloto ? `| Piloto Lateral (${carroceria.puertaPilotoAncho}")` : ''}</li>}
+                      {tipoRemolque === 'volteo' && <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Puerta Trasera:</span><br className="print:hidden"/> <span className="font-bold capitalize">{volteoOpts.puertaTrasera.replace('_', ' ')}</span></li>}
+
+                      <li>
+                        <span className="font-black uppercase text-slate-500 print:text-slate-700 block mb-1">Otros Accesorios:</span>
+                        <ul className="ml-4 space-y-1 text-slate-600 print:text-slate-800 list-disc">
+                          {tipoRemolque === 'ganadero' && <li>Techo: <span className="font-bold">{oTecho.nombre}</span></li>}
+                          {tipoRemolque === 'ganadero' && carroceria.frente !== 'ninguno' && <li>Frente: <span className="font-bold capitalize">{carroceria.frente}</span> {carroceria.puertaPerroCachucha ? '(C/ Puerta Perro)' : ''}</li>}
+                          {tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' && <li>Monturero: <span className="font-bold">{oMont.nombre}</span> {monturero.puertaPerro ? '(C/ Puerta Perro Lateral)' : ''}</li>}
+                          {tipoRemolque === 'ganadero' && carroceria.plexiglass && <li>Sistema de Plexiglass (Todas las rejillas)</li>}
+                          {tipoRemolque === 'ganadero' && carroceria.rackPacas && <li>Rack Superior para Pacas</li>}
+                          {tipoRemolque === 'volteo' && <li>Sistema de Elevación: <span className="font-bold capitalize">{volteoOpts.sistemaElevacion}</span></li>}
+                          {['cama_baja', 'cama_alta'].includes(tipoRemolque) && camaBajaOpts.rampas !== 'ninguna' && <li>Accesos: <span className="font-bold">{oRampa.nombre}</span></li>}
+                          {['cama_baja', 'volteo'].includes(tipoRemolque) && (camaBajaOpts.fenderReforzado || volteoOpts.fenderReforzado) && <li>Fender Reforzado Especial</li>}
+                          {rodado.llantaExtra > 0 && <li><span className="font-bold">{rodado.llantaExtra}x</span> Llanta de Refacción</li>}
+                          {Number(rodado.portaExtra) > 0 && <li><span className="font-bold">{Number(rodado.portaExtra)}x</span> Porta Extra Especial</li>}
+                          {carroceria.polverasEspeciales && <li>Polveras Estilo USA</li>}
+                          <li>Luces: <span className="font-bold">{oLuces.nombre}</span> {acabados.luces === 'especial' && ['cama_baja', 'cama_alta'].includes(tipoRemolque) ? `(${camaBajaOpts.ovaloRojo}x Óvalo, ${camaBajaOpts.tresCuartosRojo}x 3/4" R, ${camaBajaOpts.tresCuartosAmbar}x 3/4" A)` : ''} {camaBajaOpts.luzPortaplaca || volteoOpts.luzPortaplaca ? '+ Luz Portaplaca' : ''}</li>
+                          {acabados.cajaHtas !== 'ninguna' && <li>Caja de Herramientas: <span className="font-bold">{acabados.cajaHtas === 'std' ? 'Estándar' : 'Grande'}</span></li>}
                           {extrasCustom.map(ext => (
-                              <li key={ext.id}>• Extra Especial: <span className="font-bold">{ext.nombre}</span> {!esHojaDiseno && <span className="text-slate-400 font-medium ml-1">(+ {formatoMoneda(Number(ext.precio))})</span>}</li>
+                              <li key={ext.id}>Extra: <span className="font-bold">{ext.nombre}</span> {!esHojaDiseno && <span className="text-slate-400 text-[10px] ml-1">(+ {formatoMoneda(Number(ext.precio))})</span>}</li>
                           ))}
                         </ul>
-                      </div>
-                    </div>
+                      </li>
+
+                      <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Color del Remolque:</span><br className="print:hidden"/> <span className="font-black uppercase">{db.colores?.find(c => c.id === acabados.color)?.nombre || 'Estándar'}</span></li>
+                    </ul>
                   </div>
 
                   {/* Ocultar precios si es hoja de diseño */}
