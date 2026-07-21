@@ -107,18 +107,22 @@ const DEFAULT_DB = {
   capacidades: [
     { id: '850kg', nombre: '850 Kg (1 Eje Ligero)', precio: -6000 },
     { id: '1_5t', nombre: '1.5 Ton (1 Eje)', precio: -3000 },
+    { id: '2t_5200', nombre: '2 Ton (1 Eje 5,200 lbs)', precio: -1500 },
+    { id: '2t_6200', nombre: '2 Ton (1 Eje 6,200 lbs)', precio: -500 },
     { id: '3t', nombre: '3 Ton (1 o 2 Ejes 3,500 lbs)', precio: 0 },
-    { id: '4t', nombre: '4 Ton (2 Ejes)', precio: 8000 },
+    { id: '4t_5200', nombre: '4 Ton (2 Ejes 5,200 lbs)', precio: 6000 },
+    { id: '4t_6200', nombre: '4 Ton (2 Ejes 6,200 lbs)', precio: 7500 },
     { id: '6t', nombre: '6 Ton (2 Ejes 7,000 lbs)', precio: 14500 },
     { id: '7t', nombre: '7 Ton (2 Ejes 8,000 lbs)', precio: 22000 },
-    { id: '9t', nombre: '9 Ton (3 Ejes 7,000/8,000 lbs)', precio: 34000 },
-    { id: '10t', nombre: '10 Ton (2 Ejes 10,000 lbs)', precio: 48000 }
+    { id: '9t', nombre: '9 Ton (3 Ejes 7,000 lbs)', precio: 34000 },
+    { id: '10t', nombre: '10 Ton (2 Ejes 10k lbs ó 3 Ejes 8k lbs)', precio: 48000 }
   ],
   suspension: [
     { id: 'susp_1_5t', nombre: 'Kit Suspensión 1.5 Ton', precio: -1000 },
     { id: 'susp_3t', nombre: 'Kit Suspensión 3/4 Ton', precio: 0 },
     { id: 'susp_6t', nombre: 'Kit Suspensión 6 Ton', precio: 2000 },
     { id: 'muelle', nombre: 'Muelle Estándar (Ganadero/Cama Alta)', precio: 0 },
+    { id: 'muelle_drop', nombre: 'Muelles Drop', precio: 1500 },
     { id: 'torflex', nombre: 'Sistema Torflex', precio: 4500 }
   ],
   llantas: [
@@ -140,7 +144,8 @@ const DEFAULT_DB = {
     { id: 'cerrada_3', nombre: 'Cerrada 3 Pies', precio: 6000 },
     { id: 'cerrada_4', nombre: 'Cerrada 4 Pies', precio: 9000 },
     { id: 'ptr_abierta', nombre: 'PTR Abierta (Ganadero)', precio: 0 },
-    { id: 'cerrada', nombre: 'Cerrada (Ganadero)', precio: 18500 }
+    { id: 'cerrada', nombre: 'Cerrada (Ganadero)', precio: 18500 },
+    { id: 'combinada', nombre: 'Redila Combinada', precio: 10000 }
   ],
   pisos: [
     { id: 'madera', nombre: 'Madera (Fórmula LxAx2)', precioSqFt: 35 },
@@ -245,7 +250,9 @@ const DEFAULT_DB = {
     { id: 'litroBody', nombre: 'Precio Litro de Body', precio: 250 },
     { id: 'litroPintura', nombre: 'Precio Litro de Pintura', precio: 180 },
     { id: 'fenderReforzado', nombre: 'Fender Reforzado', precio: 1500 },
-    { id: 'luzPortaplaca', nombre: 'Luz Portaplaca', precio: 350 }
+    { id: 'luzPortaplaca', nombre: 'Luz Portaplaca', precio: 350 },
+    { id: 'aperturaEstribo', nombre: 'Apertura para Estribo', precio: 1500 },
+    { id: 'aperturaLimpieza', nombre: 'Apertura para Limpieza', precio: 1000 }
   ]
 };
 
@@ -330,22 +337,20 @@ function CotizadorNube() {
   const [adminUnlockPrompt, setAdminUnlockPrompt] = useState(false);
   const [adminUnlockPass, setAdminUnlockPass] = useState('');
   const [mostrarExtras, setMostrarExtras] = useState(false);
+  // ESTADOS PRINCIPALES
   const [cliente, setCliente] = useState({ nombre: '', telefono: '', anticipo: 0, descuentoPct: 0, ajusteRedondeo: 0, cantidad: 1 });
   const [dim, setDim] = useState({ largo: '20ft', ancho: '84in' });
   const [acople, setAcople] = useState({ jalon: 'ganso_facil', cadena: 'ganso_38', sujetaCadenas: true, gato: 'manual', cantGatos: 1, cargadorSolar: false, cargador110: false });
-  const [rodado, setRodado] = useState({ capacidad: '6t', suspension: 'torflex', llanta: '16in_14', cantFrenos: 2, llantaExtra: 0, portaExtra: 1 });
-  const [carroceria, setCarroceria] = useState({ techo: 'completo', frente: 'cachucha', redila: 'ptr_abierta', puertaInt: 'fija', cantPtasInt: 1, puertaTras: 'libro', puertaPiloto: true, puertaPilotoAncho: 40, plexiglass: false, rackPacas: false, ventEst: false, ventCirc: false, polverasEspeciales: false, puertaPerroCachucha: false });
+  const [rodado, setRodado] = useState({ capacidad: '6t', suspension: 'torflex', llanta: '16in_14', cantFrenos: 2, llantaExtra: 0, portaExtra: 1, cantEjesGanso: 2 });
+  const [carroceria, setCarroceria] = useState({ techo: 'completo', frente: 'cachucha', redila: 'ptr_abierta', puertasIntList: [{id: Date.now(), tipo: 'fija', distancia: 84}], puertaTras: 'libro', puertaPiloto: true, puertaPilotoAncho: 40, plexiglass: false, rackPacas: false, ventEst: false, ventCirc: false, polverasEspeciales: false, puertaPerroCachucha: false, aperturaEstribo: false, aperturaLimpieza: false });
   const [monturero, setMonturero] = useState({ tipo: 'ninguno', basesMontura: 3, tubosCobija: 1, puertaPerro: false, paredLarga: 85.5, paredCorta: 40 });
-const [acabados, setAcabados] = useState({ piso: 'madera', pintura: 'polvo', mismoColorTecho: false, color: 'gris', luces: 'estandar_usa', bodyLitros: 0, pinturaLitros: 0, techoLitros: 0, cajasPolvo: 0, cajaHtas: 'ninguna' });  const [accesorios, setAccesorios] = useState({ lucesInteriores: 0 });
-const [extrasCustom, setExtrasCustom] = useState([]); 
+  const [acabados, setAcabados] = useState({ piso: 'madera', pintura: 'polvo', mismoColorTecho: false, color: 'gris', luces: 'estandar_usa', bodyLitros: 0, pinturaLitros: 0, techoLitros: 0, cajasPolvo: 0, cajaHtas: 'ninguna', cajaHtasLargo: 40 });
+  const [accesorios, setAccesorios] = useState({ lucesInteriores: 0 });
+  const [extrasCustom, setExtrasCustom] = useState([]); 
   const [inputExtra, setInputExtra] = useState({ nombre: '', precio: '' });  
-const [camaBajaOpts, setCamaBajaOpts] = useState({ rampas: 'ninguna', fenderReforzado: false, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, luzPortaplaca: false });
-const [volteoOpts, setVolteoOpts] = useState({ 
-    sistemaElevacion: 'hidraulico', // hidraulico, electrico, ambos
-    puertaTrasera: 'libro',         // libro, dompe, sencilla, libro_dompe
-    fenderReforzado: false,
-    luzPortaplaca: false
-  });
+  const [camaBajaOpts, setCamaBajaOpts] = useState({ rampas: 'ninguna', fenderReforzado: false, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, luzPortaplaca: false });
+  const [volteoOpts, setVolteoOpts] = useState({ sistemaElevacion: 'hidraulico', puertaTrasera: 'libro', fenderReforzado: false, luzPortaplaca: false });
+    
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -525,17 +530,18 @@ const [volteoOpts, setVolteoOpts] = useState({
   const getObj = (arr, id) => arr?.find(x => x.id === id) || arr?.[0] || { nombre: 'N/A', precio: 0, valor: 0 };
   
   const calcularTotalActual = () => {
-    const oLargo = getObj(db.largos, dim.largo); const oAncho = getObj(db.anchos, dim.ancho); const oJalon = getObj(db.jalones, acople.jalon); const oCadena = getObj(db.cadenas, acople.cadena); const oGato = getObj(db.gatos, acople.gato); const oSusp = getObj(db.suspension, rodado.suspension); const oLlantas = getObj(db.llantas, rodado.llanta); const oTecho = getObj(db.techos, carroceria.techo); const oRedila = getObj(db.redilas, carroceria.redila); const oPInt = getObj(db.puertasInteriores, carroceria.puertaInt); const oPTras = getObj(db.puertasTraseras, carroceria.puertaTras); const oPiso = getObj(db.pisos, acabados.piso); const oMont = getObj(db.montureros, monturero.tipo); const oPint = getObj(db.pinturas, acabados.pintura); const oLuces = getObj(db.luces, acabados.luces); const oRampa = db.rampas?.find(r => r.id === camaBajaOpts.rampas) || {precio: 0}; const oCap = getObj(db.capacidades, rodado.capacidad);
+    const oLargo = getObj(db.largos, dim.largo); const oAncho = getObj(db.anchos, dim.ancho); const oJalon = getObj(db.jalones, acople.jalon); const oCadena = getObj(db.cadenas, acople.cadena); const oGato = getObj(db.gatos, acople.gato); const oSusp = getObj(db.suspension, rodado.suspension); const oLlantas = getObj(db.llantas, rodado.llanta); const oTecho = getObj(db.techos, carroceria.techo); const oRedila = getObj(db.redilas, carroceria.redila); const oPTras = getObj(db.puertasTraseras, carroceria.puertaTras); const oPiso = getObj(db.pisos, acabados.piso); const oMont = getObj(db.montureros, monturero.tipo); const oPint = getObj(db.pinturas, acabados.pintura); const oCap = getObj(db.capacidades, rodado.capacidad); const oRampa = db.rampas?.find(r => r.id === camaBajaOpts.rampas) || {precio: 0};
     const anchoEnPies = (oAncho.valor || 0) / 12; const areaSqFt = (oLargo.valor || 0) * anchoEnPies; const costoPisoTotal = areaSqFt * (oPiso.precioSqFt || oPiso.precio || 0) * (oPiso.id === 'madera' ? 2 : 1);
-    let costoGatos = acople.gato === 'hidraulico_bomba' ? ((db.gatos?.find(g => g.id === 'hidraulico_sencillo')?.precio || 6500) * acople.cantGatos) + (oGato.precio - (db.gatos?.find(g => g.id === 'hidraulico_sencillo')?.precio || 6500)) : oGato.precio * acople.cantGatos;
-    const totalGatos = costoGatos + (acople.cargadorSolar ? 2500 : 0) + (acople.cargador110 ? 1500 : 0) + (acople.sujetaCadenas ? 450 : 0) + (oCadena.precio || 0);
+    let costoGatos = acople.gato === 'hidraulico_bomba' ? ((db.gatos?.find(g => g.id === 'hidraulico_sencillo')?.precio || 6500) * acople.cantGatos) + (oGato.precio - 6500) : oGato.precio * acople.cantGatos;
+    const totalGatos = costoGatos + (acople.cargadorSolar ? 2500 : 0) + (acople.cargador110 ? 1500 : 0) + (acople.sujetaCadenas ? 450 : 0);
     const totalRodado = oCap.precio + oSusp.precio + oLlantas.precio + (rodado.cantFrenos > 0 ? getExtraPrice('frenos') * rodado.cantFrenos : 0) + (rodado.llantaExtra > 0 ? (rodado.llantaExtra * (oLlantas.precioExtra || 0)) : 0) + (rodado.portaExtra * getExtraPrice('portaExtra'));
-    let piesPlexi = (oLargo.valor || 0) * 4; if (oMont.id === 'recto_3') piesPlexi -= 12; else if (oMont.id === 'recto_4') piesPlexi -= 16; else if (oMont.id === 'diagonal') piesPlexi -= (((monturero.paredLarga || 0) + (monturero.paredCorta || 0)) / 12 * 2); if (carroceria.puertaPiloto) piesPlexi -= ((carroceria.puertaPilotoAncho || 0) / 12) * 4; if (carroceria.frente === 'cachucha' && carroceria.puertaPerroCachucha) piesPlexi -= 13.33; if (monturero.puertaPerro) piesPlexi -= 13.33;
-    const totalCarroceria = oTecho.precio + oRedila.precio + (oPInt.precio * carroceria.cantPtasInt) + oPTras.precio + (carroceria.frente === 'cachucha' ? getExtraPrice('frenteCachucha') : carroceria.frente === 'canasta' ? getExtraPrice('frenteCanasta') : 0) + (carroceria.plexiglass && piesPlexi > 0 ? Math.ceil(piesPlexi / 46.5) * getExtraPrice('hojaPlexiglass') : 0) + (carroceria.rackPacas ? getExtraPrice('rackPacas') : 0) + (carroceria.ventEst * getExtraPrice('ventEst')) + (carroceria.ventCirc * getExtraPrice('ventCirc')) + (carroceria.polverasEspeciales ? getExtraPrice('polverasEspeciales') : 0) + (carroceria.puertaPerroCachucha ? getExtraPrice('puertaPerroCachucha') : 0);
-    const totalMonturero = tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' ? oMont.precio + (monturero.basesMontura * getExtraPrice('basesMontura')) + (monturero.tubosCobija * getExtraPrice('tubosCobija')) + (monturero.puertaPerro ? getExtraPrice('puertaPerroLateral') : 0) : 0;
-    const totalAcabados = oPint.precio + oLuces.precio + (accesorios.lucesInteriores * getExtraPrice('lucesInteriores')) + (acabados.bodyLitros * getExtraPrice('litroBody')) + ((acabados.pinturaLitros + acabados.techoLitros) * getExtraPrice('litroPintura')) + (acabados.cajaHtas === 'std' ? getExtraPrice('cajaHtasStd') : acabados.cajaHtas === 'grande' ? getExtraPrice('cajaHtasGrande') : 0);
+    let piesPlexi = (oLargo.valor || 0) * 4;
+    const costoPtasInt = carroceria.puertasIntList?.length > 0 ? carroceria.puertasIntList.reduce((acc, pta) => acc + (getObj(db.puertasInteriores, pta.tipo).precio || 0), 0) : 0;
+    const totalCarroceria = oTecho.precio + oRedila.precio + costoPtasInt + oPTras.precio + (carroceria.frente === 'cachucha' ? getExtraPrice('frenteCachucha') : 0) + (carroceria.plexiglass && piesPlexi > 0 ? Math.ceil(piesPlexi / 46.5) * getExtraPrice('hojaPlexiglass') : 0) + (carroceria.aperturaEstribo ? getExtraPrice('aperturaEstribo') : 0) + (carroceria.aperturaLimpieza ? getExtraPrice('aperturaLimpieza') : 0);
+    const totalMonturero = tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' ? oMont.precio : 0;
+    const totalAcabados = oPint.precio + (acabados.cajaHtas === 'std' ? getExtraPrice('cajaHtasStd') : acabados.cajaHtas === 'especial' ? 8500 : 0);
     const totalExtrasCustom = extrasCustom.reduce((sum, item) => sum + (Number(item.precio) || 0), 0);
-    const subtotalNeto = (getExtraPrice('precioBase') + oLargo.precio + oAncho.precio + oJalon.precio + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : oRedila.precio) + totalMonturero + totalAcabados + (['cama_baja', 'cama_alta'].includes(tipoRemolque) ? oRampa.precio : 0) + (tipoRemolque === 'cama_baja' && camaBajaOpts.fenderReforzado ? getExtraPrice('fenderReforzado') : 0) + (['cama_baja', 'cama_alta'].includes(tipoRemolque) && camaBajaOpts.luzPortaplaca ? getExtraPrice('luzPortaplaca') : 0)+ totalExtrasCustom) * (cliente.cantidad || 1);
+    const subtotalNeto = (getExtraPrice('precioBase') + oLargo.precio + oAncho.precio + oJalon.precio + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : oRedila.precio) + totalMonturero + totalAcabados + totalExtrasCustom) * (cliente.cantidad || 1);
     const subtotalDescuento = subtotalNeto * (1 - (cliente.descuentoPct || 0) / 100);
     const subtotalIva = market === 'usa' ? 0 : subtotalDescuento * 0.16;
     return subtotalDescuento + subtotalIva + (cliente.ajusteRedondeo || 0);
@@ -622,10 +628,34 @@ const [volteoOpts, setVolteoOpts] = useState({
 
   const maxPuertasInt = (() => { const val = parseInt(dim.largo.replace('ft', '')); if (val <= 20) return 1; if (val <= 26) return 2; if (val <= 32) return 3; return 5; })();
   
-  const oCap = getObj(db.capacidades, rodado.capacidad);
+ const oCap = getObj(db.capacidades, rodado.capacidad);
+  
+  // 1. Lógica estricta de ejes según la capacidad seleccionada
   let cantEjes = 2;
-  if (tipoRemolque === 'cama_alta') { if (oCap.id === '6t') cantEjes = 2; if (oCap.id === '9t') cantEjes = 3; if (oCap.id === '10t') cantEjes = 2; } 
-  else { if (['850kg', '1_5t', '1_5t_3500', '1_5t_5200', '3t'].includes(oCap.id)) cantEjes = 1; else if (['9t', '10t'].includes(oCap.id)) cantEjes = 3; }
+  if (tipoRemolque === 'cama_alta') { 
+      if (oCap.id === '6t' || oCap.id === '10t') cantEjes = 2; 
+      if (oCap.id === '9t') cantEjes = 3; 
+  } 
+  else { 
+      if (oCap.id === '9t') cantEjes = 3;
+      else if (['7t', '6t', '4t_5200', '4t_6200'].includes(oCap.id)) cantEjes = 2;
+      else if (['850kg', '1_5t', '2t_5200', '2t_6200'].includes(oCap.id)) cantEjes = 1;
+      else if (oCap.id === '10t') cantEjes = (rodado.cantEjesGanso === 3) ? 3 : 2; 
+      else if (oCap.id === '3t') cantEjes = (rodado.cantEjesGanso === 2) ? 2 : 1;
+  }
+
+  // 2. Formato dinámico y exacto para el Ticket
+  let nombreCapacidadTicket = oCap.nombre;
+  if (oCap.id === '10t') nombreCapacidadTicket = cantEjes === 3 ? '10 Ton (3 Ejes de 8,000 lbs)' : '10 Ton (2 Ejes de 10,000 lbs)';
+  else if (oCap.id === '9t') nombreCapacidadTicket = '9 Ton (3 Ejes de 7,000 lbs)';
+  else if (oCap.id === '7t') nombreCapacidadTicket = '7 Ton (2 Ejes de 8,000 lbs)';
+  else if (oCap.id === '4t_5200') nombreCapacidadTicket = '4 Ton (2 Ejes de 5,200 lbs)';
+  else if (oCap.id === '4t_6200') nombreCapacidadTicket = '4 Ton (2 Ejes de 6,200 lbs)';
+  else if (oCap.id === '2t_5200') nombreCapacidadTicket = '2 Ton (1 Eje de 5,200 lbs)';
+  else if (oCap.id === '2t_6200') nombreCapacidadTicket = '2 Ton (1 Eje de 6,200 lbs)';
+  else if (oCap.id === '3t') nombreCapacidadTicket = `3 Ton (${cantEjes} Eje(s) de 3,500 lbs)`;
+
+  useEffect(() => { if (rodado.cantFrenos > cantEjes) setRodado(prev => ({ ...prev, cantFrenos: cantEjes })); }, [cantEjes]);
 
 // 1. Este es el control del Mercado (USA vs México) que tenías antes
   useEffect(() => {
@@ -730,16 +760,21 @@ const [volteoOpts, setVolteoOpts] = useState({
       }
 
     } else {
-      const GANADERO_CAPS = ['3t', '6t', '7t', '9t', '10t'];
-      if (!GANADERO_CAPS.includes(rodado.capacidad)) setRodado(prev => ({ ...prev, capacidad: '6t' }));
+const GANADERO_CAPS = ['2t_5200', '2t_6200', '3t', '4t_5200', '4t_6200', '6t', '7t', '9t', '10t'];
     }
     // Aseguramos que el efecto escuche los cambios clave del volteo
   }, [tipoRemolque, dim.ancho, dim.largo, rodado.capacidad, carroceria.redila, db.jalones, acople.jalon, rodado.llantaExtra]);
 
   useEffect(() => {
-    if (carroceria.cantPtasInt > maxPuertasInt) setCarroceria(prev => ({ ...prev, cantPtasInt: maxPuertasInt }));
+    const maxLargo = parseInt(dim.largo.replace('ft', '')) || 0;
+    if (carroceria.techoEspecialLargo > maxLargo) {
+        setCarroceria(prev => ({ ...prev, techoEspecialLargo: maxLargo }));
+    }
+    if ((carroceria.puertasIntList || []).length > maxPuertasInt) {
+        setCarroceria(prev => ({ ...prev, puertasIntList: prev.puertasIntList.slice(0, maxPuertasInt) }));
+    }
     if (rodado.cantFrenos > cantEjes) setRodado(prev => ({ ...prev, cantFrenos: cantEjes }));
-  }, [dim.largo, maxPuertasInt, cantEjes, tipoRemolque]);
+  }, [dim.largo, maxPuertasInt, cantEjes, tipoRemolque, carroceria.puertasIntList]);
 
   useEffect(() => {
     if (tipoRemolque === 'cama_alta' && acople.gato.includes('hidraulico') && acabados.cajaHtas === 'ninguna') { setAcabados(prev => ({ ...prev, cajaHtas: 'std' })); }
@@ -780,13 +815,16 @@ const [volteoOpts, setVolteoOpts] = useState({
 
   const anchosDisponibles = tipoRemolque === 'volteo' ? db.anchos?.filter(a => ['60in', '76in', '82in'].includes(a.id)) || [] : tipoRemolque === 'cama_baja' ? db.anchos?.filter(a => Object.keys(CAMA_BAJA_COMBOS).includes(a.id)) || [] : tipoRemolque === 'cama_alta' ? db.anchos?.filter(a => a.id === '96in') || [] : db.anchos?.filter(a => !['50in', '75in', '76in', '82in'].includes(a.id)) || [];
   const largosDisponibles = tipoRemolque === 'volteo' && VOLTEO_COMBOS[dim.ancho] ? db.largos?.filter(l => VOLTEO_COMBOS[dim.ancho].includes(l.id)) || [] : tipoRemolque === 'cama_baja' && CAMA_BAJA_COMBOS[dim.ancho] ? db.largos?.filter(l => CAMA_BAJA_COMBOS[dim.ancho].includes(l.id)) || [] : tipoRemolque === 'cama_alta' ? db.largos?.filter(l => CAMA_ALTA_LARGOS.includes(l.id)) || [] : db.largos?.filter(l => l.valor >= 16) || [];
-  const capacidadesDisponibles = tipoRemolque === 'volteo' ? db.capacidades?.filter(c => dim.ancho === '60in' ? ['1_5t', '3t', '6t'].includes(c.id) : ['3t', '6t'].includes(c.id)) || [] : tipoRemolque === 'cama_baja' ? db.capacidades?.filter(c => getCapacidadesCamaBaja(dim.ancho, dim.largo).includes(c.id)) || [] : tipoRemolque === 'cama_alta' ? db.capacidades?.filter(c => CAMA_ALTA_CAPS.includes(c.id)) || [] : db.capacidades?.filter(c => ['3t', '6t', '7t', '9t', '10t'].includes(c.id)) || [];
+  const capacidadesDisponibles = tipoRemolque === 'volteo' ? db.capacidades?.filter(c => dim.ancho === '60in' ? ['1_5t', '3t', '6t'].includes(c.id) : ['3t', '6t'].includes(c.id)) || [] : tipoRemolque === 'cama_baja' ? db.capacidades?.filter(c => getCapacidadesCamaBaja(dim.ancho, dim.largo).includes(c.id)) || [] : tipoRemolque === 'cama_alta' ? db.capacidades?.filter(c => CAMA_ALTA_CAPS.includes(c.id)) || [] : db.capacidades?.filter(c => {
+      if (['2t_5200', '2t_6200', '4t_5200', '4t_6200'].includes(c.id)) return acople.jalon.includes('ganso') && rodado.suspension === 'muelle_drop';
+      return ['3t', '6t', '7t', '9t', '10t'].includes(c.id);
+  }) || [];
   const jalonesDisponibles = tipoRemolque === 'volteo' ? db.jalones?.filter(j => ['bumper_2', 'bumper_2_516', 'bumper_ajustable_2', 'bumper_ajustable_2_516', 'argolla', 'ganso_normal', 'ganso_facil'].includes(j.id)) || [] : tipoRemolque === 'cama_baja' ? db.jalones?.filter(j => j.tipo !== 'ganso') || [] : tipoRemolque === 'cama_alta' ? db.jalones?.filter(j => ['ganso_normal', 'ganso_facil', 'argolla'].includes(j.id)) || [] : db.jalones || [];
   const gatosDisponibles = tipoRemolque === 'volteo' ? db.gatos?.filter(g => g.id === 'manual_12k') || [] : tipoRemolque === 'cama_baja' ? db.gatos?.filter(g => { const cap = rodado.capacidad; if (cap === '850kg') return g.id === 'tubo_2k'; if (['1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return g.id === 'normal_2k'; if (cap === '3t') return ['normal_2k', 'manual_7k'].includes(g.id); if (cap === '4t') return g.id === 'manual_7k'; if (cap === '6t') return ['manual_7k', 'manual_12k'].includes(g.id); return true; }) || [] : tipoRemolque === 'cama_alta' ? db.gatos?.filter(g => ['manual_12k', 'hidraulico_sencillo', 'hidraulico_bomba'].includes(g.id)) || [] : db.gatos?.filter(g => (isSpecialClient || g.id !== 'hidraulico_bomba') && !['tubo_2k','normal_2k','manual_7k','manual_12k'].includes(g.id)) || [];
-  const suspensionesDisponibles = tipoRemolque === 'volteo' ? db.suspension?.filter(s => ['susp_1_5t', 'susp_3t', 'susp_6t'].includes(s.id)) || [] : tipoRemolque === 'cama_baja' ? db.suspension?.filter(s => ['susp_1_5t', 'susp_3t', 'susp_6t'].includes(s.id)) || [] : db.suspension?.filter(s => ['muelle', 'torflex'].includes(s.id)) || [];
+const suspensionesDisponibles = tipoRemolque === 'volteo' ? db.suspension?.filter(s => ['susp_1_5t', 'susp_3t', 'susp_6t'].includes(s.id)) || [] : tipoRemolque === 'cama_baja' ? db.suspension?.filter(s => ['susp_1_5t', 'susp_3t', 'susp_6t'].includes(s.id)) || [] : db.suspension?.filter(s => ['muelle', 'torflex', 'muelle_drop'].includes(s.id)) || [];
   const llantasDisponibles = tipoRemolque === 'cama_baja' ? db.llantas?.filter(l => { const cap = rodado.capacidad; if (['850kg', '1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return ['700_15', '225_75_15', 'ninguna'].includes(l.id); if (cap === '3t') return ['700_15', '235_80_16', 'ninguna'].includes(l.id); if (cap === '4t') return ['225_75_15', 'ninguna'].includes(l.id); if (cap === '6t') return ['235_80_16', '235_80_16_14', 'ninguna'].includes(l.id); return true; }) || [] : tipoRemolque === 'cama_alta' ? db.llantas?.filter(l => rodado.capacidad === '10t' ? ['17_5in', 'ninguna'].includes(l.id) : ['235_80_16', '16in_10', '16in_14', '235_80_16_14', 'ninguna'].includes(l.id)) || [] : db.llantas?.filter(l => ['16in_10', '16in_14', '235_80_16_14', '17_5in', 'ninguna'].includes(l.id)) || [];
   const pisosDisponibles = tipoRemolque === 'volteo' ? db.pisos?.filter(p => ['madera', 'lamina_madera'].includes(p.id)) || [] : tipoRemolque === 'cama_baja' ? db.pisos?.filter(p => ['madera', 'duela_laminada'].includes(p.id)) || [] : tipoRemolque === 'cama_alta' ? db.pisos?.filter(p => ['madera', 'lamina_madera'].includes(p.id)) || [] : db.pisos?.filter(p => ['madera', 'hule_liso', 'hule_anti'].includes(p.id)) || [];
-  const redilasDisponibles = tipoRemolque === 'cama_baja' ? db.redilas?.filter(r => ['sin_redila', 'ptr_abierta_2', 'ptr_abierta_3', 'ptr_abierta_4', 'cerrada_2', 'cerrada_3', 'cerrada_4'].includes(r.id)) || [] : db.redilas?.filter(r => ['ptr_abierta', 'cerrada'].includes(r.id)) || [];
+const redilasDisponibles = tipoRemolque === 'cama_baja' ? db.redilas?.filter(r => ['sin_redila', 'ptr_abierta_2', 'ptr_abierta_3', 'ptr_abierta_4', 'cerrada_2', 'cerrada_3', 'cerrada_4'].includes(r.id)) || [] : db.redilas?.filter(r => ['ptr_abierta', 'cerrada', 'combinada'].includes(r.id)) || [];
   const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => { if (r.id === 'ninguna' || r.id === 'puerta_rampa') return true; const is82 = dim.ancho === '82in'; if (r.id === 'rampa_1_5m') return is82 && carroceria.redila === 'sin_redila'; if (r.id === 'rampa_39') return is82 && carroceria.redila !== 'sin_redila'; return false; }) || [] : tipoRemolque === 'cama_alta' ? db.rampas?.filter(r => ['recto_rampas', 'cola_4', 'cola_5'].includes(r.id)) || [] : [];
   const oLargo = getObj(db.largos, dim.largo); const oAncho = getObj(db.anchos, dim.ancho); const oJalon = getObj(db.jalones, acople.jalon); const oCadena = getObj(db.cadenas, acople.cadena); const oGato = getObj(db.gatos, acople.gato); const oSusp = getObj(db.suspension, rodado.suspension); const oLlantas = getObj(db.llantas, rodado.llanta); const oTecho = getObj(db.techos, carroceria.techo); const oRedila = getObj(db.redilas, carroceria.redila); const oPInt = getObj(db.puertasInteriores, carroceria.puertaInt); const oPTras = getObj(db.puertasTraseras, carroceria.puertaTras); const oPiso = getObj(db.pisos, acabados.piso); const oMont = getObj(db.montureros, monturero.tipo); const oPint = getObj(db.pinturas, acabados.pintura); const oLuces = getObj(db.luces, acabados.luces); const oRampa = db.rampas?.find(r => r.id === camaBajaOpts.rampas) || {precio: 0};
   const lucesDisponibles = db.luces?.filter(l => market === 'usa' ? l.id.includes('_usa') : l.id.includes('_mexico')) || [];
@@ -817,11 +855,9 @@ const [volteoOpts, setVolteoOpts] = useState({
   const totalPrevio = subtotalDescuento + subtotalIva;
   const totalFinal = totalPrevio + (cliente.ajusteRedondeo || 0);
   const saldoPendiente = totalFinal - (cliente.anticipo || 0);
-
-  let capacidadLbs = '7,000 LBS';
-  if (tipoRemolque === 'cama_alta') { if (oCap.id === '6t') capacidadLbs = '7,000 LBS'; if (oCap.id === '9t') capacidadLbs = '7,000 LBS'; if (oCap.id === '10t') capacidadLbs = '10,000 LBS'; } 
-  else { if (['7t', '9t'].includes(oCap.id)) capacidadLbs = '8,000 LBS'; else if (oCap.id === '10t') capacidadLbs = '10,000 LBS'; else if (['850kg', '1_5t', '1_5t_3500', '3t'].includes(oCap.id)) capacidadLbs = '3,500 LBS'; else if (['1_5t_5200', '4t'].includes(oCap.id)) capacidadLbs = '5,200 LBS'; else if (oCap.id === '6t') capacidadLbs = '6,000 / 7,000 LBS'; }
-
+   let capacidadLbs = '7,000 LBS';
+  if (tipoRemolque === 'cama_alta') { if (oCap.id === '6t' || oCap.id === '9t') capacidadLbs = '7,000 LBS'; if (oCap.id === '10t') capacidadLbs = '10,000 LBS / 8,000 LBS'; } 
+  else { if (['7t', '9t', '10t'].includes(oCap.id)) capacidadLbs = oCap.id === '10t' ? '10,000 / 8,000 LBS' : oCap.id === '9t' ? '7,000 LBS' : '8,000 LBS'; else if (['850kg', '1_5t', '3t'].includes(oCap.id)) capacidadLbs = '3,500 LBS'; else if (oCap.id.includes('5200')) capacidadLbs = '5,200 LBS'; else if (oCap.id.includes('6200')) capacidadLbs = '6,200 LBS'; else if (oCap.id === '6t') capacidadLbs = '7,000 LBS'; }
   let marcaEje = rodado.suspension === 'torflex' ? 'IMPORTADO TORFLEX' : (capacidadLbs === '10,000 LBS' ? 'LIPPERT' : 'DEXTER');
   let medidasEje = '';
   if (tipoRemolque === 'cama_alta') { 
@@ -844,7 +880,7 @@ const [volteoOpts, setVolteoOpts] = useState({
   let cantLlantasTotal = (cantEjes * llantasPorEje) + rodado.llantaExtra;
   const hojasPlexiCalculadas = carroceria.plexiglass && piesPlexi > 0 ? Math.ceil(piesPlexi / (Math.floor(96 / 8.25) * 4)) : 0;
 
-  if (!isCloudLoaded) {
+   if (!isCloudLoaded) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
         <Truck className="w-16 h-16 text-amber-500 animate-bounce mb-4" />
@@ -1161,6 +1197,7 @@ const [volteoOpts, setVolteoOpts] = useState({
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="md:col-span-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre Comercial / Cliente</label><input type="text" value={cliente.nombre} onChange={e => setCliente({...cliente, nombre: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium" placeholder="Ej. Juan Pérez" /></div>
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Teléfono</label><input type="text" value={cliente.telefono} onChange={e => setCliente({...cliente, telefono: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium" placeholder="Ej. 614 123 4567" /></div>
+               <div><label className="text-xs font-bold text-blue-700 uppercase block mb-1">Cant. Remolques</label><input type="number" min="1" value={cliente.cantidad} onChange={e => setCliente({...cliente, cantidad: parseInt(e.target.value)||1})} className="w-full p-2 border-2 border-blue-400 bg-blue-50 text-blue-900 rounded-md font-black text-center" /></div>
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Descuento (%)</label><div className="relative"><input type="number" min="0" max="100" value={cliente.descuentoPct || ''} onChange={e => setCliente({...cliente, descuentoPct: parseFloat(e.target.value) || 0})} className="w-full p-2 border border-slate-300 rounded-md font-black text-red-600 text-center" placeholder="0" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">%</span></div></div>
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Ajuste / Redondeo</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={cliente.ajusteRedondeo || ''} onChange={e => setCliente({...cliente, ajusteRedondeo: parseFloat(e.target.value) || 0})} className="w-full p-2 pl-7 border border-slate-300 rounded-md font-black text-purple-700" placeholder="0" /></div></div>
                 <div className="md:col-span-5 border-t border-slate-100 pt-3 mt-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Anticipo (MXN)</label><div className="relative max-w-[200px]"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={cliente.anticipo || ''} onChange={e => setCliente({...cliente, anticipo: parseFloat(e.target.value) || 0})} className="w-full p-2 pl-7 border border-slate-300 rounded-md font-black text-green-700 bg-green-50" placeholder="0" /></div></div>
@@ -1213,6 +1250,18 @@ const [volteoOpts, setVolteoOpts] = useState({
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
               <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><Zap className="w-5 h-5 mr-2 text-blue-600"/> 2. Capacidad y Ejes</h2>
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-5"><label className="text-xs font-bold text-blue-800 uppercase block mb-2">Configuración de Ejes</label><select value={rodado.capacidad} onChange={e => setRodado({...rodado, capacidad: e.target.value})} className="w-full p-2 border border-blue-300 rounded-md font-black text-blue-900">{capacidadesDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+              {acople.jalon.includes('ganso') && ['10t', '3t'].includes(rodado.capacidad) && (
+                  <div className="mt-3">
+                    <label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">Configuración de Ejes</label>
+                    <select value={rodado.cantEjesGanso} onChange={e => setRodado({...rodado, cantEjesGanso: parseInt(e.target.value)})} className="w-full sm:w-2/3 p-2 border border-blue-300 rounded-md font-bold text-blue-900 bg-white shadow-sm">
+                      {rodado.capacidad === '10t' ? (
+                        <><option value={2}>2 Ejes (de 10,000 lbs)</option><option value={3}>3 Ejes (de 8,000 lbs)</option></>
+                      ) : (
+                        <><option value={1}>1 Eje (de 3,500 lbs)</option><option value={2}>2 Ejes (de 3,500 lbs)</option></>
+                      )}
+                    </select>
+                  </div>
+                                )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Suspensión</label>
@@ -1233,8 +1282,19 @@ const [volteoOpts, setVolteoOpts] = useState({
               {tipoRemolque === 'ganadero' && (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-                    <div><label className="text-xs font-bold text-amber-700 uppercase block mb-1">Techo</label><select value={carroceria.techo} onChange={e => setCarroceria({...carroceria, techo: e.target.value})} className="w-full p-2 border border-amber-300 rounded-md">{db.techos.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
-                    <div>
+<div>
+  <label className="text-xs font-bold text-amber-700 uppercase block mb-1">Techo</label>
+  <div className="flex gap-2">
+    <select value={carroceria.techo} onChange={e => setCarroceria({...carroceria, techo: e.target.value})} className="w-full p-2 border border-amber-300 rounded-md">{db.techos.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select>
+    {carroceria.techo === 'media_especial' && (
+      <div className="flex items-center bg-amber-50 border border-amber-300 rounded-md px-2 w-24 shadow-sm" title="Largo máximo limitado al tamaño del remolque">
+        <input type="number" min="1" max={parseInt(dim.largo.replace('ft', ''))} value={carroceria.techoEspecialLargo || ''} onChange={e => { let max = parseInt(dim.largo.replace('ft', '')); let val = parseInt(e.target.value)||''; setCarroceria({...carroceria, techoEspecialLargo: val > max ? max : val})}} className="w-full bg-transparent font-black text-amber-900 text-center outline-none" placeholder="Pies"/>
+        <span className="text-[10px] font-bold text-amber-700 pr-1">FT</span>
+      </div>
+    )}
+  </div>
+</div>
+                     <div>
                       <label className="text-xs font-bold text-amber-700 uppercase block mb-1">Frente</label>
                       <select value={carroceria.frente} onChange={e => setCarroceria({...carroceria, frente: e.target.value})} className="w-full p-2 border border-amber-300 rounded-md font-bold">
                         {db.jalones?.find(j => j.id === acople.jalon)?.tipo === 'ganso' ? (
@@ -1249,13 +1309,37 @@ const [volteoOpts, setVolteoOpts] = useState({
                     </div>
                     <div><label className="text-xs font-bold text-amber-700 uppercase block mb-1">Redila</label><select value={carroceria.redila} onChange={e => setCarroceria({...carroceria, redila: e.target.value})} className="w-full p-2 border border-amber-300 rounded-md font-bold">{redilasDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-amber-200">
-                    <div>
-                      <label className="text-xs font-bold text-amber-700 uppercase block mb-1">Ptas. Int ({carroceria.cantPtasInt} / {maxPuertasInt})</label>
-                      <div className="flex"><select value={carroceria.puertaInt} onChange={e => setCarroceria({...carroceria, puertaInt: e.target.value})} className="flex-1 p-2 border border-amber-300 rounded-l-md">{db.puertasInteriores.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select><button onClick={() => handleCant(setCarroceria, 'cantPtasInt', -1)} className="px-2 bg-amber-100 border-y border-amber-300 font-bold">-</button><button onClick={() => handleCant(setCarroceria, 'cantPtasInt', 1, 0, maxPuertasInt)} disabled={carroceria.cantPtasInt >= maxPuertasInt} className="px-2 bg-amber-100 border border-amber-300 rounded-r-md font-bold disabled:opacity-50">+</button></div>
+                  <div className="flex flex-wrap gap-4 mt-2">
+                 {(carroceria.redila.includes('cerrada') || carroceria.redila === 'combinada') && ( <label className="flex items-center space-x-2 font-medium text-sm text-amber-900 cursor-pointer"><input type="checkbox" checked={carroceria.aperturaEstribo} onChange={() => toggle(setCarroceria, 'aperturaEstribo')} className="w-4 h-4 text-amber-600"/> <span>Apertura para Estribo</span></label> )}
+                 <label className="flex items-center space-x-2 font-medium text-sm text-amber-900 cursor-pointer"><input type="checkbox" checked={carroceria.aperturaLimpieza} onChange={() => toggle(setCarroceria, 'aperturaLimpieza')} className="w-4 h-4 text-amber-600"/> <span>Apertura para Limpieza</span></label>
+              </div>
+
+              <div className="col-span-full border-t border-amber-200 pt-4 mt-4">
+                <div className="flex justify-between items-center mb-3">
+                       <label className="text-xs font-black text-amber-800 uppercase block">Puertas Interiores (Dinámicas)</label>
+                       <button onClick={() => { if ((carroceria.puertasIntList||[]).length < maxPuertasInt) setCarroceria({...carroceria, puertasIntList: [...(carroceria.puertasIntList||[]), {id: Date.now(), tipo: 'fija', distancia: getObj(db.anchos, dim.ancho).valor}]}) }} disabled={(carroceria.puertasIntList||[]).length >= maxPuertasInt} className={`px-3 py-1 rounded-md text-xs font-black transition shadow-sm border ${(carroceria.puertasIntList||[]).length >= maxPuertasInt ? 'bg-slate-100 border-slate-300 text-slate-400 cursor-not-allowed' : 'bg-amber-100 border-amber-300 text-amber-800 hover:bg-amber-200'}`}>+ Agregar Puerta</button>
                     </div>
-                    <div><label className="text-xs font-bold text-amber-700 uppercase block mb-1">Pta Trasera</label><select value={carroceria.puertaTrasera} onChange={e => setCarroceria({...carroceria, puertaTrasera: e.target.value})} className="w-full p-2 border border-amber-300 rounded-md">{db.puertasTraseras.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
-                  </div>
+                    <div className="space-y-2">
+                  {(carroceria.puertasIntList || []).map((pta, idx) => (
+                     <div key={pta.id} className="flex flex-wrap sm:flex-nowrap gap-2 items-center bg-white p-2 rounded-lg border border-amber-200 shadow-sm">
+                        <span className="font-black text-slate-400 text-xs px-2">{idx+1}.</span>
+                        <select value={pta.tipo} onChange={e => { const newList = [...carroceria.puertasIntList]; newList[idx].tipo = e.target.value; setCarroceria({...carroceria, puertasIntList: newList}); }} className="flex-1 p-2 border border-amber-300 rounded text-sm font-bold text-amber-900 bg-amber-50">
+                           {db.puertasInteriores.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
+                        </select>
+                        <div className="flex items-center space-x-2 bg-slate-50 px-2 py-1 rounded border border-slate-200">
+                           <span className="text-[10px] font-bold text-slate-500 uppercase">Distancia:</span>
+                           <input type="number" min={getObj(db.anchos, dim.ancho).valor || 0} value={pta.distancia} onChange={e => { const newList = [...carroceria.puertasIntList]; newList[idx].distancia = Math.max(getObj(db.anchos, dim.ancho).valor, parseInt(e.target.value)||0); setCarroceria({...carroceria, puertasIntList: newList}); }} className="w-16 p-1 border border-slate-300 rounded text-sm text-center font-black text-blue-700" />
+                           <span className="text-[10px] font-bold text-slate-500">PULG.</span>
+                        </div>
+                        <button onClick={() => { const newList = carroceria.puertasIntList.filter((_, i) => i !== idx); setCarroceria({...carroceria, puertasIntList: newList}); }} className="text-red-500 hover:bg-red-50 p-2 rounded border border-transparent hover:border-red-200 transition"><Trash2 className="w-5 h-5"/></button>
+                     </div>
+                  ))}
+                  {(carroceria.puertasIntList?.length === 0) && <p className="text-xs font-bold text-amber-600/70 italic py-2 text-center bg-amber-50 rounded border border-amber-100">Sin puertas interiores.</p>}
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-amber-200">
+                <label className="text-xs font-bold text-amber-700 uppercase block mb-1">Puerta Trasera</label><select value={carroceria.puertaTras} onChange={e => setCarroceria({...carroceria, puertaTras: e.target.value})} className="w-full sm:w-1/3 p-2 border border-amber-300 rounded-md font-bold">{db.puertasTraseras.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select>
+              </div>
                   <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-amber-200">
                     <div className={`flex items-center space-x-2 ${carroceria.puertaPiloto ? 'bg-white border border-amber-200 rounded px-2 py-0.5 shadow-sm' : ''}`}>
                       <label className="flex items-center space-x-2 cursor-pointer font-medium text-sm text-amber-900"><input type="checkbox" checked={carroceria.puertaPiloto} onChange={() => toggle(setCarroceria, 'puertaPiloto')} className="w-4 h-4 text-amber-600"/> <span>Pta Piloto</span></label>
@@ -1339,6 +1423,7 @@ const [volteoOpts, setVolteoOpts] = useState({
               </div>
             )}
 
+            {/* 4. ACABADOS Y ACCESORIOS */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
               <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-black text-slate-800 flex items-center"><Layers className="w-5 h-5 mr-2 text-blue-600"/> {tipoRemolque === 'ganadero' ? '5.' : '4.'} Acabados y Accesorios</h2></div>
               <div className="mb-5 bg-slate-50 p-4 rounded-lg border border-slate-200">
@@ -1354,16 +1439,35 @@ const [volteoOpts, setVolteoOpts] = useState({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                 <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Piso</label><select value={acabados.piso} onChange={e => setAcabados({...acabados, piso: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md">{pisosDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
-                <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Caja Htas</label><select value={acabados.cajaHtas} onChange={e => setAcabados({...acabados, cajaHtas: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md">{(!acople.gato.includes('hidraulico')) && <option value="ninguna">Sin Caja</option>}<option value="std">Estándar</option><option value="grande">Grande</option></select></div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Caja Htas</label>
+                  <select value={acabados.cajaHtas} onChange={e => setAcabados({...acabados, cajaHtas: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-bold">
+                    <option value="ninguna">Sin Caja</option><option value="std">Estándar</option><option value="especial">Medida Especial</option>
+                  </select>
+                </div>
                 <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Luces</label><select value={acabados.luces} disabled={isSpecialClient && market==='usa'} onChange={e => setAcabados({...acabados, luces: e.target.value})} className={`w-full p-2 border border-slate-300 rounded-md ${isSpecialClient && market==='usa' ? 'bg-slate-100 font-bold' : ''}`}>{lucesDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
               </div>
+              
+              {acabados.cajaHtas === 'especial' && (
+                <div className="mt-2 mb-4 bg-amber-50 border-2 border-amber-200 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+                   <div className="flex items-center space-x-3">
+                      <span className="text-xs font-black text-amber-900 uppercase">Largo Especial:</span>
+                      <div className="flex items-center bg-white border border-amber-300 rounded-lg overflow-hidden shadow-sm">
+                         <button onClick={() => handleCant(setAcabados, 'cajaHtasLargo', -1)} className="px-3 py-1 font-black text-amber-700 hover:bg-amber-100 transition">-</button>
+                         <span className="w-16 text-center font-black text-lg text-amber-900 border-x border-amber-200">{acabados.cajaHtasLargo}"</span>
+                         <button onClick={() => handleCant(setAcabados, 'cajaHtasLargo', 1)} className="px-3 py-1 font-black text-amber-700 hover:bg-amber-100 transition">+</button>
+                      </div>
+                   </div>
+                   <p className="text-[10px] font-bold text-red-600 flex-1 leading-tight bg-white p-2 rounded border border-red-100"><AlertTriangle className="w-4 h-4 inline mr-1 text-red-500 mb-0.5"/> Consultar con diseño para verificar si es posible fabricar el remolque con esta medida.</p>
+                </div>
+              )}
 
               {acabados.luces === 'especial' && ['cama_baja', 'cama_alta'].includes(tipoRemolque) && (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">Óvalos Rojos</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.ovaloRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
                   <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">3/4" Rojos</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.tresCuartosRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
                   <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">3/4" Ámbar</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.tresCuartosAmbar}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
-                  <div className="flex items-end pb-0.5"><label className="flex items-center space-x-2 cursor-pointer font-bold text-[13px] text-blue-900 bg-white px-3 py-1.5 rounded border border-blue-300 w-full justify-center shadow-sm"><input type="checkbox" checked={camaBajaOpts.luzPortaplaca} onChange={() => toggle(camaBajaOpts, 'luzPortaplaca')} className="w-4 h-4 text-blue-600"/> <span>Luz Portaplaca</span></label></div>
+                  <div className="flex items-end pb-0.5"><label className="flex items-center space-x-2 cursor-pointer font-bold text-[13px] text-blue-900 bg-white px-3 py-1.5 rounded border border-blue-300 w-full justify-center shadow-sm"><input type="checkbox" checked={camaBajaOpts.luzPortaplaca} onChange={() => toggle(setCamaBajaOpts, 'luzPortaplaca')} className="w-4 h-4 text-blue-600"/> <span>Luz Portaplaca</span></label></div>
                 </div>
               )}
 
@@ -1468,8 +1572,7 @@ const [volteoOpts, setVolteoOpts] = useState({
                     <ul className="space-y-3 text-slate-700 print:text-slate-900 text-xs">
                       <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Tipo y Tamaño:</span><br className="print:hidden"/> Remolque {tipoRemolque === 'ganadero' ? 'Ganadero' : tipoRemolque === 'cama_alta' ? 'Cama Alta' : tipoRemolque === 'volteo' ? 'Volteo' : 'Cama Baja'} AMACSA {oLargo.valor}' Largo x {oAncho.valor}" Ancho</li>
                       
-                      <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Capacidad y Ejes:</span><br className="print:hidden"/> <span className="font-bold">{oCap.nombre}</span> — {oSusp.nombre} — Llantas {oLlantas.nombre} {rodado.cantFrenos > 0 ? `(${rodado.cantFrenos}x Ejes c/Frenos)` : ''}</li>
-                      
+<li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Capacidad y Ejes:</span><br className="print:hidden"/> <span className="font-bold text-blue-700 print:text-slate-900">{nombreCapacidadTicket}</span> — {oSusp.nombre} — Llantas {oLlantas.nombre} {rodado.cantFrenos > 0 ? `(${rodado.cantFrenos}x Ejes c/Frenos)` : ''}</li>
                       <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Tipo de Jalón:</span><br className="print:hidden"/> <span className="font-bold">{oJalon.nombre}</span> {market === 'usa' ? '(Ganso 3/8 x 35")' : (acople.cadena !== 'ninguna' ? `(${oCadena.nombre})` : '')} {acople.sujetaCadenas ? '+ Sujeta Cadenas' : ''}</li>
                       
                       {tipoRemolque !== 'cama_alta' && <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Redila:</span><br className="print:hidden"/> <span className="font-bold">{oRedila.nombre}</span></li>}
@@ -1484,7 +1587,7 @@ const [volteoOpts, setVolteoOpts] = useState({
                       <li>
                         <span className="font-black uppercase text-slate-500 print:text-slate-700 block mb-1">Otros Accesorios:</span>
                         <ul className="ml-4 space-y-1 text-slate-600 print:text-slate-800 list-disc">
-                          {tipoRemolque === 'ganadero' && <li>Techo: <span className="font-bold">{oTecho.nombre}</span></li>}
+                          {tipoRemolque === 'ganadero' && <li>Techo: <span className="font-bold">{oTecho.nombre} {carroceria.techo === 'media_especial' && carroceria.techoEspecialLargo ? `(${carroceria.techoEspecialLargo} Pies)` : ''}</span></li>}
                           {tipoRemolque === 'ganadero' && carroceria.frente !== 'ninguno' && <li>Frente: <span className="font-bold capitalize">{carroceria.frente}</span> {carroceria.puertaPerroCachucha ? '(C/ Puerta Perro)' : ''}</li>}
                           {tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' && <li>Monturero: <span className="font-bold">{oMont.nombre}</span> {monturero.puertaPerro ? '(C/ Puerta Perro Lateral)' : ''}</li>}
                           {tipoRemolque === 'ganadero' && carroceria.plexiglass && <li>Sistema de Plexiglass (Todas las rejillas)</li>}
