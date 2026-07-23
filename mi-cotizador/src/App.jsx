@@ -145,7 +145,8 @@ const DEFAULT_DB = {
     { id: 'cerrada_4', nombre: 'Cerrada 4 Pies', precio: 9000 },
     { id: 'ptr_abierta', nombre: 'PTR Abierta (Ganadero)', precio: 0 },
     { id: 'cerrada', nombre: 'Cerrada (Ganadero)', precio: 18500 },
-    { id: 'combinada', nombre: 'Redila Combinada', precio: 10000 }
+    { id: 'combinada', nombre: 'Redila Combinada', precio: 10000 },
+    { id: 'desmontable', nombre: 'Redila Desmontable', precio: 12000 }
   ],
   pisos: [
     { id: 'madera', nombre: 'Madera (Fórmula LxAx2)', precioSqFt: 35 },
@@ -324,6 +325,7 @@ function CotizadorNube() {
 
   const [view, setView] = useState('cotizador');
   const [adminSection, setAdminSection] = useState('cotizaciones');
+  const [adminTrailerTab, setAdminTrailerTab] = useState('gen');
   const [activeTab, setActiveTab] = useState('cotizacion');
   
   const [market, setMarket] = useState('usa'); 
@@ -526,22 +528,25 @@ function CotizadorNube() {
 
   // AYUDANTES MATEMÁTICOS PARA EL PDF Y GUARDADO
   const formatoMoneda = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num || 0).replace('$', '$ ');
-  const getExtraPrice = (id) => db.extras?.find(e => e.id === id)?.precio || 0;
+  const tipoPrecio = tipoRemolque === 'ganadero' ? (tipoGanadero === 'redondo' && market === 'mexico' ? 'ganadero_redondo' : 'ganadero_ganso') : tipoRemolque;
+  const getP = (obj, key = 'precio') => obj ? (obj[`${key}_${tipoPrecio}`] !== undefined ? obj[`${key}_${tipoPrecio}`] : (obj[key] || 0)) : 0;
+  const getExtraPrice = (id) => { const ext = db.extras?.find(e => e.id === id); return ext ? (ext[`precio_${tipoPrecio}`] ?? ext.precio ?? 0) : 0; };
   const getObj = (arr, id) => arr?.find(x => x.id === id) || arr?.[0] || { nombre: 'N/A', precio: 0, valor: 0 };
   
   const calcularTotalActual = () => {
     const oLargo = getObj(db.largos, dim.largo); const oAncho = getObj(db.anchos, dim.ancho); const oJalon = getObj(db.jalones, acople.jalon); const oCadena = getObj(db.cadenas, acople.cadena); const oGato = getObj(db.gatos, acople.gato); const oSusp = getObj(db.suspension, rodado.suspension); const oLlantas = getObj(db.llantas, rodado.llanta); const oTecho = getObj(db.techos, carroceria.techo); const oRedila = getObj(db.redilas, carroceria.redila); const oPTras = getObj(db.puertasTraseras, carroceria.puertaTras); const oPiso = getObj(db.pisos, acabados.piso); const oMont = getObj(db.montureros, monturero.tipo); const oPint = getObj(db.pinturas, acabados.pintura); const oCap = getObj(db.capacidades, rodado.capacidad); const oRampa = db.rampas?.find(r => r.id === camaBajaOpts.rampas) || {precio: 0};
-    const anchoEnPies = (oAncho.valor || 0) / 12; const areaSqFt = (oLargo.valor || 0) * anchoEnPies; const costoPisoTotal = areaSqFt * (oPiso.precioSqFt || oPiso.precio || 0) * (oPiso.id === 'madera' ? 2 : 1);
-    let costoGatos = acople.gato === 'hidraulico_bomba' ? ((db.gatos?.find(g => g.id === 'hidraulico_sencillo')?.precio || 6500) * acople.cantGatos) + (oGato.precio - 6500) : oGato.precio * acople.cantGatos;
+    const anchoEnPies = (oAncho.valor || 0) / 12; const areaSqFt = (oLargo.valor || 0) * anchoEnPies; const costoPisoTotal = areaSqFt * (getP(oPiso, 'precioSqFt') || getP(oPiso) || 0) * (oPiso.id === 'madera' ? 2 : 1);
+    let costoGatos = acople.gato === 'hidraulico_bomba' ? ((getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500) * acople.cantGatos) + (getP(oGato) - 6500) : getP(oGato) * acople.cantGatos;
     const totalGatos = costoGatos + (acople.cargadorSolar ? 2500 : 0) + (acople.cargador110 ? 1500 : 0) + (acople.sujetaCadenas ? 450 : 0);
-    const totalRodado = oCap.precio + oSusp.precio + oLlantas.precio + (rodado.cantFrenos > 0 ? getExtraPrice('frenos') * rodado.cantFrenos : 0) + (rodado.llantaExtra > 0 ? (rodado.llantaExtra * (oLlantas.precioExtra || 0)) : 0) + (rodado.portaExtra * getExtraPrice('portaExtra'));
+    const totalRodado = getP(oCap) + getP(oSusp) + getP(oLlantas) + (rodado.cantFrenos > 0 ? getExtraPrice('frenos') * rodado.cantFrenos : 0) + (rodado.llantaExtra > 0 ? (rodado.llantaExtra * getP(oLlantas, 'precioExtra')) : 0) + (rodado.portaExtra * getExtraPrice('portaExtra'));
     let piesPlexi = (oLargo.valor || 0) * 4;
-    const costoPtasInt = carroceria.puertasIntList?.length > 0 ? carroceria.puertasIntList.reduce((acc, pta) => acc + (getObj(db.puertasInteriores, pta.tipo).precio || 0), 0) : 0;
-    const totalCarroceria = oTecho.precio + oRedila.precio + costoPtasInt + oPTras.precio + (carroceria.frente === 'cachucha' ? getExtraPrice('frenteCachucha') : 0) + (carroceria.plexiglass && piesPlexi > 0 ? Math.ceil(piesPlexi / 46.5) * getExtraPrice('hojaPlexiglass') : 0) + (carroceria.aperturaEstribo ? getExtraPrice('aperturaEstribo') : 0) + (carroceria.aperturaLimpieza ? getExtraPrice('aperturaLimpieza') : 0);
-    const totalMonturero = tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' ? oMont.precio : 0;
-    const totalAcabados = oPint.precio + (acabados.cajaHtas === 'std' ? getExtraPrice('cajaHtasStd') : acabados.cajaHtas === 'especial' ? 8500 : 0);
+    const costoPtasInt = carroceria.puertasIntList?.length > 0 ? carroceria.puertasIntList.reduce((acc, pta) => acc + (getP(getObj(db.puertasInteriores, pta.tipo)) || 0), 0) : 0;
+    const totalCarroceria = getP(oTecho) + getP(oRedila) + costoPtasInt + getP(oPTras) + (carroceria.frente === 'cachucha' ? getExtraPrice('frenteCachucha') : 0) + (carroceria.plexiglass && piesPlexi > 0 ? Math.ceil(piesPlexi / 46.5) * getExtraPrice('hojaPlexiglass') : 0) + (carroceria.aperturaEstribo ? getExtraPrice('aperturaEstribo') : 0) + (carroceria.aperturaLimpieza ? getExtraPrice('aperturaLimpieza') : 0);
+    const totalMonturero = tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' ? getP(oMont) : 0;
+    const oLuces = getObj(db.luces, acabados.luces);
+    const totalAcabados = getP(oPint) + getP(oLuces) + (accesorios.lucesInteriores * getExtraPrice('lucesInteriores')) + (acabados.bodyLitros * getExtraPrice('litroBody')) + (acabados.cajaHtas === 'std' ? getExtraPrice('cajaHtasStd') : acabados.cajaHtas === 'grande' ? getExtraPrice('cajaHtasGrande') : acabados.cajaHtas === 'especial' ? 8500 : 0);
     const totalExtrasCustom = extrasCustom.reduce((sum, item) => sum + (Number(item.precio) || 0), 0);
-    const subtotalNeto = (getExtraPrice('precioBase') + oLargo.precio + oAncho.precio + oJalon.precio + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : oRedila.precio) + totalMonturero + totalAcabados + totalExtrasCustom) * (cliente.cantidad || 1);
+    const subtotalNeto = (getExtraPrice('precioBase') + getP(oLargo) + getP(oAncho) + getP(oJalon) + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : getP(oRedila)) + totalMonturero + totalAcabados + totalExtrasCustom) * (cliente.cantidad || 1);
     const subtotalDescuento = subtotalNeto * (1 - (cliente.descuentoPct || 0) / 100);
     const subtotalIva = market === 'usa' ? 0 : subtotalDescuento * 0.16;
     return subtotalDescuento + subtotalIva + (cliente.ajusteRedondeo || 0);
@@ -630,32 +635,45 @@ function CotizadorNube() {
   
  const oCap = getObj(db.capacidades, rodado.capacidad);
   
+  const isGanaderoRedondoMex = tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'mexico';
+  const isGanaderoRedondoUSA = tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'usa';
+
   // 1. Lógica estricta de ejes según la capacidad seleccionada
   let cantEjes = 2;
   if (tipoRemolque === 'cama_alta') { 
-      if (oCap.id === '6t' || oCap.id === '10t') cantEjes = 2; 
-      if (oCap.id === '9t') cantEjes = 3; 
-  } 
-  else { 
+      if (oCap.id === '6t') cantEjes = 2; 
+      else if (oCap.id === '10t') cantEjes = (rodado.cantEjesGanso >= 3) ? 3 : 2; 
+      else if (oCap.id === '9t') cantEjes = 3; 
+  } else if (tipoRemolque === 'volteo' || tipoRemolque === 'cama_baja' || isGanaderoRedondoMex) {
+      if (oCap.id === '6t' || oCap.id === '7t') cantEjes = 2;
+      else if (oCap.id === '3t') cantEjes = 2;
+      else if (oCap.id === '1_5t' || oCap.id === '850kg') cantEjes = 1;
+  } else { 
       if (oCap.id === '9t') cantEjes = 3;
       else if (['7t', '6t', '4t_5200', '4t_6200'].includes(oCap.id)) cantEjes = 2;
       else if (['850kg', '1_5t', '2t_5200', '2t_6200'].includes(oCap.id)) cantEjes = 1;
-      else if (oCap.id === '10t') cantEjes = (rodado.cantEjesGanso === 3) ? 3 : 2; 
+      else if (oCap.id === '10t') cantEjes = (rodado.cantEjesGanso >= 3) ? 3 : 2; 
       else if (oCap.id === '3t') cantEjes = (rodado.cantEjesGanso === 2) ? 2 : 1;
   }
 
   // 2. Formato dinámico y exacto para el Ticket
   let nombreCapacidadTicket = oCap.nombre;
-  if (oCap.id === '10t') nombreCapacidadTicket = cantEjes === 3 ? '10 Ton (3 Ejes de 8,000 lbs)' : '10 Ton (2 Ejes de 10,000 lbs)';
+  if (oCap.id === '10t') {
+      if (rodado.cantEjesGanso === 310) nombreCapacidadTicket = '10 Ton (3 Ejes de 10,000 lbs)';
+      else if (rodado.cantEjesGanso === 3) nombreCapacidadTicket = '10 Ton (3 Ejes de 8,000 lbs)';
+      else nombreCapacidadTicket = '10 Ton (2 Ejes de 10,000 lbs)';
+  }
   else if (oCap.id === '9t') nombreCapacidadTicket = '9 Ton (3 Ejes de 7,000 lbs)';
   else if (oCap.id === '7t') nombreCapacidadTicket = '7 Ton (2 Ejes de 8,000 lbs)';
   else if (oCap.id === '4t_5200') nombreCapacidadTicket = '4 Ton (2 Ejes de 5,200 lbs)';
   else if (oCap.id === '4t_6200') nombreCapacidadTicket = '4 Ton (2 Ejes de 6,200 lbs)';
   else if (oCap.id === '2t_5200') nombreCapacidadTicket = '2 Ton (1 Eje de 5,200 lbs)';
   else if (oCap.id === '2t_6200') nombreCapacidadTicket = '2 Ton (1 Eje de 6,200 lbs)';
-  else if (oCap.id === '3t') nombreCapacidadTicket = `3 Ton (${cantEjes} Eje(s) de 3,500 lbs)`;
-
-  useEffect(() => { if (rodado.cantFrenos > cantEjes) setRodado(prev => ({ ...prev, cantFrenos: cantEjes })); }, [cantEjes]);
+  else if (oCap.id === '1_5t') nombreCapacidadTicket = '1.5 Ton (1 Eje de 3,500 lbs)';
+  else if (oCap.id === '3t') {
+      if (tipoRemolque === 'volteo' || tipoRemolque === 'cama_baja') nombreCapacidadTicket = '3 Ton (2 Ejes de 3,500 lbs)';
+      else nombreCapacidadTicket = `3 Ton (${cantEjes} Eje(s) de 3,500 lbs)`;
+  }
 
 // 1. Este es el control del Mercado (USA vs México) que tenías antes
   useEffect(() => {
@@ -673,7 +691,15 @@ function CotizadorNube() {
   // 2. Control Inteligente para Frente, Gatos, Jalones y Monturero del Ganadero
   useEffect(() => {
     if (tipoRemolque === 'ganadero') {
-      setCarroceria(prev => ({ ...prev, frente: tipoGanadero === 'redondo' ? 'ninguno' : 'cachucha' }));
+      setCarroceria(prev => {
+          let nuevoFrente = prev.frente;
+          if (tipoGanadero === 'redondo') {
+              if (nuevoFrente !== 'ninguno' && nuevoFrente !== 'cuadrado') nuevoFrente = 'ninguno';
+          } else {
+              if (nuevoFrente !== 'cachucha' && nuevoFrente !== 'canasta') nuevoFrente = 'cachucha';
+          }
+          return prev.frente !== nuevoFrente ? { ...prev, frente: nuevoFrente } : prev;
+      });
       
       setAcople(prev => {
           let nuevoGato = prev.gato;
@@ -794,11 +820,32 @@ function CotizadorNube() {
         if (rodado.suspension !== suspCorrecta) {
           setRodado(prev => ({ ...prev, suspension: suspCorrecta }));
         }
-    } else {
-const GANADERO_CAPS = ['2t_5200', '2t_6200', '3t', '4t_5200', '4t_6200', '6t', '7t', '9t', '10t'];
-    }
+   } else if (tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'mexico') {
+            if (!['1_5t', '3t', '6t'].includes(rodado.capacidad)) setRodado(prev => ({ ...prev, capacidad: '3t' }));
+            
+            if (rodado.capacidad === '1_5t') {
+                if (dim.ancho !== '60in') setDim(prev => ({ ...prev, ancho: '60in' }));
+                if (!['10ft', '12ft'].includes(dim.largo)) setDim(prev => ({ ...prev, largo: '12ft' }));
+            } else if (rodado.capacidad === '3t') {
+                if (!['60in', '76in'].includes(dim.ancho)) setDim(prev => ({ ...prev, ancho: '76in' }));
+                if (!['10ft', '12ft', '14ft', '16ft'].includes(dim.largo)) setDim(prev => ({ ...prev, largo: '16ft' }));
+            } else if (rodado.capacidad === '6t') {
+                if (!['60in', '76in'].includes(dim.ancho)) setDim(prev => ({ ...prev, ancho: '76in' }));
+                if (!['12ft', '14ft', '16ft', '18ft'].includes(dim.largo)) setDim(prev => ({ ...prev, largo: '16ft' }));
+            }
+        } else if (tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'usa') {
+            if (dim.ancho !== '75in') setDim(prev => ({ ...prev, ancho: '75in' }));
+            if (!['14ft', '16ft'].includes(dim.largo)) setDim(prev => ({ ...prev, largo: '16ft' }));
+            
+            if (dim.largo === '14ft') {
+                if (!['2t_5200', '2t_6200'].includes(rodado.capacidad)) setRodado(prev => ({ ...prev, capacidad: '2t_5200' }));
+            } else if (dim.largo === '16ft') {
+                if (!['4t_5200', '4t_6200'].includes(rodado.capacidad)) setRodado(prev => ({ ...prev, capacidad: '4t_5200' }));
+            }
+        }
+  
     // Aseguramos que el efecto escuche los cambios clave del volteo
-  }, [tipoRemolque, dim.ancho, dim.largo, rodado.capacidad, carroceria.redila, db.jalones, acople.jalon, rodado.llantaExtra]);
+  }, [tipoRemolque, dim.ancho, dim.largo, rodado.capacidad, carroceria.redila, db.jalones, acople.jalon, rodado.llantaExtra, tipoGanadero, market]);
 
   useEffect(() => {
     const maxLargo = parseInt(dim.largo.replace('ft', '')) || 0;
@@ -815,25 +862,36 @@ const GANADERO_CAPS = ['2t_5200', '2t_6200', '3t', '4t_5200', '4t_6200', '6t', '
     if (tipoRemolque === 'cama_alta' && acople.gato.includes('hidraulico') && acabados.cajaHtas === 'ninguna') { setAcabados(prev => ({ ...prev, cajaHtas: 'std' })); }
     if (tipoRemolque === 'ganadero') {
         const l = parseInt(dim.largo.replace('ft', '')) || 0;
-        let cajas = 0;
-        if (acabados.pintura === 'polvo') { if (l <= 16) cajas = 0.75; else if (l <= 20) cajas = 1; else if (l <= 23) cajas = 1.5; else if (l <= 32) cajas = 2; else if (l <= 36) cajas = 2.5; else cajas = 3; }
+        
+        setAcabados(prev => {
+            let tipoB = prev.tipoBody || 'ninguno';
+            // Si es USA y está en "ninguno", lo forzamos a estándar. Si ya está en "full", lo respeta.
+            if (isSpecialClient && market === 'usa' && tipoB === 'ninguno') tipoB = 'estandar';
+            
+            let b = 0;
+            if (tipoB !== 'ninguno') {
+                if (l <= 16) b = 10; else if (l <= 22) b = 12; else if (l <= 26) b = 14; else if (l <= 28) b = 15; else b = 16;
+                if (tipoB === 'full') b += 3;
+            }
+
+            if (isSpecialClient && market === 'usa') {
+                // Candado para evitar ciclos infinitos
+                if (prev.pintura === 'liquida' && prev.luces === 'especial_usa' && prev.tipoBody === tipoB && prev.bodyLitros === b) return prev;
+                return { ...prev, pintura: 'liquida', luces: 'especial_usa', tipoBody: tipoB, bodyLitros: b };
+            }
+            return (prev.bodyLitros !== b || prev.tipoBody !== tipoB) ? { ...prev, tipoBody: tipoB, bodyLitros: b } : prev;
+        });
+
         if (isSpecialClient && market === 'usa') {
-          setAcabados(prev => ({ ...prev, pintura: 'liquida', luces: 'especial_usa', cajasPolvo: 0 }));
           setCarroceria(prev => ({ ...prev, polverasEspeciales: true }));
           setRodado(prev => ({ ...prev, suspension: 'torflex' }));
           setAccesorios(prev => ({ ...prev, lucesInteriores: prev.lucesInteriores > 0 ? prev.lucesInteriores : 1 }));
-          let b = 0, p = 0, t = 0;
-          if (l <= 16) p = 14.2125; else if (l <= 18) p = 18.95; else if (l <= 20) p = 23.6875; else if (l <= 28) p = 28.425; else if (l <= 32) p = 33.1625; else p = 37.9;
-          if (carroceria.techo === 'sin_techo' || carroceria.techo === 'lona' || acabados.mismoColorTecho) t = 0; else { if (l <= 16) t = 2.36875; else t = 4.7375; }
-          if (l <= 16) b = 10; else if (l <= 18) b = 12; else if (l <= 22) b = 12; else if (l <= 26) b = 14; else if (l <= 28) b = 15; else b = 16;
-          setAcabados(prev => ({ ...prev, bodyLitros: b, pinturaLitros: p, techoLitros: t }));
         } else {
           setCarroceria(prev => ({ ...prev, polverasEspeciales: false }));
-          setAcabados(prev => ({ ...prev, cajasPolvo: cajas }));
           if (acople.gato === 'hidraulico_bomba') setAcople(prev => ({ ...prev, gato: 'hidraulico_sencillo' }));
         }
     }
-  }, [isSpecialClient, market, tipoRemolque, dim.largo, acabados.pintura, acabados.mismoColorTecho, acople.gato, acabados.cajaHtas]);
+  }, [isSpecialClient, market, tipoRemolque, dim.largo, acople.gato, acabados.cajaHtas]);
 
   useEffect(() => {
     if (acople.gato === 'manual' || acople.gato.includes('2k') || acople.gato.includes('7k') || acople.gato.includes('12k')) { setAcople(prev => ({ ...prev, cargadorSolar: false, cargador110: false })); } 
@@ -848,9 +906,14 @@ const GANADERO_CAPS = ['2t_5200', '2t_6200', '3t', '4t_5200', '4t_6200', '6t', '
     if (tipoRemolque === 'cama_alta' && rodado.capacidad === '10t' && rodado.llanta !== '17_5in') setRodado(prev => ({...prev, llanta: '17_5in'}));
   }, [rodado.llantaExtra, rodado.portaExtra, tipoRemolque, rodado.capacidad, rodado.llanta]);
 
-  const anchosDisponibles = tipoRemolque === 'volteo' ? db.anchos?.filter(a => ['60in', '76in', '82in'].includes(a.id)) || [] : tipoRemolque === 'cama_baja' ? db.anchos?.filter(a => Object.keys(CAMA_BAJA_COMBOS).includes(a.id)) || [] : tipoRemolque === 'cama_alta' ? db.anchos?.filter(a => a.id === '96in') || [] : db.anchos?.filter(a => !['50in', '75in', '76in', '82in'].includes(a.id)) || [];
-  const largosDisponibles = tipoRemolque === 'volteo' && VOLTEO_COMBOS[dim.ancho] ? db.largos?.filter(l => VOLTEO_COMBOS[dim.ancho].includes(l.id)) || [] : tipoRemolque === 'cama_baja' && CAMA_BAJA_COMBOS[dim.ancho] ? db.largos?.filter(l => CAMA_BAJA_COMBOS[dim.ancho].includes(l.id)) || [] : tipoRemolque === 'cama_alta' ? db.largos?.filter(l => CAMA_ALTA_LARGOS.includes(l.id)) || [] : db.largos?.filter(l => l.valor >= 16) || [];
-  const capacidadesDisponibles = tipoRemolque === 'volteo' ? db.capacidades?.filter(c => dim.ancho === '60in' ? ['1_5t', '3t', '6t'].includes(c.id) : ['3t', '6t'].includes(c.id)) || [] : tipoRemolque === 'cama_baja' ? db.capacidades?.filter(c => getCapacidadesCamaBaja(dim.ancho, dim.largo).includes(c.id)) || [] : tipoRemolque === 'cama_alta' ? db.capacidades?.filter(c => CAMA_ALTA_CAPS.includes(c.id)) || [] : db.capacidades?.filter(c => {
+  const anchosDisponibles = tipoRemolque === 'volteo' ? db.anchos?.filter(a => ['60in', '76in', '82in'].includes(a.id)) || [] : tipoRemolque === 'cama_baja' ? db.anchos?.filter(a => Object.keys(CAMA_BAJA_COMBOS).includes(a.id)) || [] : tipoRemolque === 'cama_alta' ? db.anchos?.filter(a => a.id === '96in') || [] : isGanaderoRedondoMex ? db.anchos?.filter(a => ['60in', '76in'].includes(a.id)) || [] : isGanaderoRedondoUSA ? db.anchos?.filter(a => ['75in'].includes(a.id)) || [] : db.anchos?.filter(a => !['50in', '75in', '76in', '82in'].includes(a.id)) || [];
+  const largosDisponibles = tipoRemolque === 'volteo' && VOLTEO_COMBOS[dim.ancho] ? db.largos?.filter(l => VOLTEO_COMBOS[dim.ancho].includes(l.id)) || [] : tipoRemolque === 'cama_baja' && CAMA_BAJA_COMBOS[dim.ancho] ? db.largos?.filter(l => CAMA_BAJA_COMBOS[dim.ancho].includes(l.id)) || [] : tipoRemolque === 'cama_alta' ? db.largos?.filter(l => CAMA_ALTA_LARGOS.includes(l.id)) || [] : isGanaderoRedondoMex ? db.largos?.filter(l => {
+      if (rodado.capacidad === '1_5t') return ['10ft', '12ft'].includes(l.id);
+      if (rodado.capacidad === '3t') return ['10ft', '12ft', '14ft', '16ft'].includes(l.id);
+      if (rodado.capacidad === '6t') return ['12ft', '14ft', '16ft', '18ft'].includes(l.id);
+      return false;
+  }) || [] : isGanaderoRedondoUSA ? db.largos?.filter(l => ['14ft', '16ft'].includes(l.id)) || [] : db.largos?.filter(l => l.valor >= 16) || [];
+  const capacidadesDisponibles = tipoRemolque === 'volteo' ? db.capacidades?.filter(c => dim.ancho === '60in' ? ['1_5t', '3t', '6t'].includes(c.id) : ['3t', '6t'].includes(c.id)) || [] : tipoRemolque === 'cama_baja' ? db.capacidades?.filter(c => getCapacidadesCamaBaja(dim.ancho, dim.largo).includes(c.id)) || [] : tipoRemolque === 'cama_alta' ? db.capacidades?.filter(c => CAMA_ALTA_CAPS.includes(c.id)) || [] : isGanaderoRedondoMex ? db.capacidades?.filter(c => ['1_5t', '3t', '6t'].includes(c.id)) || [] : isGanaderoRedondoUSA ? db.capacidades?.filter(c => dim.largo === '14ft' ? ['2t_5200', '2t_6200'].includes(c.id) : ['4t_5200', '4t_6200'].includes(c.id)) || [] : db.capacidades?.filter(c => {
       if (['2t_5200', '2t_6200', '4t_5200', '4t_6200'].includes(c.id)) return acople.jalon.includes('ganso') && rodado.suspension === 'muelle_drop';
       return ['3t', '6t', '7t', '9t', '10t'].includes(c.id);
   }) || [];
@@ -872,19 +935,19 @@ const jalonesDisponibles = tipoRemolque === 'volteo' ? db.jalones?.filter(j => [
   }) || [] : db.suspension?.filter(s => ['muelle', 'torflex', 'muelle_drop'].includes(s.id)) || [];
   const llantasDisponibles = tipoRemolque === 'cama_baja' ? db.llantas?.filter(l => { const cap = rodado.capacidad; if (['850kg', '1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return ['700_15', '225_75_15', 'ninguna'].includes(l.id); if (cap === '3t') return ['700_15', '235_80_16', 'ninguna'].includes(l.id); if (cap === '4t') return ['225_75_15', 'ninguna'].includes(l.id); if (cap === '6t') return ['235_80_16', '235_80_16_14', 'ninguna'].includes(l.id); return true; }) || [] : tipoRemolque === 'cama_alta' ? db.llantas?.filter(l => rodado.capacidad === '10t' ? ['17_5in', 'ninguna'].includes(l.id) : ['235_80_16', '16in_10', '16in_14', '235_80_16_14', 'ninguna'].includes(l.id)) || [] : db.llantas?.filter(l => ['16in_10', '16in_14', '235_80_16_14', '17_5in', 'ninguna'].includes(l.id)) || [];
   const pisosDisponibles = tipoRemolque === 'volteo' ? db.pisos?.filter(p => ['madera', 'lamina_madera'].includes(p.id)) || [] : tipoRemolque === 'cama_baja' ? db.pisos?.filter(p => ['madera', 'duela_laminada'].includes(p.id)) || [] : tipoRemolque === 'cama_alta' ? db.pisos?.filter(p => ['madera', 'lamina_madera'].includes(p.id)) || [] : db.pisos?.filter(p => ['madera', 'hule_liso', 'hule_anti'].includes(p.id)) || [];
-const redilasDisponibles = tipoRemolque === 'cama_baja' ? db.redilas?.filter(r => ['sin_redila', 'ptr_abierta_2', 'ptr_abierta_3', 'ptr_abierta_4', 'cerrada_2', 'cerrada_3', 'cerrada_4'].includes(r.id)) || [] : db.redilas?.filter(r => ['ptr_abierta', 'cerrada', 'combinada'].includes(r.id)) || [];
-const monturerosDisponibles = (tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'usa') ? db.montureros?.filter(m => ['ninguno', 'recto_3', 'recto_4'].includes(m.id)) || [] : db.montureros || [];
+const redilasDisponibles = tipoRemolque === 'cama_baja' ? db.redilas?.filter(r => ['sin_redila', 'ptr_abierta_2', 'ptr_abierta_3', 'ptr_abierta_4', 'cerrada_2', 'cerrada_3', 'cerrada_4'].includes(r.id)) || [] : isGanaderoRedondoMex ? db.redilas?.filter(r => ['ptr_abierta', 'cerrada', 'combinada', 'desmontable'].includes(r.id)) || [] : db.redilas?.filter(r => ['ptr_abierta', 'cerrada', 'combinada'].includes(r.id)) || [];
+  const monturerosDisponibles = (tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'usa') ? db.montureros?.filter(m => ['ninguno', 'recto_3', 'recto_4'].includes(m.id)) || [] : db.montureros || [];
 const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => { if (r.id === 'ninguna' || r.id === 'puerta_rampa') return true; const is82 = dim.ancho === '82in'; if (r.id === 'rampa_1_5m') return is82 && carroceria.redila === 'sin_redila'; if (r.id === 'rampa_39') return is82 && carroceria.redila !== 'sin_redila'; return false; }) || [] : tipoRemolque === 'cama_alta' ? db.rampas?.filter(r => ['recto_rampas', 'cola_4', 'cola_5'].includes(r.id)) || [] : [];
   const oLargo = getObj(db.largos, dim.largo); const oAncho = getObj(db.anchos, dim.ancho); const oJalon = getObj(db.jalones, acople.jalon); const oCadena = getObj(db.cadenas, acople.cadena); const oGato = getObj(db.gatos, acople.gato); const oSusp = getObj(db.suspension, rodado.suspension); const oLlantas = getObj(db.llantas, rodado.llanta); const oTecho = getObj(db.techos, carroceria.techo); const oRedila = getObj(db.redilas, carroceria.redila); const oPInt = getObj(db.puertasInteriores, carroceria.puertaInt); const oPTras = getObj(db.puertasTraseras, carroceria.puertaTras); const oPiso = getObj(db.pisos, acabados.piso); const oMont = getObj(db.montureros, monturero.tipo); const oPint = getObj(db.pinturas, acabados.pintura); const oLuces = getObj(db.luces, acabados.luces); const oRampa = db.rampas?.find(r => r.id === camaBajaOpts.rampas) || {precio: 0};
   const lucesDisponibles = db.luces?.filter(l => market === 'usa' ? l.id.includes('_usa') : l.id.includes('_mexico')) || [];
   const anchoEnPies = (oAncho.valor || 0) / 12;
   const areaSqFt = (oLargo.valor || 0) * anchoEnPies;
-  const costoPisoTotal = areaSqFt * (oPiso.precioSqFt || oPiso.precio || 0) * (oPiso.id === 'madera' ? 2 : 1);
+  const costoPisoTotal = areaSqFt * (getP(oPiso, 'precioSqFt') || getP(oPiso) || 0) * (oPiso.id === 'madera' ? 2 : 1);
 
-  let costoGatos = acople.gato === 'hidraulico_bomba' ? ((db.gatos?.find(g => g.id === 'hidraulico_sencillo')?.precio || 6500) * acople.cantGatos) + (oGato.precio - (db.gatos?.find(g => g.id === 'hidraulico_sencillo')?.precio || 6500)) : oGato.precio * acople.cantGatos;
-  const totalGatos = costoGatos + (acople.cargadorSolar ? 2500 : 0) + (acople.cargador110 ? 1500 : 0) + (acople.sujetaCadenas ? 450 : 0) + (oCadena.precio || 0);
+  let costoGatos = acople.gato === 'hidraulico_bomba' ? ((getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500) * acople.cantGatos) + (getP(oGato) - (getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500)) : getP(oGato) * acople.cantGatos;
+  const totalGatos = costoGatos + (acople.cargadorSolar ? 2500 : 0) + (acople.cargador110 ? 1500 : 0) + (acople.sujetaCadenas ? 450 : 0) + getP(oCadena);
 
-  const totalRodado = oCap.precio + oSusp.precio + oLlantas.precio + (rodado.cantFrenos > 0 ? getExtraPrice('frenos') * rodado.cantFrenos : 0) + (rodado.llantaExtra > 0 ? (rodado.llantaExtra * (oLlantas.precioExtra || 0)) : 0) + (rodado.portaExtra * getExtraPrice('portaExtra'));
+  const totalRodado = getP(oCap) + getP(oSusp) + getP(oLlantas) + (rodado.cantFrenos > 0 ? getExtraPrice('frenos') * rodado.cantFrenos : 0) + (rodado.llantaExtra > 0 ? (rodado.llantaExtra * getP(oLlantas, 'precioExtra')) : 0) + (rodado.portaExtra * getExtraPrice('portaExtra'));
   
   let piesPlexi = (oLargo.valor || 0) * 4;
   if (oMont.id === 'recto_3') piesPlexi -= 12; else if (oMont.id === 'recto_4') piesPlexi -= 16; else if (oMont.id === 'diagonal') piesPlexi -= (((monturero.paredLarga || 0) + (monturero.paredCorta || 0)) / 12 * 2);
@@ -892,21 +955,30 @@ const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => 
   if (carroceria.frente === 'cachucha' && carroceria.puertaPerroCachucha) piesPlexi -= 13.33;
   if (monturero.puertaPerro) piesPlexi -= 13.33;
   
-  const totalCarroceria = oTecho.precio + oRedila.precio + (oPInt.precio * carroceria.cantPtasInt) + oPTras.precio + (carroceria.frente === 'cachucha' ? getExtraPrice('frenteCachucha') : carroceria.frente === 'canasta' ? getExtraPrice('frenteCanasta') : 0) + (carroceria.plexiglass && piesPlexi > 0 ? Math.ceil(piesPlexi / 46.5) * getExtraPrice('hojaPlexiglass') : 0) + (carroceria.rackPacas ? getExtraPrice('rackPacas') : 0) + (carroceria.ventEst * getExtraPrice('ventEst')) + (carroceria.ventCirc * getExtraPrice('ventCirc')) + (carroceria.polverasEspeciales ? getExtraPrice('polverasEspeciales') : 0) + (carroceria.puertaPerroCachucha ? getExtraPrice('puertaPerroCachucha') : 0);
+  const totalCarroceria = getP(oTecho) + getP(oRedila) + (getP(oPInt) * carroceria.cantPtasInt) + getP(oPTras) + (carroceria.frente === 'cachucha' ? getExtraPrice('frenteCachucha') : carroceria.frente === 'canasta' ? getExtraPrice('frenteCanasta') : 0) + (carroceria.plexiglass && piesPlexi > 0 ? Math.ceil(piesPlexi / 46.5) * getExtraPrice('hojaPlexiglass') : 0) + (carroceria.rackPacas ? getExtraPrice('rackPacas') : 0) + (carroceria.ventEst * getExtraPrice('ventEst')) + (carroceria.ventCirc * getExtraPrice('ventCirc')) + (carroceria.polverasEspeciales ? getExtraPrice('polverasEspeciales') : 0) + (carroceria.puertaPerroCachucha ? getExtraPrice('puertaPerroCachucha') : 0);
 
-  const totalMonturero = tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' ? oMont.precio + (monturero.basesMontura * getExtraPrice('basesMontura')) + (monturero.tubosCobija * getExtraPrice('tubosCobija')) + (monturero.puertaPerro ? getExtraPrice('puertaPerroLateral') : 0) : 0;
-  const totalAcabados = oPint.precio + oLuces.precio + (accesorios.lucesInteriores * getExtraPrice('lucesInteriores')) + (acabados.bodyLitros * getExtraPrice('litroBody')) + ((acabados.pinturaLitros + acabados.techoLitros) * getExtraPrice('litroPintura')) + (acabados.cajaHtas === 'std' ? getExtraPrice('cajaHtasStd') : acabados.cajaHtas === 'grande' ? getExtraPrice('cajaHtasGrande') : 0);
+  const totalMonturero = tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' ? getP(oMont) + (monturero.basesMontura * getExtraPrice('basesMontura')) + (monturero.tubosCobija * getExtraPrice('tubosCobija')) + (monturero.puertaPerro ? getExtraPrice('puertaPerroLateral') : 0) : 0;
+  const totalAcabados = getP(oPint) + getP(oLuces) + (accesorios.lucesInteriores * getExtraPrice('lucesInteriores')) + (acabados.bodyLitros * getExtraPrice('litroBody')) + (acabados.cajaHtas === 'std' ? getExtraPrice('cajaHtasStd') : acabados.cajaHtas === 'grande' ? getExtraPrice('cajaHtasGrande') : acabados.cajaHtas === 'especial' ? 8500 : 0);
 
-  const subtotalNeto = getExtraPrice('precioBase') + oLargo.precio + oAncho.precio + oJalon.precio + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : oRedila.precio) + totalMonturero + totalAcabados + (['cama_baja', 'cama_alta'].includes(tipoRemolque) ? oRampa.precio : 0) + (tipoRemolque === 'cama_baja' && camaBajaOpts.fenderReforzado ? getExtraPrice('fenderReforzado') : 0) + (['cama_baja', 'cama_alta'].includes(tipoRemolque) && camaBajaOpts.luzPortaplaca ? getExtraPrice('luzPortaplaca') : 0);
+  const subtotalNeto = getExtraPrice('precioBase') + getP(oLargo) + getP(oAncho) + getP(oJalon) + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : getP(oRedila)) + totalMonturero + totalAcabados + (['cama_baja', 'cama_alta'].includes(tipoRemolque) ? getP(oRampa) : 0) + (tipoRemolque === 'cama_baja' && camaBajaOpts.fenderReforzado ? getExtraPrice('fenderReforzado') : 0) + (['cama_baja', 'cama_alta'].includes(tipoRemolque) && camaBajaOpts.luzPortaplaca ? getExtraPrice('luzPortaplaca') : 0);
 
   const subtotalDescuento = subtotalNeto * (1 - (cliente.descuentoPct || 0) / 100);
   const subtotalIva = market === 'usa' ? 0 : subtotalDescuento * 0.16;
   const totalPrevio = subtotalDescuento + subtotalIva;
   const totalFinal = totalPrevio + (cliente.ajusteRedondeo || 0);
   const saldoPendiente = totalFinal - (cliente.anticipo || 0);
-   let capacidadLbs = '7,000 LBS';
-  if (tipoRemolque === 'cama_alta') { if (oCap.id === '6t' || oCap.id === '9t') capacidadLbs = '7,000 LBS'; if (oCap.id === '10t') capacidadLbs = '10,000 LBS / 8,000 LBS'; } 
-  else { if (['7t', '9t', '10t'].includes(oCap.id)) capacidadLbs = oCap.id === '10t' ? '10,000 / 8,000 LBS' : oCap.id === '9t' ? '7,000 LBS' : '8,000 LBS'; else if (['850kg', '1_5t', '3t'].includes(oCap.id)) capacidadLbs = '3,500 LBS'; else if (oCap.id.includes('5200')) capacidadLbs = '5,200 LBS'; else if (oCap.id.includes('6200')) capacidadLbs = '6,200 LBS'; else if (oCap.id === '6t') capacidadLbs = '7,000 LBS'; }
+let capacidadLbs = '7,000 LBS';
+  if (tipoRemolque === 'cama_alta') { 
+      if (oCap.id === '6t' || oCap.id === '9t') capacidadLbs = '7,000 LBS'; 
+      if (oCap.id === '10t') capacidadLbs = rodado.cantEjesGanso === 3 ? '8,000 LBS' : '10,000 LBS'; 
+  } 
+  else { 
+      if (['7t', '9t', '10t'].includes(oCap.id)) capacidadLbs = oCap.id === '10t' ? (rodado.cantEjesGanso === 3 ? '8,000 LBS' : '10,000 LBS') : (oCap.id === '9t' ? '7,000 LBS' : '8,000 LBS'); 
+      else if (['850kg', '1_5t', '3t'].includes(oCap.id)) capacidadLbs = '3,500 LBS'; 
+      else if (oCap.id.includes('5200')) capacidadLbs = '5,200 LBS'; 
+      else if (oCap.id.includes('6200')) capacidadLbs = '6,200 LBS'; 
+      else if (oCap.id === '6t') capacidadLbs = '7,000 LBS'; 
+  }
   let marcaEje = rodado.suspension === 'torflex' ? 'IMPORTADO TORFLEX' : (capacidadLbs === '10,000 LBS' ? 'LIPPERT' : 'DEXTER');
   let medidasEje = '';
   if (tipoRemolque === 'cama_alta') { 
@@ -1139,26 +1211,59 @@ const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => 
                 </div>
              ) : (
               <>
-                <div className="flex justify-between items-center mb-6 border-b pb-3">
+                <div className="flex flex-col h-full">
+                <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-black text-slate-800">{ADMIN_SECTIONS.find(s => s.id === adminSection)?.title}</h2>
                   {!ADMIN_SECTIONS.find(s => s.id === adminSection)?.isFixed && (
                     <button onClick={() => handleDbAdd(adminSection)} className="flex items-center space-x-1 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm"><Plus className="w-5 h-5"/> <span>Agregar Elemento</span></button>
                   )}
                 </div>
-                <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
+                
+                {/* MATRIZ DE PRECIOS POR TIPO DE REMOLQUE */}
+                {!ADMIN_SECTIONS.find(s => s.id === adminSection)?.isColor && (
+                  <div className="flex space-x-2 mb-4 bg-slate-100 p-1.5 rounded-lg overflow-x-auto">
+                    {[
+                      { id: 'gen', name: 'General (Base)' },
+                      { id: 'ganadero_ganso', name: 'Ganso / USA' },
+                      { id: 'ganadero_redondo', name: 'Redondo (Mex)' },
+                      { id: 'volteo', name: 'Volteo' },
+                      { id: 'cama_baja', name: 'Cama Baja' },
+                      { id: 'cama_alta', name: 'Cama Alta' }
+                    ].map(tab => (
+                      <button key={tab.id} onClick={() => setAdminTrailerTab(tab.id)} className={`px-4 py-2 rounded-md text-sm font-black whitespace-nowrap transition-all ${adminTrailerTab === tab.id ? 'bg-white text-blue-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200'}`}>
+                        {tab.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-2">
                   {db[adminSection]?.map((item, index) => {
                     const sectionDef = ADMIN_SECTIONS.find(s => s.id === adminSection);
+                    const isGeneral = adminTrailerTab === 'gen';
+                    const pKey = sectionDef?.isPiso ? 'precioSqFt' : 'precio';
+                    const extraKey = 'precioExtra';
+                    const activePKey = isGeneral ? pKey : `${pKey}_${adminTrailerTab}`;
+                    const activeExtraKey = isGeneral ? extraKey : `${extraKey}_${adminTrailerTab}`;
+                    
                     return (
-                      <div key={item.id || index} className="flex flex-wrap items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl hover:shadow-sm transition">
+                      <div key={item.id || index} className="flex flex-wrap items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl hover:shadow-sm transition relative">
+                        {!isGeneral && item[activePKey] === undefined && !sectionDef?.isColor && (
+                          <div className="absolute top-2 right-4 text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Usando precio General</div>
+                        )}
                         <div className="flex-1 min-w-[200px]"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre Comercial</label><input type="text" value={item.nombre} onChange={e => handleDbChange(adminSection, index, 'nombre', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none" /></div>
                         {sectionDef?.hasValor && (<div className="w-24"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef.valorLabel}</label><input type="number" value={item.valor || 0} onChange={e => handleDbChange(adminSection, index, 'valor', parseFloat(e.target.value) || 0)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 text-center focus:ring-2" /></div>)}
-                        {sectionDef?.hasPrecioExtra && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Precio Extra (MXN)</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item.precioExtra || 0} onChange={e => handleDbChange(adminSection, index, 'precioExtra', parseFloat(e.target.value) || 0)} className="w-full p-2.5 pl-7 border border-slate-300 rounded-md font-bold" /></div></div>)}
-                        {!sectionDef?.isColor && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'Precio x SqFt' : 'Precio Set (MXN)'}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={sectionDef?.isPiso ? (item.precioSqFt || 0) : (item.precio || 0)} onChange={e => handleDbChange(adminSection, index, sectionDef?.isPiso ? 'precioSqFt' : 'precio', parseFloat(e.target.value) || 0)} className="w-full p-2.5 pl-7 border border-slate-300 rounded-md font-black text-blue-700 text-right" /></div></div>)}
+                        
+                        {sectionDef?.hasPrecioExtra && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Extra {isGeneral ? '(Base)' : ''}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item[activeExtraKey] ?? item.precioExtra ?? 0} onChange={e => handleDbChange(adminSection, index, activeExtraKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-bold ${!isGeneral && item[activeExtraKey] !== undefined ? 'border-blue-400 bg-blue-50 text-blue-800' : 'border-slate-300'}`} /></div></div>)}
+                        
+                        {!sectionDef?.isColor && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'P. SqFt' : 'Precio'} {isGeneral ? '(Base)' : ''}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item[activePKey] ?? item[pKey] ?? 0} onChange={e => handleDbChange(adminSection, index, activePKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-black text-right ${!isGeneral && item[activePKey] !== undefined ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-slate-300 text-slate-700'}`} /></div></div>)}
+                        
                         {!sectionDef?.isFixed && (<div className="pt-5"><button onClick={() => handleDbDelete(adminSection, index)} className="p-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition shadow-sm"><Trash2 className="w-5 h-5"/></button></div>)}
                       </div>
                     );
                   })}
                 </div>
+              </div>
               </>
              )}
           </div>
@@ -1167,10 +1272,14 @@ const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => 
         <main className="max-w-[1400px] mx-auto p-4 sm:p-6 flex flex-col xl:flex-row gap-6 print:block">
           <div className="w-full xl:w-2/3 space-y-6 print:hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* BOTONES USA / MEXICO (INTACTOS) */}
+                {/* BOTONES USA / MEXICO CON IMAGEN DE BANDERAS */}
                 <div className="p-1.5 bg-slate-200 rounded-xl flex items-center shadow-inner">
-                    <button onClick={() => setMarket('usa')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'usa' ? 'bg-white shadow text-blue-900' : 'text-slate-500 hover:text-slate-700'}`}><Globe className="w-4 h-4 mr-2"/> USA</button>
-                    <button onClick={() => setMarket('mexico')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'mexico' ? 'bg-white shadow text-green-700' : 'text-slate-500 hover:text-slate-700'}`}><Globe className="w-4 h-4 mr-2"/> MÉXICO</button>
+                    <button onClick={() => setMarket('usa')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'usa' ? 'bg-white shadow text-blue-900 scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}>
+                        <img src="https://flagcdn.com/w40/us.png" alt="USA" className="w-5 h-auto mr-2 rounded-sm shadow-sm" /> USA
+                    </button>
+                    <button onClick={() => setMarket('mexico')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'mexico' ? 'bg-white shadow text-green-700 scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}>
+                        <img src="https://flagcdn.com/w40/mx.png" alt="México" className="w-5 h-auto mr-2 rounded-sm shadow-sm" /> MÉXICO
+                    </button>
                 </div>
 
                 {/* NUEVAS TARJETAS VISUALES DE REMOLQUES */}
@@ -1298,19 +1407,36 @@ const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => 
 
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
               <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><Zap className="w-5 h-5 mr-2 text-blue-600"/> 2. Capacidad y Ejes</h2>
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-5"><label className="text-xs font-bold text-blue-800 uppercase block mb-2">Configuración de Ejes</label><select value={rodado.capacidad} onChange={e => setRodado({...rodado, capacidad: e.target.value})} className="w-full p-2 border border-blue-300 rounded-md font-black text-blue-900">{capacidadesDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
-              {acople.jalon.includes('ganso') && ['10t', '3t'].includes(rodado.capacidad) && (
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-5">
+                  <label className="text-xs font-bold text-blue-800 uppercase block mb-2">Configuración de Ejes</label>
+                  <select value={rodado.capacidad} onChange={e => setRodado({...rodado, capacidad: e.target.value})} className="w-full p-2 border border-blue-300 rounded-md font-black text-blue-900">
+                      {capacidadesDisponibles.map(o => {
+                          let displayName = o.nombre;
+                          // FORZAMOS LOS NOMBRES PARA IGNORAR LA NUBE
+                          if (o.id === '9t') displayName = '9 Ton (3 Ejes 7,000 lbs)';
+                          else if (o.id === '10t') displayName = '10 Ton (Configuración Especial)';
+                          else if (o.id === '3t') displayName = (tipoRemolque === 'volteo' || tipoRemolque === 'cama_baja' || isGanaderoRedondoMex) ? '3 Ton (2 Ejes 3,500 lbs)' : '3 Ton (Configuración Especial)';
+                          else if (o.id === '1_5t') displayName = '1.5 Ton (1 Eje 3,500 lbs)';
+                          return <option key={o.id} value={o.id}>{displayName}</option>;
+                      })}
+                  </select>
+              </div>
+              {((rodado.capacidad === '10t') || (rodado.capacidad === '3t' && tipoRemolque === 'ganadero' && !isGanaderoRedondoMex)) && (
                   <div className="mt-3">
-                    <label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">Configuración de Ejes</label>
+                    <label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">Especifique Cantidad de Ejes</label>
                     <select value={rodado.cantEjesGanso} onChange={e => setRodado({...rodado, cantEjesGanso: parseInt(e.target.value)})} className="w-full sm:w-2/3 p-2 border border-blue-300 rounded-md font-bold text-blue-900 bg-white shadow-sm">
                       {rodado.capacidad === '10t' ? (
-                        <><option value={2}>2 Ejes (de 10,000 lbs)</option><option value={3}>3 Ejes (de 8,000 lbs)</option></>
+                        <>
+                           <option value={2}>2 Ejes (de 10,000 lbs)</option>
+                           <option value={3}>3 Ejes (de 8,000 lbs)</option>
+                           <option value={310}>3 Ejes (de 10,000 lbs)</option>
+                        </>
                       ) : (
                         <><option value={1}>1 Eje (de 3,500 lbs)</option><option value={2}>2 Ejes (de 3,500 lbs)</option></>
                       )}
                     </select>
                   </div>
-                                )}
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Suspensión</label>
@@ -1352,7 +1478,10 @@ const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => 
                             <option value="canasta">Canasta</option>
                           </>
                         ) : (
-                          <option value="ninguno">Redondo Fijo</option>
+                          <>
+                            <option value="ninguno">Redondo Fijo</option>
+                            <option value="cuadrado">Frente Cuadrado</option>
+                          </>
                         )}
                       </select>
                     </div>
@@ -1375,10 +1504,16 @@ const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => 
                         <select value={pta.tipo} onChange={e => { const newList = [...carroceria.puertasIntList]; newList[idx].tipo = e.target.value; setCarroceria({...carroceria, puertasIntList: newList}); }} className="flex-1 p-2 border border-amber-300 rounded text-sm font-bold text-amber-900 bg-amber-50">
                            {db.puertasInteriores.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
                         </select>
-                        <div className="flex items-center space-x-2 bg-slate-50 px-2 py-1 rounded border border-slate-200">
-                           <span className="text-[10px] font-bold text-slate-500 uppercase">Distancia:</span>
-                           <input type="number" min={getObj(db.anchos, dim.ancho).valor || 0} value={pta.distancia} onChange={e => { const newList = [...carroceria.puertasIntList]; newList[idx].distancia = Math.max(getObj(db.anchos, dim.ancho).valor, parseInt(e.target.value)||0); setCarroceria({...carroceria, puertasIntList: newList}); }} className="w-16 p-1 border border-slate-300 rounded text-sm text-center font-black text-blue-700" />
-                           <span className="text-[10px] font-bold text-slate-500">PULG.</span>
+                        <div className="flex items-center space-x-2 bg-slate-50 px-2 py-1 rounded border border-slate-200 min-w-[120px] justify-center">
+                            {carroceria.puertasIntList.length === 1 ? (
+                                <span className="text-xs font-black text-blue-700 uppercase">Centrada</span>
+                            ) : (
+                                <>
+                                   <span className="text-[10px] font-bold text-slate-500 uppercase">Distancia:</span>
+                                   <input type="number" min="10" max={parseInt(dim.largo.replace('ft', '')) * 12} value={pta.distancia} onChange={e => { const maxPulgadas = parseInt(dim.largo.replace('ft', '')) * 12; const newList = [...carroceria.puertasIntList]; newList[idx].distancia = Math.min(maxPulgadas, Math.max(10, parseInt(e.target.value)||0)); setCarroceria({...carroceria, puertasIntList: newList}); }} className="w-16 p-1 border border-slate-300 rounded text-sm text-center font-black text-blue-700" />
+                                   <span className="text-[10px] font-bold text-slate-500">PULG.</span>
+                                </>
+                            )}
                         </div>
                         <button onClick={() => { const newList = carroceria.puertasIntList.filter((_, i) => i !== idx); setCarroceria({...carroceria, puertasIntList: newList}); }} className="text-red-500 hover:bg-red-50 p-2 rounded border border-transparent hover:border-red-200 transition"><Trash2 className="w-5 h-5"/></button>
                      </div>
@@ -1522,20 +1657,42 @@ const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => 
 
               {tipoRemolque === 'ganadero' && ( <div className="grid grid-cols-1 gap-4 mb-4 bg-slate-50 p-3 rounded border border-slate-200"><div className="flex justify-between items-center max-w-sm"><label className="text-sm font-bold text-slate-700 flex items-center"><Lightbulb className="w-4 h-4 mr-2 text-amber-500"/> Luces Interiores</label><div className="flex bg-white border border-slate-300 rounded overflow-hidden"><button onClick={() => handleCant(setAccesorios, 'lucesInteriores', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="px-4 py-1 font-bold border-x border-slate-200">{accesorios.lucesInteriores}</span><button onClick={() => handleCant(setAccesorios, 'lucesInteriores', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div></div> )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 pt-4 border-t border-slate-100 items-end">
-                <div className="sm:col-span-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Tipo Pintura</label><select value={acabados.pintura} disabled={(isSpecialClient && market==='usa') || tipoRemolque === 'cama_alta'} onChange={e => setAcabados({...acabados, pintura: e.target.value})} className={`w-full p-2 border border-slate-300 rounded-md h-[34px] text-sm ${((isSpecialClient && market==='usa') || tipoRemolque === 'cama_alta') ? 'bg-slate-100 font-bold' : ''}`}>{db.pinturas.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
-                {acabados.pintura === 'polvo' ? ( <div className="sm:col-span-3"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Cajas de Polvo (20kg)</label><div className="h-[34px] flex items-center font-bold text-slate-800 bg-slate-100 px-3 rounded border border-slate-200">{acabados.cajasPolvo} Cajas</div></div> ) : (
-                  <>
-                    <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Body(L)</label><div className="flex bg-slate-50 border border-slate-300 rounded overflow-hidden h-[34px]"><button onClick={() => handleCant(setAcabados, 'bodyLitros', -1)} className="px-2 font-bold hover:bg-slate-200">-</button><span className="w-full text-center font-bold bg-white border-x border-slate-300 flex items-center justify-center">{acabados.bodyLitros}</span><button onClick={() => handleCant(setAcabados, 'bodyLitros', 1)} className="px-2 font-bold hover:bg-slate-200">+</button></div></div>
-                    <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Base(L)</label><div className="flex bg-slate-50 border border-slate-300 rounded overflow-hidden h-[34px]"><button onClick={() => handleCant(setAcabados, 'pinturaLitros', -1)} className="px-2 font-bold hover:bg-slate-200">-</button><span className="w-full text-center font-bold bg-white border-x border-slate-300 flex items-center justify-center">{acabados.pinturaLitros}</span><button onClick={() => handleCant(setAcabados, 'pinturaLitros', 1)} className="px-2 font-bold hover:bg-slate-200">+</button></div></div>
-                    <div className="flex flex-col relative"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Techo(L)</label><div className={`flex bg-slate-50 border border-slate-300 rounded overflow-hidden h-[34px] ${(acabados.mismoColorTecho || ['cama_baja', 'cama_alta'].includes(tipoRemolque)) ? 'opacity-50 pointer-events-none' : ''}`}><button onClick={() => handleCant(setAcabados, 'techoLitros', -1)} className="px-2 font-bold hover:bg-slate-200">-</button><span className="w-full text-center font-bold bg-white border-x border-slate-300 flex items-center justify-center">{acabados.techoLitros}</span><button onClick={() => handleCant(setAcabados, 'techoLitros', 1)} className="px-2 font-bold hover:bg-slate-200">+</button></div>
-                        {carroceria.techo !== 'sin_techo' && carroceria.techo !== 'lona' && tipoRemolque === 'ganadero' && ( <label className="absolute -top-6 -right-2 flex items-center space-x-1 cursor-pointer whitespace-nowrap bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm"><input type="checkbox" checked={acabados.mismoColorTecho} onChange={() => toggle(setAcabados, 'mismoColorTecho')} className="w-3 h-3 text-blue-600"/><span className="text-[10px] font-bold text-slate-600">Mismo Color</span></label> )}
-                    </div>
-                  </>
-                )}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-100 items-end">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Tipo Pintura</label>
+                  <select value={acabados.pintura} disabled={(isSpecialClient && market==='usa') || tipoRemolque === 'cama_alta'} onChange={e => setAcabados({...acabados, pintura: e.target.value})} className={`w-full p-2 border border-slate-300 rounded-md h-[34px] text-sm ${((isSpecialClient && market==='usa') || tipoRemolque === 'cama_alta') ? 'bg-slate-100 font-bold' : ''}`}>
+                    {db.pinturas.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                   <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Aplicación de Body</label>
+                   <select
+                       value={(isSpecialClient && market === 'usa' && (!acabados.tipoBody || acabados.tipoBody === 'ninguno')) ? 'estandar' : (acabados.tipoBody || 'ninguno')}
+                       onChange={e => {
+                           const val = e.target.value;
+                           const l = parseInt(dim.largo.replace('ft', '')) || 0;
+                           let b = 0;
+                           if (val !== 'ninguno') {
+                               if (l <= 16) b = 10; else if (l <= 22) b = 12; else if (l <= 26) b = 14; else if (l <= 28) b = 15; else b = 16;
+                               if (val === 'full') b += 3;
+                           }
+                           setAcabados({...acabados, tipoBody: val, bodyLitros: b});
+                       }}
+                       className="w-full p-2 border border-slate-300 rounded-md h-[34px] text-xs font-bold text-slate-700"
+                   >
+                       {!(isSpecialClient && market === 'usa') && <option value="ninguno">Sin Body</option>}
+                       <option value="estandar">Body Estándar (Inferior, Redila, Llantas, Monturero)</option>
+                       <option value="full">Body Full (+ Fender y Defensa)</option>
+                   </select>
+                </div>
               </div>
             </div>
 
+                    {/* --- NOTAS Y OBSERVACIONES --- */}
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mt-6 print:hidden">
+                <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><FileText className="w-5 h-5 mr-2 text-blue-600"/> 6. Notas y Observaciones para Diseño</h2>
+                <textarea value={cliente.observaciones || ''} onChange={e => setCliente({...cliente, observaciones: e.target.value})} className="w-full p-3 border border-slate-300 rounded-md font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej. El techo debe llevar una caída diferente en la parte trasera, cliente solicita ganchos extra, etc..." rows="3"></textarea>
+            </div>
             {/* --- EXTRAS ESPECIALES DESPLEGABLES --- */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mt-6 print:hidden">
                 <button onClick={() => setMostrarExtras(!mostrarExtras)} className="w-full text-left flex justify-between items-center group">
@@ -1630,7 +1787,7 @@ const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => 
                       
                       <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Gato (Elevación):</span><br className="print:hidden"/> <span className="font-bold">{acople.cantGatos}x {oGato.nombre}</span> {acople.cargadorSolar ? '+ Cargador Solar' : ''} {acople.cargador110 ? '+ Cargador 110v' : ''}</li>
                       
-                      {tipoRemolque === 'ganadero' && <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Puertas:</span><br className="print:hidden"/> <span className="font-bold">Interiores:</span> {carroceria.cantPtasInt}x {oPInt.nombre} &nbsp;|&nbsp; <span className="font-bold">Trasera:</span> {oPTras.nombre} {carroceria.puertaPiloto ? `| Piloto Lateral (${carroceria.puertaPilotoAncho}")` : ''}</li>}
+                      {tipoRemolque === 'ganadero' && <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Puertas:</span><br className="print:hidden"/> <span className="font-bold">Interiores:</span> {carroceria.puertasIntList?.length === 0 ? 'Ninguna' : carroceria.puertasIntList?.length === 1 ? `1x ${getObj(db.puertasInteriores, carroceria.puertasIntList[0].tipo).nombre} (Centrada)` : carroceria.puertasIntList?.map((p, i) => `${i+1}. ${getObj(db.puertasInteriores, p.tipo).nombre} a ${p.distancia}"`).join(' | ')} &nbsp;|&nbsp; <span className="font-bold">Trasera:</span> {oPTras.nombre} {carroceria.puertaPiloto ? `| Piloto Lateral (${carroceria.puertaPilotoAncho}")` : ''}</li>}
                       {tipoRemolque === 'volteo' && <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Puerta Trasera:</span><br className="print:hidden"/> <span className="font-bold capitalize">{volteoOpts.puertaTrasera.replace('_', ' ')}</span></li>}
 
                       <li>
@@ -1648,7 +1805,8 @@ const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => 
                           {Number(rodado.portaExtra) > 0 && <li><span className="font-bold">{Number(rodado.portaExtra)}x</span> Porta Extra Especial</li>}
                           {carroceria.polverasEspeciales && <li>Polveras Estilo USA</li>}
                           <li>Luces: <span className="font-bold">{oLuces.nombre}</span> {acabados.luces === 'especial' && ['cama_baja', 'cama_alta'].includes(tipoRemolque) ? `(${camaBajaOpts.ovaloRojo}x Óvalo, ${camaBajaOpts.tresCuartosRojo}x 3/4" R, ${camaBajaOpts.tresCuartosAmbar}x 3/4" A)` : ''} {camaBajaOpts.luzPortaplaca || volteoOpts.luzPortaplaca ? '+ Luz Portaplaca' : ''}</li>
-                          {acabados.cajaHtas !== 'ninguna' && <li>Caja de Herramientas: <span className="font-bold">{acabados.cajaHtas === 'std' ? 'Estándar' : 'Grande'}</span></li>}
+                          {acabados.cajaHtas !== 'ninguna' && <li>Caja de Herramientas: <span className="font-bold">{acabados.cajaHtas === 'std' ? 'Estándar' : acabados.cajaHtas === 'grande' ? 'Grande Aluminio' : `Medida Especial (${acabados.cajaHtasLargo}" Pulgadas)`}</span></li>}
+                          {((acabados.tipoBody || 'ninguno') !== 'ninguno' || (isSpecialClient && market === 'usa')) && <li>Aplicación de Body: <span className="font-bold">{(acabados.tipoBody === 'full') ? 'Full (Estándar + Fender y Defensa)' : 'Estándar (Chasis, Redila, Monturero, Llantas)'}</span></li>}
                           {extrasCustom.map(ext => (
                               <li key={ext.id}>Extra: <span className="font-bold">{ext.nombre}</span> {!esHojaDiseno && <span className="text-slate-400 text-[10px] ml-1">(+ {formatoMoneda(Number(ext.precio))})</span>}</li>
                           ))}
@@ -1658,6 +1816,14 @@ const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => 
                       <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Color del Remolque:</span><br className="print:hidden"/> <span className="font-black uppercase">{db.colores?.find(c => c.id === acabados.color)?.nombre || 'Estándar'}</span></li>
                     </ul>
                   </div>
+
+                  {/* Observaciones impresas en Ticket */}
+                  {cliente.observaciones && (
+                      <div className="mt-4 p-4 bg-amber-50 print:bg-transparent print:border-2 print:border-slate-800 border border-amber-200 rounded-lg mb-6">
+                          <h4 className="font-black text-amber-900 print:text-slate-800 text-xs uppercase tracking-wider mb-2">Notas y Observaciones Especiales:</h4>
+                          <p className="text-sm font-medium text-amber-800 print:text-slate-900 whitespace-pre-wrap leading-relaxed">{cliente.observaciones}</p>
+                      </div>
+                  )}
 
                   {/* Ocultar precios si es hoja de diseño */}
                   {!esHojaDiseno && (
