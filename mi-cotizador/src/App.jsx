@@ -339,6 +339,7 @@ function CotizadorNube() {
   const [adminUnlockPrompt, setAdminUnlockPrompt] = useState(false);
   const [adminUnlockPass, setAdminUnlockPass] = useState('');
   const [mostrarExtras, setMostrarExtras] = useState(false);
+  const [isGeneratingIA, setIsGeneratingIA] = useState(false);
   // ESTADOS PRINCIPALES
   const [cliente, setCliente] = useState({ nombre: '', telefono: '', anticipo: 0, descuentoPct: 0, ajusteRedondeo: 0, cantidad: 1 });
   const [dim, setDim] = useState({ largo: '20ft', ancho: '84in' });
@@ -597,44 +598,109 @@ function CotizadorNube() {
     setConfirmDialog({ title: 'Eliminar Cotización', message: `¿Seguro que deseas borrar la cotización con folio ${cotId} del historial?`, action: 'DELETE_COTIZACION', payload: { id: cotId } });
   };
 
-  const handleWhatsAppPDF = () => {
-    const totalFinalAMostrar = formatoMoneda(calcularTotalActual());
-    const texto = `Hola ${cliente.nombre || ''}, te comparto el resumen de tu cotización por un Remolque AMACSA ${tipoRemolque.replace('_', ' ').toUpperCase()}.\n\n*Total:* ${totalFinalAMostrar}\n\nTe envío el archivo PDF adjunto con todas las especificaciones a detalle. ¡Quedo a tus órdenes!`;
-    
-    // 1. Limpiamos el teléfono (quitamos letras, espacios, guiones)
-    // Si no hay teléfono ingresado, el número quedará vacío.
-    const numeroLimpio = cliente.telefono ? cliente.telefono.replace(/\D/g, '') : '';
-    
-    // 2. Construimos el enlace inteligente
-    // Si hay un número, abrimos el chat directo. Si no, abrimos WhatsApp general con el texto preparado.
-    let linkWhatsApp = '';
-    if (numeroLimpio) {
-        // Agregamos el prefijo '52' por defecto (México) si el número tiene 10 dígitos
-        // Si ingresas un número de USA (10 dígitos), WhatsApp suele requerir el código de país.
-        // Aquí asumimos México (+52) por defecto si metes 10 dígitos. 
-        const numeroFinal = numeroLimpio.length === 10 ? `52${numeroLimpio}` : numeroLimpio;
-        linkWhatsApp = `https://wa.me/${numeroFinal}?text=${encodeURIComponent(texto)}`;
-    } else {
-        linkWhatsApp = `https://wa.me/?text=${encodeURIComponent(texto)}`;
-    }
-    
-    // 3. Abrimos WhatsApp AL INSTANTE en una nueva pestaña
-    window.open(linkWhatsApp, '_blank');
-    
-    // 4. Lanzamos la ventana de Guardar como PDF
-    setTimeout(() => {
-      window.print();
-    }, 500); 
-  };
+ 
+   const handleWhatsAppPDF = async () => {
+  const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
+  const totalFinalAMostrar = formatoMoneda(calcularTotalActual());
+
+  let textoFinal = `Hola ${cliente.nombre || ''}, te comparto el resumen de tu cotización por un Remolque AMACSA ${tipoRemolque.replace('_', ' ').toUpperCase()}.
+
+*Total:* ${totalFinalAMostrar}
+
+Te envío el archivo PDF adjunto con todas las especificaciones a detalle. ¡Quedo a tus órdenes!`;
+
+  if (GEMINI_API_KEY) {
+    setIsGeneratingIA(true);
+
+    try {
+      const prompt = `
+Eres un vendedor estrella y experto en ingeniería de la fábrica de remolques AMACSA.
+
+Redacta un mensaje persuasivo y amable para WhatsApp dirigido a:
+${cliente.nombre || 'un cliente'}.
+
+Remolque: ${tipoRemolque.replace('_', ' ').toUpperCase()}
+Largo: ${dim.largo}
+Precio total: ${totalFinalAMostrar}
+Capacidad: ${rodado.capacidad}
+
+Menciona brevemente que es una configuración resistente.
+Destaca la calidad, durabilidad y uso rudo de AMACSA.
+Indica que se envía el PDF con todos los detalles técnicos.
+
+Usa un tono profesional, cercano y norteño.
+Incluye máximo 2 emojis.
+Máximo 3 párrafos cortos.
+`;
+
+      const urlGemini =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" +
+  GEMINI_API_KEY;
+
+      const response = await fetch(urlGemini, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ]
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Error completo de Gemini:', data);
+        throw new Error(data?.error?.message || 'Error de Gemini');
+      }
+
+      textoFinal =
+        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+        textoFinal;
+
+    } catch (error) {
+      console.error('Error con la IA:', error);
+    } finally {
+      setIsGeneratingIA(false);
+    }
+  }
+
+  const numeroLimpio = cliente.telefono
+    ? cliente.telefono.replace(/\D/g, '')
+    : '';
+
+  const numeroFinal =
+    numeroLimpio.length === 10
+      ? `52${numeroLimpio}`
+      : numeroLimpio;
+
+  const linkWhatsApp = numeroFinal
+    ? `https://wa.me/${numeroFinal}?text=${encodeURIComponent(textoFinal)}`
+    : `https://wa.me/?text=${encodeURIComponent(textoFinal)}`;
+
+  window.open(linkWhatsApp, '_blank');
+
+  setTimeout(() => {
+    window.print();
+  }, 1500);
+};
   // --- MATEMÁTICAS EN TIEMPO REAL ---
   const handleCant = (setter, field, delta, min = 0, max = Infinity) => setter(prev => ({ ...prev, [field]: Math.min(max, Math.max(min, prev[field] + delta)) }));
   const toggle = (setter, field) => setter(prev => ({ ...prev, [field]: !prev[field] }));
 
   const maxPuertasInt = (() => { const val = parseInt(dim.largo.replace('ft', '')); if (val <= 20) return 1; if (val <= 26) return 2; if (val <= 32) return 3; return 5; })();
   
- const oCap = getObj(db.capacidades, rodado.capacidad);
-  
+  const oCap = getObj(db.capacidades, rodado.capacidad);
+
   const isGanaderoRedondoMex = tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'mexico';
   const isGanaderoRedondoUSA = tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'usa';
 
@@ -1019,14 +1085,14 @@ let capacidadLbs = '7,000 LBS';
           <form onSubmit={handleLogin}>
             <div className="mb-4">
               <label className="block text-sm font-bold text-slate-700 mb-2">Usuario</label>
-              <div className="relative"><User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" /><input type="text" value={loginUser} onChange={(e) => setLoginUser(e.target.value)} className="w-full p-3 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-medium" placeholder="ej. admin" /></div>
+              <div className="relative"><User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" /><input type="text" value={loginUser} onChange={(e) => setLoginUser(e.target.value)} className="w-full p-3 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none font-medium" placeholder="ej. admin" /></div>
             </div>
             <div className="mb-6">
               <label className="block text-sm font-bold text-slate-700 mb-2">Contraseña</label>
-              <div className="relative"><Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" /><input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} className="w-full p-3 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-medium" placeholder="••••••••" /></div>
+              <div className="relative"><Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" /><input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} className="w-full p-3 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none font-medium" placeholder="••••••••" /></div>
               {loginError && <p className="text-red-500 text-sm font-bold mt-2">{loginError}</p>}
             </div>
-            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-lg transition">Ingresar al Sistema</button>
+            <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-lg transition">Ingresar al Sistema</button>
           </form>
         </div>
       </div>
@@ -1041,7 +1107,7 @@ let capacidadLbs = '7,000 LBS';
             <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notification.type === 'error' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}><Shield className="w-6 h-6" /></div>
             <h3 className="text-xl font-black mb-2 text-slate-800">{notification.type === 'error' ? 'Aviso Importante' : '¡Éxito!'}</h3>
             <p className="text-slate-600 font-medium mb-6">{notification.message}</p>
-            <button onClick={() => setNotification(null)} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold w-full transition">Entendido</button>
+            <button onClick={() => setNotification(null)} className="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold w-full transition">Entendido</button>
           </div>
         </div>
       )}
@@ -1065,10 +1131,10 @@ let capacidadLbs = '7,000 LBS';
           <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full z-50">
             <div className="text-center mb-6"><div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-3 bg-slate-100 text-slate-700"><Settings className="w-6 h-6" /></div><h3 className="text-xl font-black text-slate-800">Candado de Seguridad</h3><p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Acceso a Catálogo</p></div>
             <form onSubmit={handleUnlockSubmit}>
-               <input type="password" autoFocus value={adminUnlockPass} onChange={e => setAdminUnlockPass(e.target.value)} className="w-full p-3.5 border-2 border-slate-200 focus:border-blue-500 rounded-xl mb-6 text-center tracking-[0.5em] font-black text-lg outline-none transition" placeholder="••••••••" />
+               <input type="password" autoFocus value={adminUnlockPass} onChange={e => setAdminUnlockPass(e.target.value)} className="w-full p-3.5 border-2 border-slate-200 focus:border-green-500 rounded-xl mb-6 text-center tracking-[0.5em] font-black text-lg outline-none transition" placeholder="••••••••" />
                <div className="flex space-x-3">
                  <button type="button" onClick={() => setAdminUnlockPrompt(false)} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-xl font-bold transition">Volver</button>
-                 <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-black transition shadow-lg shadow-blue-500/30">Desbloquear</button>
+                 <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl font-black transition shadow-lg shadow-green-500/30">Desbloquear</button>
                </div>
             </form>
           </div>
@@ -1076,10 +1142,10 @@ let capacidadLbs = '7,000 LBS';
       )}
 
       {/* HEADER PRINCIPAL */}
-      <header className="bg-slate-900 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-md print:hidden">
+      <header className="bg-green-950 border-b-4 border-green-600 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-lg print:hidden">
         <div className="flex items-center space-x-3">
-          <div className="relative h-10 flex items-center justify-center min-w-[40px] bg-slate-800 rounded-lg p-1"><img src="/logo_amacsa.png" alt="AMACSA" className="h-12 object-contain" /></div>
-          <div><h1 className="text-xl font-black tracking-wider leading-tight text-white">AMACSA</h1><p className="text-xs text-amber-500 font-bold tracking-widest uppercase">ERP Ventas</p></div>
+          <div className="relative h-11 flex items-center justify-center min-w-[45px] bg-white rounded-lg p-1.5 shadow-inner"><img src="/logo_amacsa.png" alt="AMACSA" className="h-full object-contain" /></div>
+          <div><h1 className="text-2xl font-black tracking-widest leading-none text-white">AMACSA</h1><p className="text-[10px] text-amber-400 font-black tracking-[0.2em] uppercase mt-0.5">ERP Ventas</p></div>
         </div>
         <div className="flex items-center space-x-3">
           <div className="hidden sm:block text-right mr-2"><p className="text-xs text-slate-400">Usuario activo</p><p className="text-sm font-bold text-white">{currentUser.name}</p></div>
@@ -1089,7 +1155,7 @@ let capacidadLbs = '7,000 LBS';
               <button onClick={handleAdminAccess} className={`flex items-center space-x-1 px-4 py-2 rounded text-sm font-bold transition text-white ${isAppUnlocked ? 'bg-red-600 hover:bg-red-500' : 'bg-slate-800 hover:bg-slate-700'}`}>
                 {isAppUnlocked ? <><Unlock className="w-4 h-4"/> <span className="hidden md:inline">Cerrar Catálogo</span></> : <><Lock className="w-4 h-4"/> <span className="hidden md:inline">Panel Historial</span></>}
               </button>
-              <button onClick={() => window.print()} className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-sm font-bold transition text-white"><Printer className="w-4 h-4"/> <span>Imprimir</span></button>
+              <button onClick={() => window.print()} className="flex items-center space-x-1 bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm font-bold transition text-white"><Printer className="w-4 h-4"/> <span>Imprimir</span></button>
              <button 
     onClick={() => { 
         setEsHojaDiseno(true); 
@@ -1112,11 +1178,11 @@ let capacidadLbs = '7,000 LBS';
             <h2 className="text-lg font-black text-slate-800 mb-4 border-b pb-2">Panel de Control</h2>
             <div className="flex flex-col space-y-1 h-[75vh] overflow-y-auto pr-2">
               <div className="text-xs font-black text-slate-400 uppercase tracking-widest mt-2 mb-1 px-4">Historial</div>
-              <button onClick={() => setAdminSection('cotizaciones')} className={`flex items-center text-left px-4 py-3 rounded-lg text-sm font-bold transition ${adminSection === 'cotizaciones' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}><FileText className="w-4 h-4 mr-2"/> Cotizaciones Guardadas</button>
+              <button onClick={() => setAdminSection('cotizaciones')} className={`flex items-center text-left px-4 py-3 rounded-lg text-sm font-bold transition ${adminSection === 'cotizaciones' ? 'bg-green-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}><FileText className="w-4 h-4 mr-2"/> Cotizaciones Guardadas</button>
               
               <div className="text-xs font-black text-slate-400 uppercase tracking-widest mt-6 mb-1 px-4">Inventario y Precios</div>
               {ADMIN_SECTIONS.map(sec => (
-                <button key={sec.id} onClick={() => setAdminSection(sec.id)} className={`text-left px-4 py-3 rounded-lg text-sm font-bold transition ${adminSection === sec.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>{sec.title}</button>
+                <button key={sec.id} onClick={() => setAdminSection(sec.id)} className={`text-left px-4 py-3 rounded-lg text-sm font-bold transition ${adminSection === sec.id ? 'bg-green-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>{sec.title}</button>
               ))}
 
               <div className="text-xs font-black text-slate-400 uppercase tracking-widest mt-6 mb-1 px-4">Mi Cuenta</div>
@@ -1141,9 +1207,9 @@ let capacidadLbs = '7,000 LBS';
                        <tbody>
                          {cotizaciones.length === 0 ? <tr><td colSpan="6" className="p-6 text-center text-slate-500">No hay cotizaciones registradas en la nube.</td></tr> : cotizaciones.map((cot, i) => (
                            <tr key={i} className="border-b last:border-0 hover:bg-slate-50">
-                             <td className="p-3 font-black text-blue-700">{cot.id}</td><td className="p-3 text-slate-600 font-medium">{cot.fecha}</td><td className="p-3 font-bold text-slate-800">{cot.cliente}</td><td className="p-3 text-slate-600">{cot.remolque} ({cot.medida})</td><td className="p-3 font-black text-slate-800 text-right">{cot.total}</td>
+                             <td className="p-3 font-black text-green-700">{cot.id}</td><td className="p-3 text-slate-600 font-medium">{cot.fecha}</td><td className="p-3 font-bold text-slate-800">{cot.cliente}</td><td className="p-3 text-slate-600">{cot.remolque} ({cot.medida})</td><td className="p-3 font-black text-slate-800 text-right">{cot.total}</td>
                              <td className="p-3 text-center space-x-2 whitespace-nowrap">
-                                <button onClick={() => handleCargarCotizacion(cot)} className="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-black transition border border-blue-200 shadow-sm">Cargar / Reimprimir</button>
+                                <button onClick={() => handleCargarCotizacion(cot)} className="bg-green-50 hover:bg-green-100 text-green-600 px-3 py-1 rounded text-xs font-black transition border border-green-200 shadow-sm">Cargar / Reimprimir</button>
                                 <button onClick={() => handleEliminarCotizacion(cot.id)} className="text-red-500 hover:text-red-700 p-1 transition align-middle" title="Eliminar del historial"><Trash2 className="w-5 h-5 inline" /></button>
                              </td>
                            </tr>
@@ -1160,7 +1226,7 @@ let capacidadLbs = '7,000 LBS';
                       <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre Completo</label><input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium" /></div>
                       <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Usuario de Acceso</label><input type="text" value={profileForm.username} onChange={e => setProfileForm({...profileForm, username: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium" /></div>
                       <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contraseña</label><input type="text" value={profileForm.password} onChange={e => setProfileForm({...profileForm, password: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium" /></div>
-                      <div className="text-right pt-2"><button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm">Guardar Cambios</button></div>
+                      <div className="text-right pt-2"><button type="submit" className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm">Guardar Cambios</button></div>
                     </form>
                   </div>
                 </div>
@@ -1183,7 +1249,7 @@ let capacidadLbs = '7,000 LBS';
                         {users.map(u => (
                           <tr key={u.id} className="border-b last:border-0 hover:bg-slate-50">
                             <td className="p-3 font-medium text-slate-800">{u.name}</td><td className="p-3 text-slate-600">{u.username}</td>
-                            <td className="p-3"><span className={`px-2 py-1 rounded text-xs font-bold ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{u.role === 'admin' ? 'Administrador' : 'Ventas'}</span></td>
+                            <td className="p-3"><span className={`px-2 py-1 rounded text-xs font-bold ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>{u.role === 'admin' ? 'Administrador' : 'Ventas'}</span></td>
                             <td className="p-3 text-right"><button onClick={() => handleDeleteUser(u.id, u.name)} disabled={u.id === currentUser.id} className="text-red-500 hover:text-red-700 disabled:opacity-30 transition p-1"><Trash2 className="w-5 h-5 inline" /></button></td>
                           </tr>
                         ))}
@@ -1202,7 +1268,7 @@ let capacidadLbs = '7,000 LBS';
                         logs.map((log) => (
                           <div key={log.id} className="flex flex-col sm:flex-row sm:items-start gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm">
                             <div className="sm:w-1/4 text-slate-500 text-xs font-bold pt-0.5 whitespace-nowrap">{log.date}</div>
-                            <div className="sm:w-1/4 font-black text-blue-700 flex items-center"><User className="w-3 h-3 mr-1 inline"/> {log.user}</div>
+                            <div className="sm:w-1/4 font-black text-green-700 flex items-center"><User className="w-3 h-3 mr-1 inline"/> {log.user}</div>
                             <div className="sm:w-2/4 text-slate-700 leading-tight">{log.action}</div>
                           </div>
                         ))
@@ -1230,7 +1296,7 @@ let capacidadLbs = '7,000 LBS';
                       { id: 'cama_baja', name: 'Cama Baja' },
                       { id: 'cama_alta', name: 'Cama Alta' }
                     ].map(tab => (
-                      <button key={tab.id} onClick={() => setAdminTrailerTab(tab.id)} className={`px-4 py-2 rounded-md text-sm font-black whitespace-nowrap transition-all ${adminTrailerTab === tab.id ? 'bg-white text-blue-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200'}`}>
+                      <button key={tab.id} onClick={() => setAdminTrailerTab(tab.id)} className={`px-4 py-2 rounded-md text-sm font-black whitespace-nowrap transition-all ${adminTrailerTab === tab.id ? 'bg-white text-green-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200'}`}>
                         {tab.name}
                       </button>
                     ))}
@@ -1251,12 +1317,12 @@ let capacidadLbs = '7,000 LBS';
                         {!isGeneral && item[activePKey] === undefined && !sectionDef?.isColor && (
                           <div className="absolute top-2 right-4 text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Usando precio General</div>
                         )}
-                        <div className="flex-1 min-w-[200px]"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre Comercial</label><input type="text" value={item.nombre} onChange={e => handleDbChange(adminSection, index, 'nombre', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none" /></div>
+                        <div className="flex-1 min-w-[200px]"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre Comercial</label><input type="text" value={item.nombre} onChange={e => handleDbChange(adminSection, index, 'nombre', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 focus:ring-2 focus:ring-green-500 outline-none" /></div>
                         {sectionDef?.hasValor && (<div className="w-24"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef.valorLabel}</label><input type="number" value={item.valor || 0} onChange={e => handleDbChange(adminSection, index, 'valor', parseFloat(e.target.value) || 0)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 text-center focus:ring-2" /></div>)}
                         
-                        {sectionDef?.hasPrecioExtra && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Extra {isGeneral ? '(Base)' : ''}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item[activeExtraKey] ?? item.precioExtra ?? 0} onChange={e => handleDbChange(adminSection, index, activeExtraKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-bold ${!isGeneral && item[activeExtraKey] !== undefined ? 'border-blue-400 bg-blue-50 text-blue-800' : 'border-slate-300'}`} /></div></div>)}
+                        {sectionDef?.hasPrecioExtra && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Extra {isGeneral ? '(Base)' : ''}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item[activeExtraKey] ?? item.precioExtra ?? 0} onChange={e => handleDbChange(adminSection, index, activeExtraKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-bold ${!isGeneral && item[activeExtraKey] !== undefined ? 'border-green-400 bg-green-50 text-green-800' : 'border-slate-300'}`} /></div></div>)}
                         
-                        {!sectionDef?.isColor && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'P. SqFt' : 'Precio'} {isGeneral ? '(Base)' : ''}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item[activePKey] ?? item[pKey] ?? 0} onChange={e => handleDbChange(adminSection, index, activePKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-black text-right ${!isGeneral && item[activePKey] !== undefined ? 'border-blue-400 bg-blue-50 text-blue-700' : 'border-slate-300 text-slate-700'}`} /></div></div>)}
+                        {!sectionDef?.isColor && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'P. SqFt' : 'Precio'} {isGeneral ? '(Base)' : ''}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item[activePKey] ?? item[pKey] ?? 0} onChange={e => handleDbChange(adminSection, index, activePKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-black text-right ${!isGeneral && item[activePKey] !== undefined ? 'border-green-400 bg-green-50 text-green-700' : 'border-slate-300 text-slate-700'}`} /></div></div>)}
                         
                         {!sectionDef?.isFixed && (<div className="pt-5"><button onClick={() => handleDbDelete(adminSection, index)} className="p-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition shadow-sm"><Trash2 className="w-5 h-5"/></button></div>)}
                       </div>
@@ -1274,7 +1340,7 @@ let capacidadLbs = '7,000 LBS';
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* BOTONES USA / MEXICO CON IMAGEN DE BANDERAS */}
                 <div className="p-1.5 bg-slate-200 rounded-xl flex items-center shadow-inner">
-                    <button onClick={() => setMarket('usa')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'usa' ? 'bg-white shadow text-blue-900 scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}>
+                    <button onClick={() => setMarket('usa')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'usa' ? 'bg-white shadow text-green-900 scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}>
                         <img src="https://flagcdn.com/w40/us.png" alt="USA" className="w-5 h-auto mr-2 rounded-sm shadow-sm" /> USA
                     </button>
                     <button onClick={() => setMarket('mexico')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'mexico' ? 'bg-white shadow text-green-700 scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}>
@@ -1335,13 +1401,13 @@ let capacidadLbs = '7,000 LBS';
             </div>
 
             {market === 'usa' && tipoRemolque === 'ganadero' && (
-                <div className={`p-5 rounded-xl shadow-sm border transition-colors ${isSpecialClient ? 'bg-indigo-900 border-indigo-700' : 'bg-white border-slate-200'}`}>
+                <div className={`p-5 rounded-xl shadow-sm border transition-colors ${isSpecialClient ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-lg ${isSpecialClient ? 'bg-indigo-800' : 'bg-slate-100'}`}><Star className={`w-6 h-6 ${isSpecialClient ? 'text-indigo-300' : 'text-slate-400'}`}/></div>
-                      <div><h2 className={`font-black text-lg ${isSpecialClient ? 'text-white' : 'text-slate-800'}`}>Cliente Especial USA</h2><p className={`text-xs font-bold ${isSpecialClient ? 'text-indigo-300' : 'text-slate-500'}`}>{isSpecialClient ? 'Reglas y accesorios requeridos activados' : 'Configuración Estándar USA'}</p></div>
+                      <div className={`p-2 rounded-lg ${isSpecialClient ? 'bg-slate-700' : 'bg-slate-100'}`}><Star className={`w-6 h-6 ${isSpecialClient ? 'text-amber-400' : 'text-slate-400'}`}/></div>
+                      <div><h2 className={`font-black text-lg ${isSpecialClient ? 'text-white' : 'text-slate-800'}`}>Cliente Especial USA</h2><p className={`text-xs font-bold ${isSpecialClient ? 'text-amber-400' : 'text-slate-500'}`}>{isSpecialClient ? 'Reglas y accesorios requeridos activados' : 'Configuración Estándar USA'}</p></div>
                     </div>
-                    <label className={`flex items-center space-x-3 px-5 py-3 rounded-xl cursor-pointer border transition shadow-inner ${isSpecialClient ? 'bg-indigo-950 border-indigo-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-600 hover:bg-slate-100'}`}>
+                    <label className={`flex items-center space-x-3 px-5 py-3 rounded-xl cursor-pointer border transition shadow-inner ${isSpecialClient ? 'bg-slate-900 border-slate-600 text-white' : 'bg-slate-50 border-slate-300 text-slate-600 hover:bg-slate-100'}`}>
                       <span className="text-sm font-black tracking-wide uppercase">Cliente Especial</span>
                       <div className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${isSpecialClient ? 'bg-green-500' : 'bg-slate-400'}`}><div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isSpecialClient ? 'translate-x-6' : 'translate-x-0'}`}></div></div>
                       <input type="checkbox" checked={isSpecialClient} onChange={() => setIsSpecialClient(!isSpecialClient)} className="hidden"/>
@@ -1351,11 +1417,11 @@ let capacidadLbs = '7,000 LBS';
             )}
             
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-              <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><User className="w-5 h-5 mr-2 text-blue-600"/> Datos del Cliente</h2>
+              <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><User className="w-5 h-5 mr-2 text-green-600"/> Datos del Cliente</h2>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="md:col-span-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre Comercial / Cliente</label><input type="text" value={cliente.nombre} onChange={e => setCliente({...cliente, nombre: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium" placeholder="Ej. Juan Pérez" /></div>
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Teléfono</label><input type="text" value={cliente.telefono} onChange={e => setCliente({...cliente, telefono: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium" placeholder="Ej. 614 123 4567" /></div>
-               <div><label className="text-xs font-bold text-blue-700 uppercase block mb-1">Cant. Remolques</label><input type="number" min="1" value={cliente.cantidad} onChange={e => setCliente({...cliente, cantidad: parseInt(e.target.value)||1})} className="w-full p-2 border-2 border-blue-400 bg-blue-50 text-blue-900 rounded-md font-black text-center" /></div>
+               <div><label className="text-xs font-bold text-green-700 uppercase block mb-1">Cant. Remolques</label><input type="number" min="1" value={cliente.cantidad} onChange={e => setCliente({...cliente, cantidad: parseInt(e.target.value)||1})} className="w-full p-2 border-2 border-green-400 bg-green-50 text-green-900 rounded-md font-black text-center" /></div>
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Descuento (%)</label><div className="relative"><input type="number" min="0" max="100" value={cliente.descuentoPct || ''} onChange={e => setCliente({...cliente, descuentoPct: parseFloat(e.target.value) || 0})} className="w-full p-2 border border-slate-300 rounded-md font-black text-red-600 text-center" placeholder="0" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">%</span></div></div>
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Ajuste / Redondeo</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={cliente.ajusteRedondeo || ''} onChange={e => setCliente({...cliente, ajusteRedondeo: parseFloat(e.target.value) || 0})} className="w-full p-2 pl-7 border border-slate-300 rounded-md font-black text-purple-700" placeholder="0" /></div></div>
                 <div className="md:col-span-5 border-t border-slate-100 pt-3 mt-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Anticipo (MXN)</label><div className="relative max-w-[200px]"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={cliente.anticipo || ''} onChange={e => setCliente({...cliente, anticipo: parseFloat(e.target.value) || 0})} className="w-full p-2 pl-7 border border-slate-300 rounded-md font-black text-green-700 bg-green-50" placeholder="0" /></div></div>
@@ -1363,15 +1429,15 @@ let capacidadLbs = '7,000 LBS';
 <div className="col-span-full grid grid-cols-1 md:grid-cols-4 gap-6 mt-6 pt-6 border-t border-slate-200">
                     <div>
                         <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Cantidad de Remolques</label>
-                        <input type="number" min="1" value={cliente.cantidad || 1} onChange={(e) => setCliente({...cliente, cantidad: parseInt(e.target.value) || 1})} className="w-full bg-blue-50 border-2 border-blue-200 text-blue-900 font-black rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors" />
+                        <input type="number" min="1" value={cliente.cantidad || 1} onChange={(e) => setCliente({...cliente, cantidad: parseInt(e.target.value) || 1})} className="w-full bg-green-50 border-2 border-green-200 text-green-900 font-black rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 transition-colors" />
                     </div>
                     <div>
                         <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Folio de Diseño</label>
-                        <input type="text" value={folio} onChange={(e) => setFolio(e.target.value)} placeholder="Ej. JP-015" className="w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" />
+                        <input type="text" value={folio} onChange={(e) => setFolio(e.target.value)} placeholder="Ej. JP-015" className="w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 focus:bg-white transition-colors" />
                     </div>
                     <div>
                         <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Fecha de Cotización</label>
-                        <input type="date" value={fechaCotizacion} onChange={(e) => setFechaCotizacion(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" />
+                        <input type="date" value={fechaCotizacion} onChange={(e) => setFechaCotizacion(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 focus:bg-white transition-colors" />
                     </div>
                     <div>
                         <label className="block text-[11px] font-black text-slate-400 mb-2 tracking-wider uppercase">Entrega Estimada</label>
@@ -1383,7 +1449,7 @@ let capacidadLbs = '7,000 LBS';
             </div>
              
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-              <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><Disc className="w-5 h-5 mr-2 text-blue-600"/> 1. Dimensiones y Acoplamiento</h2>
+              <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><Disc className="w-5 h-5 mr-2 text-green-600"/> 1. Dimensiones y Acoplamiento</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Largo del Remolque</label><select value={dim.largo} onChange={e => setDim({...dim, largo: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium">{largosDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
                 <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Ancho Exterior</label><select value={dim.ancho} onChange={e => setDim({...dim, ancho: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium">{anchosDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
@@ -1391,7 +1457,7 @@ let capacidadLbs = '7,000 LBS';
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
                 <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Tipo de Jalón</label><select value={acople.jalon} onChange={e => setAcople({...acople, jalon: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-bold">{jalonesDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
                 <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Cadena de Seguridad</label><select value={acople.cadena} disabled={market === 'usa'} onChange={e => setAcople({...acople, cadena: e.target.value})} className={`w-full p-2 border border-slate-300 rounded-md font-bold ${market === 'usa' ? 'bg-slate-100 opacity-70' : ''}`}>{db.cadenas?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
-                <div className="flex flex-col justify-end space-y-2 pb-1"><label className={`flex items-center space-x-2 font-medium text-sm text-slate-700 ${market === 'usa' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}><input type="checkbox" checked={acople.sujetaCadenas} disabled={market === 'usa'} onChange={() => toggle(setAcople, 'sujetaCadenas')} className="w-4 h-4 text-blue-600"/> <span>Incluir Sujeta Cadenas</span></label></div>
+                <div className="flex flex-col justify-end space-y-2 pb-1"><label className={`flex items-center space-x-2 font-medium text-sm text-slate-700 ${market === 'usa' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}><input type="checkbox" checked={acople.sujetaCadenas} disabled={market === 'usa'} onChange={() => toggle(setAcople, 'sujetaCadenas')} className="w-4 h-4 text-green-600"/> <span>Incluir Sujeta Cadenas</span></label></div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 pt-4 mt-4 border-t border-slate-100">
                 <div className="sm:col-span-6"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Gato Elevación</label><select value={acople.gato} onChange={e => setAcople({...acople, gato: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md">{gatosDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
@@ -1406,10 +1472,10 @@ let capacidadLbs = '7,000 LBS';
             </div>
 
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-              <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><Zap className="w-5 h-5 mr-2 text-blue-600"/> 2. Capacidad y Ejes</h2>
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-5">
-                  <label className="text-xs font-bold text-blue-800 uppercase block mb-2">Configuración de Ejes</label>
-                  <select value={rodado.capacidad} onChange={e => setRodado({...rodado, capacidad: e.target.value})} className="w-full p-2 border border-blue-300 rounded-md font-black text-blue-900">
+              <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><Zap className="w-5 h-5 mr-2 text-green-600"/> 2. Capacidad y Ejes</h2>
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200 mb-5">
+                  <label className="text-xs font-bold text-green-800 uppercase block mb-2">Configuración de Ejes</label>
+                  <select value={rodado.capacidad} onChange={e => setRodado({...rodado, capacidad: e.target.value})} className="w-full p-2 border border-green-300 rounded-md font-black text-green-900">
                       {capacidadesDisponibles.map(o => {
                           let displayName = o.nombre;
                           // FORZAMOS LOS NOMBRES PARA IGNORAR LA NUBE
@@ -1423,8 +1489,8 @@ let capacidadLbs = '7,000 LBS';
               </div>
               {((rodado.capacidad === '10t') || (rodado.capacidad === '3t' && tipoRemolque === 'ganadero' && !isGanaderoRedondoMex)) && (
                   <div className="mt-3">
-                    <label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">Especifique Cantidad de Ejes</label>
-                    <select value={rodado.cantEjesGanso} onChange={e => setRodado({...rodado, cantEjesGanso: parseInt(e.target.value)})} className="w-full sm:w-2/3 p-2 border border-blue-300 rounded-md font-bold text-blue-900 bg-white shadow-sm">
+                    <label className="text-[11px] font-bold text-green-800 uppercase block mb-1">Especifique Cantidad de Ejes</label>
+                    <select value={rodado.cantEjesGanso} onChange={e => setRodado({...rodado, cantEjesGanso: parseInt(e.target.value)})} className="w-full sm:w-2/3 p-2 border border-green-300 rounded-md font-bold text-green-900 bg-white shadow-sm">
                       {rodado.capacidad === '10t' ? (
                         <>
                            <option value={2}>2 Ejes (de 10,000 lbs)</option>
@@ -1445,8 +1511,8 @@ let capacidadLbs = '7,000 LBS';
                 <div><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Set de Llantas</label><select value={rodado.llanta} onChange={e => setRodado({...rodado, llanta: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md">{llantasDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
               </div>
               <div className="flex flex-wrap items-center gap-5 pt-4 border-t border-slate-100">
-                <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded px-2 py-1"><span className="text-sm font-bold text-slate-700">Frenos Eléctricos:</span><button onClick={() => handleCant(setRodado, 'cantFrenos', -1, 0, cantEjes)} className="px-2 font-bold hover:bg-slate-200 rounded text-lg">-</button><span className="font-black text-blue-700 w-4 text-center">{rodado.cantFrenos}</span><button onClick={() => handleCant(setRodado, 'cantFrenos', 1, 0, cantEjes)} className="px-2 font-bold hover:bg-slate-200 rounded text-lg">+</button><span className="text-xs font-medium text-slate-500 ml-1">/ {cantEjes} Ejes</span></div>
-                <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded px-2 py-1"><span className="text-sm font-bold text-slate-700">Llanta Extra:</span><button onClick={() => handleCant(setRodado, 'llantaExtra', -1)} className="px-2 font-bold hover:bg-slate-200 rounded">-</button><span className="font-black text-blue-700 w-4 text-center">{rodado.llantaExtra}</span><button onClick={() => handleCant(setRodado, 'llantaExtra', 1)} className="px-2 font-bold hover:bg-slate-200 rounded">+</button></div>
+                <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded px-2 py-1"><span className="text-sm font-bold text-slate-700">Frenos Eléctricos:</span><button onClick={() => handleCant(setRodado, 'cantFrenos', -1, 0, cantEjes)} className="px-2 font-bold hover:bg-slate-200 rounded text-lg">-</button><span className="font-black text-green-700 w-4 text-center">{rodado.cantFrenos}</span><button onClick={() => handleCant(setRodado, 'cantFrenos', 1, 0, cantEjes)} className="px-2 font-bold hover:bg-slate-200 rounded text-lg">+</button><span className="text-xs font-medium text-slate-500 ml-1">/ {cantEjes} Ejes</span></div>
+                <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded px-2 py-1"><span className="text-sm font-bold text-slate-700">Llanta Extra:</span><button onClick={() => handleCant(setRodado, 'llantaExtra', -1)} className="px-2 font-bold hover:bg-slate-200 rounded">-</button><span className="font-black text-green-700 w-4 text-center">{rodado.llantaExtra}</span><button onClick={() => handleCant(setRodado, 'llantaExtra', 1)} className="px-2 font-bold hover:bg-slate-200 rounded">+</button></div>
                 <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded px-2 py-1"><span className="text-sm font-medium text-slate-700">Porta Extra:</span><button onClick={() => handleCant(setRodado, 'portaExtra', -1, tipoRemolque !== 'ganadero' ? 1 : rodado.llantaExtra)} className="px-2 font-bold hover:bg-slate-200 rounded">-</button><span className="font-bold w-4 text-center">{rodado.portaExtra}</span><button onClick={() => handleCant(setRodado, 'portaExtra', 1)} className="px-2 font-bold hover:bg-slate-200 rounded">+</button></div>
               </div>
             </div>
@@ -1506,11 +1572,11 @@ let capacidadLbs = '7,000 LBS';
                         </select>
                         <div className="flex items-center space-x-2 bg-slate-50 px-2 py-1 rounded border border-slate-200 min-w-[120px] justify-center">
                             {carroceria.puertasIntList.length === 1 ? (
-                                <span className="text-xs font-black text-blue-700 uppercase">Centrada</span>
+                                <span className="text-xs font-black text-green-700 uppercase">Centrada</span>
                             ) : (
                                 <>
                                    <span className="text-[10px] font-bold text-slate-500 uppercase">Distancia:</span>
-                                   <input type="number" min="10" max={parseInt(dim.largo.replace('ft', '')) * 12} value={pta.distancia} onChange={e => { const maxPulgadas = parseInt(dim.largo.replace('ft', '')) * 12; const newList = [...carroceria.puertasIntList]; newList[idx].distancia = Math.min(maxPulgadas, Math.max(10, parseInt(e.target.value)||0)); setCarroceria({...carroceria, puertasIntList: newList}); }} className="w-16 p-1 border border-slate-300 rounded text-sm text-center font-black text-blue-700" />
+                                   <input type="number" min="10" max={parseInt(dim.largo.replace('ft', '')) * 12} value={pta.distancia} onChange={e => { const maxPulgadas = parseInt(dim.largo.replace('ft', '')) * 12; const newList = [...carroceria.puertasIntList]; newList[idx].distancia = Math.min(maxPulgadas, Math.max(10, parseInt(e.target.value)||0)); setCarroceria({...carroceria, puertasIntList: newList}); }} className="w-16 p-1 border border-slate-300 rounded text-sm text-center font-black text-green-700" />
                                    <span className="text-[10px] font-bold text-slate-500">PULG.</span>
                                 </>
                             )}
@@ -1593,10 +1659,10 @@ let capacidadLbs = '7,000 LBS';
 
             {tipoRemolque === 'ganadero' && (
               <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><DoorOpen className="w-5 h-5 mr-2 text-blue-600"/> 4. Monturero</h2>
+                <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><DoorOpen className="w-5 h-5 mr-2 text-green-600"/> 4. Monturero</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
 <select value={monturero.tipo} onChange={e => setMonturero({...monturero, tipo: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium">{monturerosDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select>
-                  {(monturero.tipo !== 'ninguno' || carroceria.frente === 'cachucha') && (<label className="flex items-center space-x-2 cursor-pointer font-medium"><input type="checkbox" checked={monturero.puertaPerro} onChange={() => toggle(setMonturero, 'puertaPerro')} className="w-4 h-4 text-blue-600"/> <span>Incluir Puerta Perro Lateral</span></label>)}
+                  {(monturero.tipo !== 'ninguno' || carroceria.frente === 'cachucha') && (<label className="flex items-center space-x-2 cursor-pointer font-medium"><input type="checkbox" checked={monturero.puertaPerro} onChange={() => toggle(setMonturero, 'puertaPerro')} className="w-4 h-4 text-green-600"/> <span>Incluir Puerta Perro Lateral</span></label>)}
                 </div>
                 {monturero.tipo === 'diagonal' && (
                     <div className="flex gap-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
@@ -1609,12 +1675,12 @@ let capacidadLbs = '7,000 LBS';
 
             {/* 4. ACABADOS Y ACCESORIOS */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-              <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-black text-slate-800 flex items-center"><Layers className="w-5 h-5 mr-2 text-blue-600"/> {tipoRemolque === 'ganadero' ? '5.' : '4.'} Acabados y Accesorios</h2></div>
+              <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-black text-slate-800 flex items-center"><Layers className="w-5 h-5 mr-2 text-green-600"/> {tipoRemolque === 'ganadero' ? '5.' : '4.'} Acabados y Accesorios</h2></div>
               <div className="mb-5 bg-slate-50 p-4 rounded-lg border border-slate-200">
                 <label className="text-xs font-bold text-slate-500 uppercase block mb-3">Color del Remolque</label>
                 <div className="flex flex-wrap gap-3">
                   {db.colores?.map(c => (
-                    <button key={c.id} onClick={() => setAcabados({...acabados, color: c.id})} className={`flex items-center space-x-2 px-3 py-2 rounded-full border shadow-sm transition ${acabados.color === c.id ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-300 hover:bg-white bg-slate-100'}`}>
+                    <button key={c.id} onClick={() => setAcabados({...acabados, color: c.id})} className={`flex items-center space-x-2 px-3 py-2 rounded-full border shadow-sm transition ${acabados.color === c.id ? 'border-green-600 bg-green-50 ring-2 ring-green-200' : 'border-slate-300 hover:bg-white bg-slate-100'}`}>
                       <div className="w-5 h-5 rounded-full shadow-sm border border-slate-300" style={{ backgroundColor: c.hex }}></div><span className="text-sm font-bold text-slate-700">{c.nombre}</span>
                     </button>
                   ))}
@@ -1647,11 +1713,11 @@ let capacidadLbs = '7,000 LBS';
               )}
 
               {acabados.luces === 'especial' && ['cama_baja', 'cama_alta'].includes(tipoRemolque) && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">Óvalos Rojos</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.ovaloRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
-                  <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">3/4" Rojos</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.tresCuartosRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
-                  <div><label className="text-[11px] font-bold text-blue-800 uppercase block mb-1">3/4" Ámbar</label><div className="flex bg-white border border-blue-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-blue-200">{camaBajaOpts.tresCuartosAmbar}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
-                  <div className="flex items-end pb-0.5"><label className="flex items-center space-x-2 cursor-pointer font-bold text-[13px] text-blue-900 bg-white px-3 py-1.5 rounded border border-blue-300 w-full justify-center shadow-sm"><input type="checkbox" checked={camaBajaOpts.luzPortaplaca} onChange={() => toggle(setCamaBajaOpts, 'luzPortaplaca')} className="w-4 h-4 text-blue-600"/> <span>Luz Portaplaca</span></label></div>
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div><label className="text-[11px] font-bold text-green-800 uppercase block mb-1">Óvalos Rojos</label><div className="flex bg-white border border-green-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-green-200">{camaBajaOpts.ovaloRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
+                  <div><label className="text-[11px] font-bold text-green-800 uppercase block mb-1">3/4" Rojos</label><div className="flex bg-white border border-green-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-green-200">{camaBajaOpts.tresCuartosRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
+                  <div><label className="text-[11px] font-bold text-green-800 uppercase block mb-1">3/4" Ámbar</label><div className="flex bg-white border border-green-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-green-200">{camaBajaOpts.tresCuartosAmbar}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
+                  <div className="flex items-end pb-0.5"><label className="flex items-center space-x-2 cursor-pointer font-bold text-[13px] text-green-900 bg-white px-3 py-1.5 rounded border border-green-300 w-full justify-center shadow-sm"><input type="checkbox" checked={camaBajaOpts.luzPortaplaca} onChange={() => toggle(setCamaBajaOpts, 'luzPortaplaca')} className="w-4 h-4 text-green-600"/> <span>Luz Portaplaca</span></label></div>
                 </div>
               )}
 
@@ -1690,14 +1756,14 @@ let capacidadLbs = '7,000 LBS';
 
                     {/* --- NOTAS Y OBSERVACIONES --- */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mt-6 print:hidden">
-                <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><FileText className="w-5 h-5 mr-2 text-blue-600"/> 6. Notas y Observaciones para Diseño</h2>
-                <textarea value={cliente.observaciones || ''} onChange={e => setCliente({...cliente, observaciones: e.target.value})} className="w-full p-3 border border-slate-300 rounded-md font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej. El techo debe llevar una caída diferente en la parte trasera, cliente solicita ganchos extra, etc..." rows="3"></textarea>
+                <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><FileText className="w-5 h-5 mr-2 text-green-600"/> 6. Notas y Observaciones para Diseño</h2>
+                <textarea value={cliente.observaciones || ''} onChange={e => setCliente({...cliente, observaciones: e.target.value})} className="w-full p-3 border border-slate-300 rounded-md font-medium text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Ej. El techo debe llevar una caída diferente en la parte trasera, cliente solicita ganchos extra, etc..." rows="3"></textarea>
             </div>
             {/* --- EXTRAS ESPECIALES DESPLEGABLES --- */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mt-6 print:hidden">
                 <button onClick={() => setMostrarExtras(!mostrarExtras)} className="w-full text-left flex justify-between items-center group">
-                    <h2 className="text-lg font-black text-slate-800 flex items-center"><Plus className="w-5 h-5 mr-2 text-blue-600"/> Extras Especiales (Fuera de Catálogo)</h2>
-                    <span className="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200 transition group-hover:bg-blue-100">{mostrarExtras ? 'Ocultar' : 'Agregar Extra'}</span>
+                    <h2 className="text-lg font-black text-slate-800 flex items-center"><Plus className="w-5 h-5 mr-2 text-green-600"/> Extras Especiales (Fuera de Catálogo)</h2>
+                    <span className="text-sm font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200 transition group-hover:bg-green-100">{mostrarExtras ? 'Ocultar' : 'Agregar Extra'}</span>
                 </button>
                 
                 {mostrarExtras && (
@@ -1706,7 +1772,7 @@ let capacidadLbs = '7,000 LBS';
                             <input type="text" value={inputExtra.nombre} onChange={e => setInputExtra({...inputExtra, nombre: e.target.value})} placeholder="Descripción... (Ej. Llantas Michelin)" className="flex-1 p-2 border border-slate-300 rounded-md font-medium text-sm" />
                             <div className="relative w-full sm:w-40">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
-                                <input type="number" value={inputExtra.precio} onChange={e => setInputExtra({...inputExtra, precio: e.target.value})} placeholder="0.00" className="w-full p-2 pl-7 border border-slate-300 rounded-md font-bold text-sm text-blue-700" />
+                                <input type="number" value={inputExtra.precio} onChange={e => setInputExtra({...inputExtra, precio: e.target.value})} placeholder="0.00" className="w-full p-2 pl-7 border border-slate-300 rounded-md font-bold text-sm text-green-700" />
                             </div>
                             <button onClick={() => { if(inputExtra.nombre) { setExtrasCustom([...extrasCustom, { id: Date.now(), nombre: inputExtra.nombre, precio: inputExtra.precio }]); setInputExtra({nombre: '', precio: ''}); } }} className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-md font-bold transition flex items-center justify-center shadow-sm">Añadir</button>
                         </div>
@@ -1717,7 +1783,7 @@ let capacidadLbs = '7,000 LBS';
                                     <div key={ext.id} className="flex justify-between items-center bg-slate-50 p-2.5 rounded border border-slate-200 text-sm">
                                         <span className="font-bold text-slate-700">• {ext.nombre}</span>
                                         <div className="flex items-center space-x-4">
-                                            <span className="font-black text-blue-700">{formatoMoneda(Number(ext.precio))}</span>
+                                            <span className="font-black text-green-700">{formatoMoneda(Number(ext.precio))}</span>
                                             <button onClick={() => setExtrasCustom(extrasCustom.filter(e => e.id !== ext.id))} className="text-red-500 hover:bg-red-100 p-1.5 rounded transition"><Trash2 className="w-4 h-4"/></button>
                                         </div>
                                     </div>
@@ -1765,8 +1831,8 @@ let capacidadLbs = '7,000 LBS';
                       <ul className="flex flex-col sm:flex-row print:flex-row flex-wrap gap-x-8 gap-y-2 text-slate-700 print:text-slate-900 text-xs">
                         {cliente.nombre && <li>• Cliente: <span className="font-bold">{cliente.nombre}</span></li>}
                         {cliente.telefono && !esHojaDiseno && <li>• Teléfono: <span className="font-bold">{cliente.telefono}</span></li>}
-                        <li>• Cantidad: <span className="font-black text-blue-700 print:text-slate-900">{cliente.cantidad || 1} Remolque(s)</span></li>
-                        {esHojaDiseno && folio && <li>• Folio: <span className="font-black text-blue-700 print:text-slate-900">{folio}</span></li>}
+                        <li>• Cantidad: <span className="font-black text-green-700 print:text-slate-900">{cliente.cantidad || 1} Remolque(s)</span></li>
+                        {esHojaDiseno && folio && <li>• Folio: <span className="font-black text-green-700 print:text-slate-900">{folio}</span></li>}
                         {esHojaDiseno && fechaEntrega && <li>• Entrega Estimada: <span className="font-black text-amber-600 print:text-slate-900">{fechaEntrega}</span></li>}
                       </ul>
                     </div>
@@ -1778,7 +1844,7 @@ let capacidadLbs = '7,000 LBS';
                     <ul className="space-y-3 text-slate-700 print:text-slate-900 text-xs">
                       <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Tipo y Tamaño:</span><br className="print:hidden"/> Remolque {tipoRemolque === 'ganadero' ? 'Ganadero' : tipoRemolque === 'cama_alta' ? 'Cama Alta' : tipoRemolque === 'volteo' ? 'Volteo' : 'Cama Baja'} AMACSA {oLargo.valor}' Largo x {oAncho.valor}" Ancho</li>
                       
-<li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Capacidad y Ejes:</span><br className="print:hidden"/> <span className="font-bold text-blue-700 print:text-slate-900">{nombreCapacidadTicket}</span> — {oSusp.nombre} — Llantas {oLlantas.nombre} {rodado.cantFrenos > 0 ? `(${rodado.cantFrenos}x Ejes c/Frenos)` : ''}</li>
+<li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Capacidad y Ejes:</span><br className="print:hidden"/> <span className="font-bold text-green-700 print:text-slate-900">{nombreCapacidadTicket}</span> — {oSusp.nombre} — Llantas {oLlantas.nombre} {rodado.cantFrenos > 0 ? `(${rodado.cantFrenos}x Ejes c/Frenos)` : ''}</li>
                       <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Tipo de Jalón:</span><br className="print:hidden"/> <span className="font-bold">{oJalon.nombre}</span> {market === 'usa' ? '(Ganso 3/8 x 35")' : (acople.cadena !== 'ninguna' ? `(${oCadena.nombre})` : '')} {acople.sujetaCadenas ? '+ Sujeta Cadenas' : ''}</li>
                       
                       {tipoRemolque !== 'cama_alta' && <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Redila:</span><br className="print:hidden"/> <span className="font-bold">{oRedila.nombre}</span></li>}
@@ -1857,7 +1923,10 @@ let capacidadLbs = '7,000 LBS';
               
               {activeTab === 'cotizacion' && (
                 <div className="print:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                   <button onClick={handleWhatsAppPDF} className="bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition shadow-md"><Send className="w-5 h-5 mr-2" /> <span>WhatsApp con PDF</span></button>
+                   <button onClick={handleWhatsAppPDF} disabled={isGeneratingIA} className={`font-black py-3 px-4 rounded-xl flex items-center justify-center transition shadow-md ${isGeneratingIA ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-[#25D366] hover:bg-[#128C7E] text-white'}`}>
+  {isGeneratingIA ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
+  <span>{isGeneratingIA ? 'Redactando con IA...' : 'WhatsApp con PDF'}</span>
+</button>
                    <button onClick={handleGuardarCotizacion} className="bg-slate-800 hover:bg-slate-700 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition shadow-md"><Save className="w-5 h-5 mr-2" /> <span>Guardar en Historial</span></button>
                 </div>
               )}
