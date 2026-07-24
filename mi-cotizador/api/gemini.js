@@ -10,8 +10,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Falta la llave en Vercel' });
   }
 
-  // Usamos la versión oficial 1.5 flash
-  const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  // VERSIÓN OFICIAL v1 PARA LLAVES AQ.
+  const urlGemini = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
   let data;
   let response;
