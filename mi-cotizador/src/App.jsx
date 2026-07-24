@@ -635,37 +635,67 @@ Máximo 3 párrafos cortos.
 `;
 
       const urlGemini =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" +
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=" +
   GEMINI_API_KEY;
 
-      const response = await fetch(urlGemini, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          contents: [
+      let data;
+let response;
+
+for (let intento = 0; intento < 3; intento++) {
+  response = await fetch(urlGemini, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
             {
-              parts: [
-                {
-                  text: prompt
-                }
-              ]
+              text: prompt
             }
           ]
-        })
-      });
+        }
+      ]
+    })
+  });
 
-      const data = await response.json();
+  data = await response.json();
 
-      if (!response.ok) {
-        console.error('Error completo de Gemini:', data);
-        throw new Error(data?.error?.message || 'Error de Gemini');
-      }
+  // Si funcionó, salimos del ciclo
+  if (response.ok) {
+    break;
+  }
 
-      textoFinal =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-        textoFinal;
+  // Si Gemini está saturado, esperamos y reintentamos
+  if (response.status === 503) {
+    console.log(`Gemini ocupado. Reintento ${intento + 1}/3...`);
+
+    await new Promise(resolve =>
+      setTimeout(resolve, 2000)
+    );
+
+    continue;
+  }
+
+  // Para cualquier otro error, detenemos el proceso
+  throw new Error(
+    data?.error?.message || 'Error de Gemini'
+  );
+}
+
+if (!response.ok) {
+  console.error('Error completo de Gemini:', data);
+
+  throw new Error(
+    data?.error?.message ||
+    'Gemini no pudo generar el mensaje después de varios intentos'
+  );
+}
+
+textoFinal =
+  data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+  textoFinal;
 
     } catch (error) {
       console.error('Error con la IA:', error);
