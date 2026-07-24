@@ -600,129 +600,39 @@ function CotizadorNube() {
 
  
    const handleWhatsAppPDF = async () => {
-  const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+    const totalFinalAMostrar = formatoMoneda(calcularTotalActual());
+    let textoFinal = `Hola ${cliente.nombre || ''}, te comparto el resumen de tu cotización por un Remolque AMACSA ${tipoRemolque.replace('_', ' ').toUpperCase()}.\n\n*Total:* ${totalFinalAMostrar}\n\nTe envío el archivo PDF adjunto con todas las especificaciones a detalle. ¡Quedo a tus órdenes!`;
 
-  const totalFinalAMostrar = formatoMoneda(calcularTotalActual());
-
-  let textoFinal = `Hola ${cliente.nombre || ''}, te comparto el resumen de tu cotización por un Remolque AMACSA ${tipoRemolque.replace('_', ' ').toUpperCase()}.
-
-*Total:* ${totalFinalAMostrar}
-
-Te envío el archivo PDF adjunto con todas las especificaciones a detalle. ¡Quedo a tus órdenes!`;
-
-  if (GEMINI_API_KEY) {
     setIsGeneratingIA(true);
 
     try {
-      const prompt = `
-Eres un vendedor estrella y experto en ingeniería de la fábrica de remolques AMACSA.
+      const prompt = `Eres un vendedor estrella y experto en ingeniería de la fábrica de remolques AMACSA. Redacta un mensaje persuasivo y amable para WhatsApp dirigido a: ${cliente.nombre || 'un cliente'}. Remolque: ${tipoRemolque.replace('_', ' ').toUpperCase()} Largo: ${dim.largo} Precio total: ${totalFinalAMostrar} Capacidad: ${rodado.capacidad}. Menciona brevemente que es una configuración resistente. Destaca la calidad, durabilidad y uso rudo de AMACSA. Indica que se envía el PDF con todos los detalles técnicos. Usa un tono profesional, cercano y norteño. Incluye máximo 2 emojis. Máximo 3 párrafos cortos.`;
 
-Redacta un mensaje persuasivo y amable para WhatsApp dirigido a:
-${cliente.nombre || 'un cliente'}.
+      // Llamamos a nuestra nueva carpeta api
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }) 
+      });
 
-Remolque: ${tipoRemolque.replace('_', ' ').toUpperCase()}
-Largo: ${dim.largo}
-Precio total: ${totalFinalAMostrar}
-Capacidad: ${rodado.capacidad}
+      const data = await response.json();
 
-Menciona brevemente que es una configuración resistente.
-Destaca la calidad, durabilidad y uso rudo de AMACSA.
-Indica que se envía el PDF con todos los detalles técnicos.
-
-Usa un tono profesional, cercano y norteño.
-Incluye máximo 2 emojis.
-Máximo 3 párrafos cortos.
-`;
-
-      const urlGemini =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=" +
-  GEMINI_API_KEY;
-
-      let data;
-let response;
-
-for (let intento = 0; intento < 3; intento++) {
-  response = await fetch(urlGemini, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt
-            }
-          ]
-        }
-      ]
-    })
-  });
-
-  data = await response.json();
-
-  // Si funcionó, salimos del ciclo
-  if (response.ok) {
-    break;
-  }
-
-  // Si Gemini está saturado, esperamos y reintentamos
-  if (response.status === 503) {
-    console.log(`Gemini ocupado. Reintento ${intento + 1}/3...`);
-
-    await new Promise(resolve =>
-      setTimeout(resolve, 2000)
-    );
-
-    continue;
-  }
-
-  // Para cualquier otro error, detenemos el proceso
-  throw new Error(
-    data?.error?.message || 'Error de Gemini'
-  );
-}
-
-if (!response.ok) {
-  console.error('Error completo de Gemini:', data);
-
-  throw new Error(
-    data?.error?.message ||
-    'Gemini no pudo generar el mensaje después de varios intentos'
-  );
-}
-
-textoFinal =
-  data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-  textoFinal;
-
+      if (response.ok && data.text) {
+        textoFinal = data.text; 
+      }
     } catch (error) {
-      console.error('Error con la IA:', error);
+      console.error('Error al contactar al backend:', error);
     } finally {
       setIsGeneratingIA(false);
     }
-  }
 
-  const numeroLimpio = cliente.telefono
-    ? cliente.telefono.replace(/\D/g, '')
-    : '';
+    const numeroLimpio = cliente.telefono ? cliente.telefono.replace(/\D/g, '') : '';
+    const numeroFinal = numeroLimpio.length === 10 ? `52${numeroLimpio}` : numeroLimpio;
+    const linkWhatsApp = numeroFinal ? `https://wa.me/${numeroFinal}?text=${encodeURIComponent(textoFinal)}` : `https://wa.me/?text=${encodeURIComponent(textoFinal)}`;
 
-  const numeroFinal =
-    numeroLimpio.length === 10
-      ? `52${numeroLimpio}`
-      : numeroLimpio;
-
-  const linkWhatsApp = numeroFinal
-    ? `https://wa.me/${numeroFinal}?text=${encodeURIComponent(textoFinal)}`
-    : `https://wa.me/?text=${encodeURIComponent(textoFinal)}`;
-
-  window.open(linkWhatsApp, '_blank');
-
-  setTimeout(() => {
-    window.print();
-  }, 1500);
-};
+    window.open(linkWhatsApp, '_blank');
+    setTimeout(() => { window.print(); }, 1500);
+  };
   // --- MATEMÁTICAS EN TIEMPO REAL ---
   const handleCant = (setter, field, delta, min = 0, max = Infinity) => setter(prev => ({ ...prev, [field]: Math.min(max, Math.max(min, prev[field] + delta)) }));
   const toggle = (setter, field) => setter(prev => ({ ...prev, [field]: !prev[field] }));
