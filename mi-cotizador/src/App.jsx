@@ -635,7 +635,7 @@ Máximo 3 párrafos cortos.
 `;
 
       const urlGemini =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=" +
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=" +
   GEMINI_API_KEY;
 
       let data;
