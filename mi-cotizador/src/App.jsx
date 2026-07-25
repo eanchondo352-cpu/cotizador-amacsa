@@ -606,7 +606,14 @@ function CotizadorNube() {
     setIsGeneratingIA(true);
 
     try {
-      const prompt = `Eres un vendedor estrella y experto en ingeniería de la fábrica de remolques AMACSA. Redacta un mensaje persuasivo y amable para WhatsApp dirigido a: ${cliente.nombre || 'un cliente'}. Remolque: ${tipoRemolque.replace('_', ' ').toUpperCase()} Largo: ${dim.largo} Precio total: ${totalFinalAMostrar} Capacidad: ${rodado.capacidad}. Menciona brevemente que es una configuración resistente. Destaca la calidad, durabilidad y uso rudo de AMACSA. Indica que se envía el PDF con todos los detalles técnicos. Usa un tono profesional, cercano y norteño. Incluye máximo 2 emojis. Máximo 3 párrafos cortos.`;
+      const prompt = `Actúa como un Ejecutivo de Ventas Senior de la empresa fabricante AMACSA. 
+Redacta un mensaje de WhatsApp breve, profesional y cordial para un cliente. 
+Infórmale que su presupuesto está listo. 
+Datos del equipo: ${tipoDeRemolque} con capacidad de ${capacidad} toneladas. 
+Precio total: $${precioTotal} MXN.
+Agrega UNA sola línea destacando de manera técnica y formal una ventaja clave del equipo (ej. resistencia estructural, calidad de los materiales o durabilidad para uso industrial).
+Menciona que se adjunta el PDF con las especificaciones técnicas completas. 
+Tono: Formal, corporativo, directo y amable. Estrictamente prohíbe el uso de jerga, palabras coloquiales o invenciones de títulos profesionales.`;
 
       // Llamamos a nuestra nueva carpeta api
       const response = await fetch('/api/gemini', {
