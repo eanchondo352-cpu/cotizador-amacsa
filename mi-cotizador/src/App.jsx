@@ -606,13 +606,14 @@ function CotizadorNube() {
     setIsGeneratingIA(true);
 
     try {
-      const prompt = `Actúa como un Ejecutivo de Ventas Senior de la empresa fabricante AMACSA. 
+      const prompt = `Actúa como ${currentUser?.name || 'Representante de Ventas'} de la empresa fabricante AMACSA. 
 Redacta un mensaje de WhatsApp breve, profesional y cordial para el cliente ${cliente.nombre || 'estimado cliente'}. 
 Infórmale que su presupuesto está listo. 
 Datos del equipo: Remolque ${tipoRemolque.replace('_', ' ')} con capacidad de ${nombreCapacidadTicket}. 
 Precio total: ${totalFinalAMostrar} MXN.
 Agrega UNA sola línea destacando de manera técnica y formal una ventaja clave del equipo (ej. resistencia estructural, calidad de los materiales o durabilidad para uso industrial).
 Menciona que se adjunta el PDF con las especificaciones técnicas completas. 
+Despídete y firma el mensaje estrictamente con el nombre: ${currentUser?.name || 'Ventas AMACSA'}.
 Tono: Formal, corporativo, directo y amable. Estrictamente prohíbe el uso de jerga, palabras coloquiales o invenciones de títulos profesionales.`;
 
       // Llamamos a nuestra nueva carpeta api
