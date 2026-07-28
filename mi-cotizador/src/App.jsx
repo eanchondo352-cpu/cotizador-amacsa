@@ -418,9 +418,16 @@ function CotizadorNube() {
 
   useEffect(() => { 
     if (currentUser) {
-      localStorage.setItem('amacsa_current_user', JSON.stringify(currentUser));
+      if (localStorage.getItem('amacsa_auth') === 'true') {
+        localStorage.setItem('amacsa_current_user', JSON.stringify(currentUser));
+      } else {
+        sessionStorage.setItem('amacsa_current_user', JSON.stringify(currentUser));
+      }
       setProfileForm({ name: currentUser.name, username: currentUser.username, password: currentUser.password });
-    } else { localStorage.removeItem('amacsa_current_user'); }
+    } else { 
+      localStorage.removeItem('amacsa_current_user'); 
+      sessionStorage.removeItem('amacsa_current_user');
+    }
   }, [currentUser]);
 
   const logAction = (actionDescription) => {
