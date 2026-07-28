@@ -1871,7 +1871,7 @@ let capacidadLbs = '7,000 LBS';
               
               {activeTab === 'cotizacion' && (
                 <div className="print:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                   <button onClick={handleWhatsAppPDF} disabled={isGeneratingIA} className={`font-black py-3 px-4 rounded-xl flex items-center justify-center transition shadow-md ${isGeneratingIA ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-[#25D366] hover:bg-[#128C7E] text-white'}`}>
+                   <button onClick={handleWhatsAppPDF} disabled={isGeneratingIA} className={`font-black py-3 px-4 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-green-500/50 active:scale-95 ${isGeneratingIA ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-[#25D366] hover:bg-[#128C7E] text-white'}`}>
   {isGeneratingIA ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
   <span>{isGeneratingIA ? 'Redactando con IA...' : 'WhatsApp con PDF'}</span>
 </button>
