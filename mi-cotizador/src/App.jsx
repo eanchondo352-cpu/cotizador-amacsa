@@ -690,7 +690,7 @@ function CotizadorNube() {
       // 1. Tomamos la "foto" del ticket y creamos el PDF en modo oculto
       const ticketElement = document.getElementById('ticket-cotizacion');
       if (ticketElement) {
-               const imgData = await toPng(ticketElement, { pixelRatio: 2, backgroundColor: '#ffffff' });
+        const imgData = await toPng(ticketElement, { pixelRatio: 2, backgroundColor: '#ffffff' });
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const imgProps = pdf.getImageProperties(imgData);
@@ -745,42 +745,6 @@ Tono: Formal, corporativo, directo y amable. Estrictamente prohíbe el uso de je
     }
   };
 
-    try {
-      const prompt = `Actúa como ${currentUser?.name || 'Representante de Ventas'} de la empresa fabricante AMACSA. 
-Redacta un mensaje de WhatsApp breve, profesional y cordial para el cliente ${cliente.nombre || 'estimado cliente'}. 
-Infórmale que su presupuesto está listo. 
-Datos del equipo: Remolque ${tipoRemolque.replace('_', ' ')} con capacidad de ${nombreCapacidadTicket}. 
-Precio total: ${totalFinalAMostrar} MXN.
-Agrega UNA sola línea destacando de manera técnica y formal una ventaja clave del equipo (ej. resistencia estructural, calidad de los materiales o durabilidad para uso industrial).
-Menciona que se adjunta el PDF con las especificaciones técnicas completas. 
-Despídete y firma el mensaje estrictamente con el nombre: ${currentUser?.name || 'Ventas AMACSA'}.
-Tono: Formal, corporativo, directo y amable. Estrictamente prohíbe el uso de jerga, palabras coloquiales o invenciones de títulos profesionales.`;
-
-      // Llamamos a nuestra nueva carpeta api
-      const response = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }) 
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.text) {
-        textoFinal = data.text; 
-      }
-    } catch (error) {
-      console.error('Error al contactar al backend:', error);
-    } finally {
-      setIsGeneratingIA(false);
-    }
-
-    const numeroLimpio = cliente.telefono ? cliente.telefono.replace(/\D/g, '') : '';
-    const numeroFinal = numeroLimpio.length === 10 ? `52${numeroLimpio}` : numeroLimpio;
-    const linkWhatsApp = numeroFinal ? `https://wa.me/${numeroFinal}?text=${encodeURIComponent(textoFinal)}` : `https://wa.me/?text=${encodeURIComponent(textoFinal)}`;
-
-    window.open(linkWhatsApp, '_blank');
-    setTimeout(() => { window.print(); }, 1500);
-  };
   // --- MATEMÁTICAS EN TIEMPO REAL ---
   const handleCant = (setter, field, delta, min = 0, max = Infinity) => setter(prev => ({ ...prev, [field]: Math.min(max, Math.max(min, prev[field] + delta)) }));
   const toggle = (setter, field) => setter(prev => ({ ...prev, [field]: !prev[field] }));
@@ -2079,14 +2043,13 @@ let capacidadLbs = '7,000 LBS';
                   )}
                 </div>
               )}
-              
-              {activeTab === 'cotizacion' && (
+                {activeTab === 'cotizacion' && (
                 <div className="print:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                   <button onClick={handleWhatsAppPDF} disabled={isGeneratingIA} className={`font-black py-3 px-4 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-green-500/50 active:scale-95 ${isGeneratingIA ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-[#25D366] hover:bg-[#128C7E] text-white'}`}>
-  {isGeneratingIA ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
-  <span>{isGeneratingIA ? 'Redactando con IA...' : 'WhatsApp con PDF'}</span>
-</button>
-                   <button onClick={handleGuardarCotizacion} className="bg-slate-800 hover:bg-slate-700 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition shadow-md"><Save className="w-5 h-5 mr-2" /> <span>Guardar en Historial</span></button>
+                  <button onClick={handleWhatsAppPDF} disabled={isGeneratingIA} className={`font-black py-3 px-4 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-green-500/50 active:scale-95 ${isGeneratingIA ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-[#25D366] hover:bg-[#128C7E] text-white'}`}>
+                    {isGeneratingIA ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
+                    <span>{isGeneratingIA ? 'Redactando con IA...' : 'WhatsApp con PDF'}</span>
+                  </button>
+                  <button onClick={handleGuardarCotizacion} className="bg-slate-800 hover:bg-slate-700 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition shadow-md"><Save className="w-5 h-5 mr-2" /> <span>Guardar en Historial</span></button>
                 </div>
               )}
             </div>
@@ -2095,4 +2058,4 @@ let capacidadLbs = '7,000 LBS';
       )}
     </div>
   );
-}
+}     
