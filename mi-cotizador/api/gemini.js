@@ -17,7 +17,7 @@ export default async function handler(req, res) {
 
   try {
     // Usamos el modelo más rápido y recomendado para textos cortos
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
     // Enviamos el prompt a la IA
     const result = await model.generateContent(prompt);
