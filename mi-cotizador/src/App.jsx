@@ -4,7 +4,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
 // --- 1. CONFIGURACIÓN DE LA NUBE (FIREBASE) ---
@@ -616,13 +616,11 @@ function CotizadorNube() {
       const ticketElement = document.getElementById('ticket-cotizacion');
       if (ticketElement) {
         // 2. Tomamos la "foto" digital
-        const canvas = await html2canvas(ticketElement, { scale: 2, useCORS: true });
-        const imgData = canvas.toDataURL('image/png');
-        
-        // 3. Creamos el PDF tamaño Carta (A4)
+        const imgData = await toPng(ticketElement, { pixelRatio: 2, backgroundColor: '#ffffff' });
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
         
         // 4. Lo convertimos a archivo y lo subimos a Firebase Storage
@@ -684,10 +682,68 @@ function CotizadorNube() {
 
  
    const handleWhatsAppPDF = async () => {
-    const totalFinalAMostrar = formatoMoneda(calcularTotalActual());
-    let textoFinal = `Hola ${cliente.nombre || ''}, te comparto el resumen de tu cotización por un Remolque AMACSA ${tipoRemolque.replace('_', ' ').toUpperCase()}.\n\n*Total:* ${totalFinalAMostrar}\n\nTe envío el archivo PDF adjunto con todas las especificaciones a detalle. ¡Quedo a tus órdenes!`;
-
     setIsGeneratingIA(true);
+    setNotification({ type: 'success', message: 'Fabricando PDF y redactando mensaje...' });
+
+    let urlPdf = null;
+    try {
+      // 1. Tomamos la "foto" del ticket y creamos el PDF en modo oculto
+      const ticketElement = document.getElementById('ticket-cotizacion');
+      if (ticketElement) {
+               const imgData = await toPng(ticketElement, { pixelRatio: 2, backgroundColor: '#ffffff' });
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        
+        // 2. Lo subimos rápidamente a una carpeta temporal en la nube
+        const pdfBlob = pdf.output('blob');
+        const tempId = `COT-WA-${Math.floor(1000 + Math.random() * 9000)}`;
+        const pdfRef = ref(storage, `cotizaciones_rapidas/${tempId}.pdf`);
+        await uploadBytes(pdfRef, pdfBlob);
+        
+        // 3. ¡Obtenemos el enlace mágico!
+        urlPdf = await getDownloadURL(pdfRef);
+      }
+
+      // 4. Se lo pasamos a Gemini para que lo integre en el texto
+      const totalFinalAMostrar = formatoMoneda(calcularTotalActual());
+      let textoFinal = `Hola ${cliente.nombre || ''}, te comparto el resumen de tu cotización por un Remolque AMACSA.\n\n*Total:* ${totalFinalAMostrar}\n\nPuedes descargar y revisar el documento oficial aquí: ${urlPdf || 'Adjunto en este chat'}`;
+
+      const prompt = `Actúa como ${currentUser?.name || 'Representante de Ventas'} de la empresa fabricante AMACSA. 
+Redacta un mensaje de WhatsApp breve, profesional y cordial para el cliente ${cliente.nombre || 'estimado cliente'}. 
+Infórmale que su presupuesto está listo. 
+Datos del equipo: Remolque ${tipoRemolque.replace('_', ' ')} con capacidad de ${nombreCapacidadTicket}. 
+Precio total: ${totalFinalAMostrar} MXN.
+Agrega UNA sola línea destacando de manera técnica y formal una ventaja clave del equipo.
+Menciona que pueden descargar y ver su cotización oficial a detalle abriendo el siguiente enlace seguro: ${urlPdf || '[Enlace no disponible]'}
+Despídete y firma el mensaje estrictamente con el nombre: ${currentUser?.name || 'Ventas AMACSA'}.
+Tono: Formal, corporativo, directo y amable. Estrictamente prohíbe el uso de jerga o palabras coloquiales.`;
+
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }) 
+      });
+
+      const data = await response.json();
+      if (response.ok && data.text) { textoFinal = data.text; }
+
+      // 5. Lanzamos el WhatsApp con todo listo
+      const numeroLimpio = cliente.telefono ? cliente.telefono.replace(/\D/g, '') : '';
+      const numeroFinal = numeroLimpio.length === 10 ? `52${numeroLimpio}` : numeroLimpio;
+      const linkWhatsApp = numeroFinal ? `https://wa.me/${numeroFinal}?text=${encodeURIComponent(textoFinal)}` : `https://wa.me/?text=${encodeURIComponent(textoFinal)}`;
+
+      window.open(linkWhatsApp, '_blank');
+
+    } catch (error) {
+      console.error('Error en el proceso de WhatsApp:', error);
+      setNotification({ type: 'error', message: 'Hubo un error al preparar el PDF para WhatsApp.' });
+    } finally {
+      setIsGeneratingIA(false);
+    }
+  };
 
     try {
       const prompt = `Actúa como ${currentUser?.name || 'Representante de Ventas'} de la empresa fabricante AMACSA. 
