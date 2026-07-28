@@ -1050,8 +1050,8 @@ let capacidadLbs = '7,000 LBS';
   return (
     <div className="min-h-screen bg-slate-100 print:bg-white font-sans pb-12">
       {notification && (
-        <div className="fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center z-50">
+  <div className="fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center z-50 animar-entrada">
             <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notification.type === 'error' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}><Shield className="w-6 h-6" /></div>
             <h3 className="text-xl font-black mb-2 text-slate-800">{notification.type === 'error' ? 'Aviso Importante' : '¡Éxito!'}</h3>
             <p className="text-slate-600 font-medium mb-6">{notification.message}</p>
@@ -1061,8 +1061,8 @@ let capacidadLbs = '7,000 LBS';
       )}
 
       {confirmDialog && (
-        <div className="fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center z-50">
+  <div className="fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center z-50 animar-entrada">
             <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 bg-amber-100 text-amber-600"><Lock className="w-6 h-6" /></div>
             <h3 className="text-xl font-black mb-2 text-slate-800">{confirmDialog.title}</h3>
             <p className="text-slate-600 font-medium mb-6">{confirmDialog.message}</p>
@@ -1075,8 +1075,8 @@ let capacidadLbs = '7,000 LBS';
       )}
 
       {adminUnlockPrompt && (
-         <div className="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full z-50">
+  <div className="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full z-50 animar-entrada">
             <div className="text-center mb-6"><div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-3 bg-slate-100 text-slate-700"><Settings className="w-6 h-6" /></div><h3 className="text-xl font-black text-slate-800">Candado de Seguridad</h3><p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Acceso a Catálogo</p></div>
             <form onSubmit={handleUnlockSubmit}>
                <input type="password" autoFocus value={adminUnlockPass} onChange={e => setAdminUnlockPass(e.target.value)} className="w-full p-3.5 border-2 border-slate-200 focus:border-green-500 rounded-xl mb-6 text-center tracking-[0.5em] font-black text-lg outline-none transition" placeholder="••••••••" />
@@ -1749,8 +1749,8 @@ let capacidadLbs = '7,000 LBS';
             <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto pb-8 pr-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
               
               {activeTab === 'cotizacion' && (
-                <div id="ticket-cotizacion" className="bg-white p-6 rounded-xl shadow-xl border-t-8 border-slate-900 print:relative print:top-0 print:border-t-0 print:shadow-none print:w-full print:p-0">
-                  
+  <div id="ticket-cotizacion" className="bg-white p-6 rounded-xl shadow-xl border-t-8 border-slate-900 print:relative print:top-0 print:border-t-0 print:shadow-none print:w-full print:p-0 animar-entrada">
+
                   {/* MEMBRETE */}
                   <div className="hidden print:flex items-center justify-between mb-8 border-b-2 border-slate-800 pb-4">
                     <div className="flex items-center space-x-4">
