@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Truck, FileText, Printer, Settings, Save, Plus, Trash2, Shield, Disc, DoorOpen, Layers, Zap, Lightbulb, Lock, Unlock, LogOut, ClipboardList, Star, Users, History, User, Key, Database, Globe, Image, RefreshCw, Send } from 'lucide-react';import { initializeApp } from 'firebase/app';
+import { AlertTriangle, Truck, FileText, Printer, Settings, Save, Plus, Trash2, Shield, Disc, DoorOpen, Layers, Zap, Lightbulb, Lock, Unlock, LogOut, ClipboardList, Star, Users, History, User, Key, Database, Globe, Image, RefreshCw, Send, Menu, X } from 'lucide-react';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -343,6 +343,7 @@ function CotizadorNube() {
   const [adminUnlockPass, setAdminUnlockPass] = useState('');
   const [mostrarExtras, setMostrarExtras] = useState(false);
   const [isGeneratingIA, setIsGeneratingIA] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const handleImageUpload = async (e, section, index) => {
@@ -1139,35 +1140,52 @@ let capacidadLbs = '7,000 LBS';
         </div>
       )}
 
-      {/* HEADER PRINCIPAL */}
-      <header className="bg-green-950 border-b-4 border-green-600 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-lg print:hidden">
-        <div className="flex items-center space-x-3">
-          <div className="relative h-11 flex items-center justify-center min-w-[45px] bg-white rounded-lg p-1.5 shadow-inner"><img src="/logo_amacsa.png" alt="AMACSA" className="h-full object-contain" /></div>
-          <div><h1 className="text-2xl font-black tracking-widest leading-none text-white">AMACSA</h1><p className="text-[10px] text-amber-400 font-black tracking-[0.2em] uppercase mt-0.5">ERP Ventas</p></div>
+      {/* === MENÚ LATERAL (SIDEBAR) === */}
+      {/* Fondo oscuro cuando está abierto */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 z-[60] backdrop-blur-sm transition-opacity" onClick={() => setIsMenuOpen(false)}></div>
+      )}
+      {/* Panel Desplegable */}
+      <div className={`fixed inset-y-0 left-0 w-72 bg-slate-900 shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out flex flex-col ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex items-center justify-between p-5 border-b border-slate-800">
+          <div className="flex items-center space-x-3">
+            <div className="h-8 bg-white rounded p-1"><img src="/logo_amacsa.png" alt="AMACSA" className="h-full object-contain" /></div>
+            <span className="font-black text-white tracking-widest">MENÚ</span>
+          </div>
+          <button onClick={() => setIsMenuOpen(false)} className="text-slate-400 hover:text-white transition bg-slate-800 p-1.5 rounded-lg"><X className="w-5 h-5" /></button>
         </div>
-        <div className="flex items-center space-x-3">
-          <div className="hidden sm:block text-right mr-2"><p className="text-xs text-slate-400">Usuario activo</p><p className="text-sm font-bold text-white">{currentUser.name}</p></div>
+        <div className="p-4 space-y-3 flex-1 overflow-y-auto">
+          <button onClick={() => { setView('catalogo'); setIsMenuOpen(false); }} className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold transition ${view === 'catalogo' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50' : 'text-slate-300 hover:bg-slate-800'}`}><Image className="w-5 h-5"/> <span>Catálogo de Modelos</span></button>
+          <button onClick={() => { handleAdminAccess(); setIsMenuOpen(false); }} className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold transition ${view === 'admin' ? 'bg-amber-600 text-white shadow-md shadow-amber-900/50' : 'text-slate-300 hover:bg-slate-800'}`}><Settings className="w-5 h-5"/> <span>Configuraciones</span></button>
+          {/* Aquí puedes ir agregando botones en el futuro */}
+        </div>
+        <div className="p-4 border-t border-slate-800 text-[10px] font-bold text-slate-500 text-center uppercase tracking-widest">
+          AMACSA ERP V2.0
+        </div>
+      </div>
+
+      {/* HEADER PRINCIPAL */}
+      <header className="bg-green-950 border-b-4 border-green-600 text-white p-3 sm:p-4 sticky top-0 z-50 flex justify-between items-center shadow-lg print:hidden">
+        <div className="flex items-center space-x-3 sm:space-x-4">
+          <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-slate-800 hover:bg-green-600 hover:text-white rounded-xl transition shadow-sm text-slate-300"><Menu className="w-6 h-6"/></button>
+          <div className="relative h-10 sm:h-11 flex items-center justify-center min-w-[40px] sm:min-w-[45px] bg-white rounded-lg p-1.5 shadow-inner hidden sm:flex"><img src="/logo_amacsa.png" alt="AMACSA" className="h-full object-contain" /></div>
+          <div><h1 className="text-xl sm:text-2xl font-black tracking-widest leading-none text-white">AMACSA</h1><p className="text-[9px] sm:text-[10px] text-amber-400 font-black tracking-[0.2em] uppercase mt-0.5">ERP Ventas</p></div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <div className="hidden lg:block text-right mr-3"><p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Usuario activo</p><p className="text-sm font-bold text-white leading-tight">{currentUser.name}</p></div>
+          
           {view === 'cotizador' ? (
             <>
-              <button onClick={handleNuevaCotizacion} className="flex items-center space-x-1 bg-red-600 hover:bg-red-500 px-3 py-2 rounded text-sm font-bold transition text-white" title="Nueva cotización de fábrica"><RefreshCw className="w-4 h-4"/> <span className="hidden md:inline">Nueva Cot.</span></button>
-              <button onClick={handleAdminAccess} className={`flex items-center space-x-1 px-4 py-2 rounded text-sm font-bold transition text-white ${isAppUnlocked ? 'bg-red-600 hover:bg-red-500' : 'bg-slate-800 hover:bg-slate-700'}`}>
-  <Settings className="w-4 h-4"/> <span className="hidden md:inline">{isAppUnlocked ? 'Cerrar Panel' : 'Panel Historial'}</span>
-              </button>
-              <button onClick={() => window.print()} className="flex items-center space-x-1 bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm font-bold transition text-white"><Printer className="w-4 h-4"/> <span>Imprimir</span></button>
-             <button 
-    onClick={() => { 
-        setEsHojaDiseno(true); 
-        setTimeout(() => { window.print(); setEsHojaDiseno(false); }, 100); 
-    }} 
-    className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm transition-all mr-3">
-    🖨️ Hoja de Diseño
-    <button onClick={() => setView('📖catalogo')} className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-sm font-bold transition shadow-sm text-white mr-2"><Image className="w-4 h-4"/> <span className="hidden md:inline">Ver Modelos</span></button>
-</button>
+              <button onClick={handleNuevaCotizacion} className="p-2.5 sm:p-3 bg-red-600 hover:bg-red-500 rounded-xl transition text-white shadow-sm flex items-center justify-center" title="Nueva Cotización"><RefreshCw className="w-5 h-5"/></button>
+              <button onClick={() => window.print()} className="p-2.5 sm:p-3 bg-green-600 hover:bg-green-500 rounded-xl transition text-white shadow-sm flex items-center justify-center" title="Imprimir Cotización"><Printer className="w-5 h-5"/></button>
+              <button onClick={() => { setEsHojaDiseno(true); setTimeout(() => { window.print(); setEsHojaDiseno(false); }, 100); }} className="p-2.5 sm:p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition text-white shadow-sm mr-1 sm:mr-3 flex items-center justify-center text-lg leading-none" title="Imprimir Hoja de Diseño">🖨️</button>
             </>
           ) : (
-            <button onClick={() => setView('cotizador')} className="flex items-center space-x-1 bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm font-bold transition text-white"><Save className="w-4 h-4"/> <span>Volver a Ventas</span></button>
+            <button onClick={() => setView('cotizador')} className="p-2.5 sm:p-3 bg-green-600 hover:bg-green-500 rounded-xl transition text-white shadow-sm flex items-center justify-center mr-1 sm:mr-3" title="Volver al Cotizador"><Save className="w-5 h-5"/></button>
           )}
-          <button onClick={handleLogout} className="flex items-center space-x-1 bg-slate-800 hover:bg-red-600 px-3 py-2 rounded text-sm font-bold transition text-slate-400 hover:text-white"><LogOut className="w-4 h-4"/></button>
+          <div className="w-px h-8 bg-slate-700 mx-1 hidden sm:block"></div>
+          <button onClick={handleLogout} className="p-2.5 sm:p-3 bg-slate-800 hover:bg-red-600 rounded-xl transition text-slate-400 hover:text-white shadow-sm flex items-center justify-center" title="Cerrar Sesión"><LogOut className="w-5 h-5"/></button>
         </div>
       </header>
 
