@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Truck, FileText, Printer, Settings, Save, Plus, Trash2, Shield, Disc, DoorOpen, Layers, Zap, Lightbulb, Lock, Unlock, LogOut, ClipboardList, Star, Users, History, User, Key, Database, Globe, RefreshCw, Send } from 'lucide-react';
-import { initializeApp } from 'firebase/app';
+import { AlertTriangle, Truck, FileText, Printer, Settings, Save, Plus, Trash2, Shield, Disc, DoorOpen, Layers, Zap, Lightbulb, Lock, Unlock, LogOut, ClipboardList, Star, Users, History, User, Key, Database, Globe, Image, RefreshCw, Send } from 'lucide-react';import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
@@ -254,7 +253,8 @@ const DEFAULT_DB = {
     { id: 'luzPortaplaca', nombre: 'Luz Portaplaca', precio: 350 },
     { id: 'aperturaEstribo', nombre: 'Apertura para Estribo', precio: 1500 },
     { id: 'aperturaLimpieza', nombre: 'Apertura para Limpieza', precio: 1000 }
-  ]
+  ],
+  modelosLinea: []
 };
 
 const DEFAULT_USERS = [
@@ -280,7 +280,8 @@ const ADMIN_SECTIONS = [
   { id: 'suspension', title: 'Sistemas de Suspensión' },
   { id: 'luces', title: 'Paquetes de Luces' },
   { id: 'colores', title: 'Colores de Remolque', isColor: true },
-  { id: 'extras', title: 'Accesorios y Extras (Fijos)', isFixed: true }
+  { id: 'extras', title: 'Accesorios y Extras (Fijos)', isFixed: true },
+  { id: 'modelosLinea', title: 'Modelos de Línea (Estándar)', isCatalog: true }
 ];
 
 const ADMIN_PASSWORD = "adminamacsa";
@@ -1135,6 +1136,7 @@ let capacidadLbs = '7,000 LBS';
     }} 
     className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm transition-all mr-3">
     🖨️ Hoja de Diseño
+    <button onClick={() => setView('catalogo')} className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-sm font-bold transition shadow-sm text-white mr-2"><Image className="w-4 h-4"/> <span className="hidden md:inline">Ver Modelos</span></button>
 </button>
             </>
           ) : (
@@ -1144,7 +1146,32 @@ let capacidadLbs = '7,000 LBS';
         </div>
       </header>
 
-      {view === 'admin' ? (
+      {view === 'catalogo' ? (
+        <div className="max-w-[1400px] mx-auto p-4 sm:p-6 animar-entrada">
+          <h2 className="text-3xl font-black text-slate-800 mb-8 flex items-center border-b-4 border-slate-900 pb-3"><Image className="w-8 h-8 mr-3 text-blue-600"/> Catálogo de Modelos de Línea</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {db.modelosLinea?.map(item => (
+              <div key={item.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                <div className="h-56 bg-slate-100 relative group">
+                  <img src={item.foto || '/img_ganso.png'} alt={item.nombre} className="w-full h-full object-cover transition duration-500 group-hover:scale-110" onError={e => e.target.src='/img_ganso.png'} />
+                  <div className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-md tracking-wider">MODELO ESTÁNDAR</div>
+                </div>
+                <div className="p-5 flex flex-col flex-1">
+                  <h3 className="font-black text-slate-800 text-xl leading-tight mb-2">{item.nombre}</h3>
+                  <p className="text-sm text-slate-600 font-medium mb-4 flex-1 whitespace-pre-wrap">{item.especificaciones}</p>
+                  <div className="border-t border-slate-100 pt-4 flex justify-between items-end mt-auto">
+                    <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Precio Referencia</p><span className="text-2xl font-black text-blue-700">{formatoMoneda(item.precio)}</span></div>
+                    <button onClick={() => setView('cotizador')} className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md">Ir a Cotizar</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {(!db.modelosLinea || db.modelosLinea.length === 0) && (
+              <div className="col-span-full py-16 text-center bg-white rounded-2xl border border-dashed border-slate-300"><Image className="w-16 h-16 text-slate-300 mx-auto mb-4"/><p className="text-slate-500 font-bold text-lg">No hay modelos de línea registrados.</p><p className="text-slate-400 text-sm mt-1">Agrega tus remolques más populares desde el Panel Historial.</p></div>
+            )}
+          </div>
+        </div>
+      ) : view === 'admin' ? (
         <div className="max-w-[1400px] mx-auto p-4 sm:p-6 flex flex-col md:flex-row gap-6 print:hidden">
           <div className="w-full md:w-1/4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
             <h2 className="text-lg font-black text-slate-800 mb-4 border-b pb-2">Panel de Control</h2>
@@ -1294,7 +1321,15 @@ let capacidadLbs = '7,000 LBS';
                         
                         {sectionDef?.hasPrecioExtra && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Extra {isGeneral ? '(Base)' : ''}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item[activeExtraKey] ?? item.precioExtra ?? 0} onChange={e => handleDbChange(adminSection, index, activeExtraKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-bold ${!isGeneral && item[activeExtraKey] !== undefined ? 'border-green-400 bg-green-50 text-green-800' : 'border-slate-300'}`} /></div></div>)}
                         
-                        {!sectionDef?.isColor && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'P. SqFt' : 'Precio'} {isGeneral ? '(Base)' : ''}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item[activePKey] ?? item[pKey] ?? 0} onChange={e => handleDbChange(adminSection, index, activePKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-black text-right ${!isGeneral && item[activePKey] !== undefined ? 'border-green-400 bg-green-50 text-green-700' : 'border-slate-300 text-slate-700'}`} /></div></div>)}
+                       {!sectionDef?.isColor && !sectionDef?.isCatalog && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'P. SqFt' : 'Precio'} {isGeneral ? '(Base)' : ''}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item[activePKey] ?? item[pKey] ?? 0} onChange={e => handleDbChange(adminSection, index, activePKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-black text-right ${!isGeneral && item[activePKey] !== undefined ? 'border-green-400 bg-green-50 text-green-700' : 'border-slate-300 text-slate-700'}`} /></div></div>)}
+                        
+                        {sectionDef?.isCatalog && (
+                          <>
+                            <div className="w-full sm:w-2/5 mt-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Enlace de la Foto (URL)</label><input type="text" value={item.foto || ''} onChange={e => handleDbChange(adminSection, index, 'foto', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-medium text-sm" placeholder="Ej. https://... o /img_ganso.png" /></div>
+                            <div className="w-full sm:w-3/5 mt-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Especificaciones Breves</label><input type="text" value={item.especificaciones || ''} onChange={e => handleDbChange(adminSection, index, 'especificaciones', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-medium text-sm" placeholder="Ej. 2 Ejes 7k, Piso Madera, Cuello Ganso..." /></div>
+                            <div className="w-40 mt-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Precio Base Referencia</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 font-bold">$</span><input type="number" value={item.precio || 0} onChange={e => handleDbChange(adminSection, index, 'precio', parseFloat(e.target.value) || 0)} className="w-full p-2.5 pl-7 border border-blue-300 bg-blue-50 rounded-md font-black text-right text-blue-800" /></div></div>
+                          </>
+                        )}
                         
                         {!sectionDef?.isFixed && (<div className="pt-5"><button onClick={() => handleDbDelete(adminSection, index)} className="p-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition shadow-sm"><Trash2 className="w-5 h-5"/></button></div>)}
                       </div>
