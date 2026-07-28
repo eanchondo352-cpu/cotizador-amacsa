@@ -692,7 +692,60 @@ function CotizadorNube() {
     setConfirmDialog({ title: 'Eliminar Cotización', message: `¿Seguro que deseas borrar la cotización con folio ${cotId} del historial?`, action: 'DELETE_COTIZACION', payload: { id: cotId } });
   };
 
- 
+ const [isGeneratingCatalogAI, setIsGeneratingCatalogAI] = useState(false);
+
+  const handleMejorarConIACatalogo = async (index) => {
+    const itemActual = db.modelosLinea[index]; // O el arreglo que uses para tus modelos de línea
+    const textoBase = itemActual.especificaciones || itemActual.nombre || "Remolque AMACSA";
+
+    setIsGeneratingCatalogAI(true);
+    setNotification({ type: 'success', message: 'La IA está analizando y cotizando el equipo...' });
+
+    try {
+      const prompt = `Actúa como un experto cotizador y jefe de planta de la empresa fabricante de remolques AMACSA.
+Tengo este modelo de línea / descripción rápida: "${textoBase}".
+Por favor, responde estrictamente en formato JSON válido (sin bloques de código markdown extra, solo el JSON puro) con las siguientes dos llaves:
+1. "specs": Una versión limpia, técnica, formal y redactada con estándar corporativo de las especificaciones breves para el catálogo (ej. "2 Ejes 7k, Piso Madera, Cuello Ganso, Torflex").
+2. "precio": Un número entero estimado de referencia en MXN para este tipo de remolque en el mercado actual de México.
+
+Ejemplo de respuesta esperada:
+{
+  "specs": "2 Ejes 7k, Piso de Madera, Cuello Ganso Reforzado",
+  "precio": 145000
+}`;
+
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.text) {
+        // Limpiamos posibles marcas de markdown del JSON
+        let jsonStr = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const resultado = JSON.parse(jsonStr);
+
+        // Actualizamos el estado de tu catálogo con lo que sugirió la IA
+        const nuevosModelos = [...db.modelosLinea];
+        nuevosModelos[index] = {
+          ...nuevosModelos[index],
+          especificaciones: resultado.specs || nuevosModelos[index].especificaciones,
+          precioBase: resultado.precio || nuevosModelos[index].precioBase
+        };
+        
+        // Actualiza tu estado de base de datos correspondiente (ej. setDb)
+        setDb({ ...db, modelosLinea: nuevosModelos });
+        setNotification({ type: 'success', message: '¡Especificaciones y precio optimizados por IA con éxito!' });
+      }
+    } catch (error) {
+      console.error('Error con la IA del catálogo:', error);
+      setNotification({ type: 'error', message: 'No se pudo conectar con la IA en este momento.' });
+    } finally {
+      setIsGeneratingCatalogAI(false);
+    }
+  };
+
    const handleWhatsAppPDF = async () => {
     setIsGeneratingIA(true);
     setNotification({ type: 'success', message: 'Guardando en historial y preparando WhatsApp...' });
@@ -1473,47 +1526,110 @@ let capacidadLbs = '7,000 LBS';
                         {!isGeneral && item[activePKey] === undefined && !sectionDef?.isColor && (
                           <div className="absolute top-2 right-4 text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Usando precio General</div>
                         )}
-                        <div className="flex-1 min-w-[200px]"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre Comercial</label><input type="text" value={item.nombre} onChange={e => handleDbChange(adminSection, index, 'nombre', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 focus:ring-2 focus:ring-green-500 outline-none" /></div>
-                        {sectionDef?.hasValor && (<div className="w-24"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef.valorLabel}</label><input type="number" value={item.valor || 0} onChange={e => handleDbChange(adminSection, index, 'valor', parseFloat(e.target.value) || 0)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 text-center focus:ring-2" /></div>)}
+                        <div className="flex-1 min-w-[200px]">
+                          <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre Comercial</label>
+                          <input type="text" value={item.nombre} onChange={e => handleDbChange(adminSection, index, 'nombre', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 focus:ring-2 focus:ring-green-500 outline-none" />
+                        </div>
                         
-                        {sectionDef?.hasPrecioExtra && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Extra {isGeneral ? '(Base)' : ''}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item[activeExtraKey] ?? item.precioExtra ?? 0} onChange={e => handleDbChange(adminSection, index, activeExtraKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-bold ${!isGeneral && item[activeExtraKey] !== undefined ? 'border-green-400 bg-green-50 text-green-800' : 'border-slate-300'}`} /></div></div>)}
+                        {sectionDef?.hasValor && (
+                          <div className="w-24">
+                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef.valorLabel}</label>
+                            <input type="number" value={item.valor || 0} onChange={e => handleDbChange(adminSection, index, 'valor', parseFloat(e.target.value) || 0)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 text-center focus:ring-2" />
+                          </div>
+                        )}
                         
-                       {!sectionDef?.isColor && !sectionDef?.isCatalog && (<div className="w-36"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'P. SqFt' : 'Precio'} {isGeneral ? '(Base)' : ''}</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={item[activePKey] ?? item[pKey] ?? 0} onChange={e => handleDbChange(adminSection, index, activePKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-black text-right ${!isGeneral && item[activePKey] !== undefined ? 'border-green-400 bg-green-50 text-green-700' : 'border-slate-300 text-slate-700'}`} /></div></div>)}
+                        {sectionDef?.hasPrecioExtra && (
+                          <div className="w-36">
+                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Extra {isGeneral ? '(Base)' : ''}</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
+                              <input type="number" value={item[activeExtraKey] ?? item.precioExtra ?? 0} onChange={e => handleDbChange(adminSection, index, activeExtraKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-bold ${!isGeneral && item[activeExtraKey] !== undefined ? 'border-green-400 bg-green-50 text-green-800' : 'border-slate-300'}`} />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {!sectionDef?.isColor && !sectionDef?.isCatalog && (
+                          <div className="w-36">
+                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'P. SqFt' : 'Precio'} {isGeneral ? '(Base)' : ''}</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
+                              <input type="number" value={item[activePKey] ?? item[pKey] ?? 0} onChange={e => handleDbChange(adminSection, index, activePKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-black text-right ${!isGeneral && item[activePKey] !== undefined ? 'border-green-400 bg-green-50 text-green-700' : 'border-slate-300 text-slate-700'}`} />
+                            </div>
+                          </div>
+                        )}
                         
                         {sectionDef?.isCatalog && (
                           <>
                             <div className="w-full sm:w-2/5 mt-2">
-  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Foto del Remolque</label>
-  <div className="flex items-center space-x-3">
-    {item.foto ? (
-      <div className="w-10 h-10 rounded border border-slate-300 overflow-hidden shrink-0"><img src={item.foto} alt="Preview" className="w-full h-full object-cover" /></div>
-    ) : (
-      <div className="w-10 h-10 rounded border border-dashed border-slate-400 bg-slate-50 flex items-center justify-center shrink-0"><Image className="w-5 h-5 text-slate-400" /></div>
-    )}
-    <label className={`flex-1 cursor-pointer border py-2 px-3 rounded-md text-xs font-bold text-center transition flex items-center justify-center ${uploadingImage ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700'}`}>
-       {uploadingImage ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
-       {uploadingImage ? 'Subiendo...' : (item.foto ? 'Cambiar Foto' : 'Subir desde la PC')}
-       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, adminSection, index)} disabled={uploadingImage} />
-    </label>
-  </div>
-</div>
-                            <div className="w-full sm:w-3/5 mt-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Especificaciones Breves</label><input type="text" value={item.especificaciones || ''} onChange={e => handleDbChange(adminSection, index, 'especificaciones', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-medium text-sm" placeholder="Ej. 2 Ejes 7k, Piso Madera, Cuello Ganso..." /></div>
-                            <div className="w-40 mt-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Precio Base Referencia</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 font-bold">$</span><input type="number" value={item.precio || 0} onChange={e => handleDbChange(adminSection, index, 'precio', parseFloat(e.target.value) || 0)} className="w-full p-2.5 pl-7 border border-blue-300 bg-blue-50 rounded-md font-black text-right text-blue-800" /></div></div>
+                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Foto del Remolque</label>
+                              <div className="flex items-center space-x-3">
+                                {item.foto ? (
+                                  <div className="w-10 h-10 rounded border border-slate-300 overflow-hidden shrink-0"><img src={item.foto} alt="Preview" className="w-full h-full object-cover" /></div>
+                                ) : (
+                                  <div className="w-10 h-10 rounded border border-dashed border-slate-400 bg-slate-50 flex items-center justify-center shrink-0"><Image className="w-5 h-5 text-slate-400" /></div>
+                                )}
+                                <label className={`flex-1 cursor-pointer border py-2 px-3 rounded-md text-xs font-bold text-center transition flex items-center justify-center ${uploadingImage ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700'}`}>
+                                   {uploadingImage ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+                                   {uploadingImage ? 'Subiendo...' : (item.foto ? 'Cambiar Foto' : 'Subir desde la PC')}
+                                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, adminSection, index)} disabled={uploadingImage} />
+                                </label>
+                              </div>
+                            </div>
+
+                            <div className="w-full sm:w-3/5 mt-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-bold text-slate-700 uppercase">Especificaciones Breves</label>
+                                <button
+                                  type="button"
+                                  onClick={() => handleMejorarConIACatalogo(index)}
+                                  disabled={isGeneratingCatalogAI}
+                                  className="text-xs bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded-md font-bold flex items-center gap-1 transition shadow-sm"
+                                >
+                                  ✨ {isGeneratingCatalogAI ? 'Analizando...' : 'Autocompletar con IA'}
+                                </button>
+                              </div>
+                              <input 
+                                type="text" 
+                                value={item.especificaciones || ''} 
+                                onChange={e => handleDbChange(adminSection, index, 'especificaciones', e.target.value)} 
+                                className="w-full p-2.5 border border-slate-300 rounded-md font-medium text-sm" 
+                                placeholder="Ej. 2 Ejes 7k, Piso Madera, Cuello Ganso..." 
+                              />
+                            </div>
+
+                           <div className="w-40 mt-2">
+                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Precio Base Referencia</label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 font-bold">$</span>
+                                <input 
+                                  type="number" 
+                                  value={item.precio || 0} 
+                                  onChange={e => handleDbChange(adminSection, index, 'precio', parseFloat(e.target.value) || 0)} 
+                                  className="w-full p-2.5 pl-7 border border-blue-300 bg-blue-50 rounded-md font-black text-right text-blue-800" 
+                                />
+                              </div>
+                            </div>
                           </>
                         )}
                         
-                        {!sectionDef?.isFixed && (<div className="pt-5"><button onClick={() => handleDbDelete(adminSection, index)} className="p-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition shadow-sm"><Trash2 className="w-5 h-5"/></button></div>)}
+                        {!sectionDef?.isFixed && (
+                          <div className="pt-5">
+                            <button onClick={() => handleDbDelete(adminSection, index)} className="p-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition shadow-sm">
+                              <Trash2 className="w-5 h-5"/>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
                 </div>
               </div>
-              </>
-             )}
-          </div>
+            </>
+          )}
         </div>
-      ) : (
-        <main className="max-w-[1400px] mx-auto p-4 sm:p-6 flex flex-col xl:flex-row gap-6 print:block">
+      </div>
+    ) : (
+      <main className="max-w-[1400px] mx-auto p-4 sm:p-6 flex flex-col xl:flex-row gap-6 print:block">
           <div className="w-full xl:w-2/3 space-y-6 print:hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* BOTONES USA / MEXICO CON IMAGEN DE BANDERAS */}
