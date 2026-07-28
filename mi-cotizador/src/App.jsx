@@ -612,23 +612,35 @@ function CotizadorNube() {
 
     let urlPdf = null;
     try {
-      // 1. Buscamos el cuadro de la cotización
       const ticketElement = document.getElementById('ticket-cotizacion');
       if (ticketElement) {
-        // 2. Tomamos la "foto" digital
-        const imgData = await toPng(ticketElement, { pixelRatio: 2, backgroundColor: '#ffffff' });
+        // Creamos un contenedor temporal visible pero transparente para que el navegador lo pinte bien
+        const clone = ticketElement.cloneNode(true);
+        clone.style.width = '800px';
+        clone.style.position = 'fixed';
+        clone.style.top = '0';
+        clone.style.left = '0';
+        clone.style.zIndex = '99999';
+        clone.style.opacity = '1'; // Lo dejamos visible un instante para que toPng lo capture perfecto
+        clone.style.background = '#ffffff';
+        clone.style.padding = '30px';
+        document.body.appendChild(clone);
+
+        // Damos un pequeño respiro de 200ms para que el navegador renderice textos y estilos
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        const imgData = await toPng(clone, { pixelRatio: 2, backgroundColor: '#ffffff' });
+        document.body.removeChild(clone);
+
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const imgProps = pdf.getImageProperties(imgData);
         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
         
-        // 4. Lo convertimos a archivo y lo subimos a Firebase Storage
         const pdfBlob = pdf.output('blob');
-        const pdfRef = ref(storage, `cotizaciones/${nuevaCotId}.pdf`);
+        const pdfRef = ref(storage, `cotizaciones/COT-${Math.floor(1000 + Math.random() * 9000)}.pdf`);
         await uploadBytes(pdfRef, pdfBlob);
-        
-        // 5. Obtenemos el link público
         urlPdf = await getDownloadURL(pdfRef);
       }
     } catch (error) {
@@ -683,34 +695,75 @@ function CotizadorNube() {
  
    const handleWhatsAppPDF = async () => {
     setIsGeneratingIA(true);
-    setNotification({ type: 'success', message: 'Fabricando PDF y redactando mensaje...' });
+    setNotification({ type: 'success', message: 'Guardando en historial y preparando WhatsApp...' });
+
+    const totalCalc = calcularTotalActual();
+    const nuevaCotId = `COT-${Math.floor(1000 + Math.random() * 9000)}`;
 
     let urlPdf = null;
     try {
-      // 1. Tomamos la "foto" del ticket y creamos el PDF en modo oculto
+      // 1. Tomamos la "foto" en ancho real y creamos el PDF oficial
       const ticketElement = document.getElementById('ticket-cotizacion');
       if (ticketElement) {
-        const imgData = await toPng(ticketElement, { pixelRatio: 2, backgroundColor: '#ffffff' });
+        const clone = ticketElement.cloneNode(true);
+        clone.style.width = '800px';
+        clone.style.position = 'fixed';
+        clone.style.top = '0';
+        clone.style.left = '0';
+        clone.style.zIndex = '99999';
+        clone.style.opacity = '1';
+        clone.style.background = '#ffffff';
+        clone.style.padding = '30px';
+        document.body.appendChild(clone);
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        const imgData = await toPng(clone, { pixelRatio: 2, backgroundColor: '#ffffff' });
+        document.body.removeChild(clone);
+
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const imgProps = pdf.getImageProperties(imgData);
         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
         
-        // 2. Lo subimos rápidamente a una carpeta temporal en la nube
+        // 2. Lo guardamos en la nube y obtenemos su enlace seguro de acceso inmediato
         const pdfBlob = pdf.output('blob');
-        const tempId = `COT-WA-${Math.floor(1000 + Math.random() * 9000)}`;
-        const pdfRef = ref(storage, `cotizaciones_rapidas/${tempId}.pdf`);
+        const pdfRef = ref(storage, `cotizaciones/${nuevaCotId}.pdf`);
         await uploadBytes(pdfRef, pdfBlob);
         
-        // 3. ¡Obtenemos el enlace mágico!
+        // Usamos getDownloadURL para garantizar acceso autorizado sin errores de permisos
         urlPdf = await getDownloadURL(pdfRef);
       }
+    } catch (error) {
+      console.error('Error al generar o subir PDF:', error);
+    }
 
-      // 4. Se lo pasamos a Gemini para que lo integre en el texto
-      const totalFinalAMostrar = formatoMoneda(calcularTotalActual());
-      let textoFinal = `Hola ${cliente.nombre || ''}, te comparto el resumen de tu cotización por un Remolque AMACSA.\n\n*Total:* ${totalFinalAMostrar}\n\nPuedes descargar y revisar el documento oficial aquí: ${urlPdf || 'Adjunto en este chat'}`;
+    // 3. Guardamos la cotización en el historial y en la nube automáticamente
+    const nuevaCot = {
+      id: nuevaCotId,
+      fecha: new Date().toLocaleDateString('es-MX'),
+      cliente: cliente.nombre || 'Mostrador',
+      telefono: cliente.telefono || 'N/A',
+      remolque: tipoRemolque.replace('_', ' ').toUpperCase(),
+      medida: `${getObj(db.largos, dim.largo).valor}' x ${getObj(db.anchos, dim.ancho).valor}"`,
+      total: formatoMoneda(totalCalc),
+      vendedor: currentUser?.name || 'Ventas',
+      pdfUrl: urlPdf,
+      config: { market, tipoRemolque, isSpecialClient, cliente, dim, acople, rodado, carroceria, monturero, acabados, accesorios, camaBajaOpts }
+    };
 
+    const updated = [nuevaCot, ...cotizaciones].slice(0, 200);
+    setCotizaciones(updated);
+    setDoc(doc(db_fs, getDocPath('cotizaciones')), { list: updated });
+    logAction(`Generó y guardó automáticamente la cotización ${nuevaCot.id} vía WhatsApp.`);
+
+    // 4. Mensaje corporativo base (Respaldado por si la IA de Google se satura)
+    const totalFinalAMostrar = formatoMoneda(totalCalc);
+    let textoFinal = `Estimado(a) *${cliente.nombre || 'Cliente'}*, le comparto el presupuesto oficial de su *Remolque AMACSA*.\n\n*Total:* ${totalFinalAMostrar} MXN\n\nPuedes descargar y revisar su cotización detallada a formato PDF abriendo el siguiente enlace seguro:\n${urlPdf || '[Enlace generado en planta]'}\n\nQuedamos a sus órdenes para cualquier duda o aclaración.\n*Ventas AMACSA*`;
+
+    // 5. Intentamos contactar a Gemini para personalizar el texto
+    try {
       const prompt = `Actúa como ${currentUser?.name || 'Representante de Ventas'} de la empresa fabricante AMACSA. 
 Redacta un mensaje de WhatsApp breve, profesional y cordial para el cliente ${cliente.nombre || 'estimado cliente'}. 
 Infórmale que su presupuesto está listo. 
@@ -728,21 +781,22 @@ Tono: Formal, corporativo, directo y amable. Estrictamente prohíbe el uso de je
       });
 
       const data = await response.json();
-      if (response.ok && data.text) { textoFinal = data.text; }
-
-      // 5. Lanzamos el WhatsApp con todo listo
-      const numeroLimpio = cliente.telefono ? cliente.telefono.replace(/\D/g, '') : '';
-      const numeroFinal = numeroLimpio.length === 10 ? `52${numeroLimpio}` : numeroLimpio;
-      const linkWhatsApp = numeroFinal ? `https://wa.me/${numeroFinal}?text=${encodeURIComponent(textoFinal)}` : `https://wa.me/?text=${encodeURIComponent(textoFinal)}`;
-
-      window.open(linkWhatsApp, '_blank');
-
-    } catch (error) {
-      console.error('Error en el proceso de WhatsApp:', error);
-      setNotification({ type: 'error', message: 'Hubo un error al preparar el PDF para WhatsApp.' });
+      if (response.ok && data.text) { 
+        textoFinal = data.text; 
+      }
+    } catch (aiError) {
+      console.log('Aviso: IA ocupada, usando formato corporativo estándar.');
     } finally {
       setIsGeneratingIA(false);
     }
+
+    // 6. Lanzamos WhatsApp con el enlace y el mensaje listo
+    const numeroLimpio = cliente.telefono ? cliente.telefono.replace(/\D/g, '') : '';
+    const numeroFinal = numeroLimpio.length === 10 ? `52${numeroLimpio}` : numeroLimpio;
+    const linkWhatsApp = numeroFinal ? `https://wa.me/${numeroFinal}?text=${encodeURIComponent(textoFinal)}` : `https://wa.me/?text=${encodeURIComponent(textoFinal)}`;
+
+    window.open(linkWhatsApp, '_blank');
+    setNotification({ type: 'success', message: `Cotización ${nuevaCotId} guardada en el historial y WhatsApp abierto.` });
   };
 
   // --- MATEMÁTICAS EN TIEMPO REAL ---
@@ -1927,21 +1981,21 @@ let capacidadLbs = '7,000 LBS';
   <div id="ticket-cotizacion" className="bg-white p-6 rounded-xl shadow-xl border-t-8 border-slate-900 print:relative print:top-0 print:border-t-0 print:shadow-none print:w-full print:p-0 animar-entrada">
 
                   {/* MEMBRETE */}
-                  <div className="hidden print:flex items-center justify-between mb-8 border-b-2 border-slate-800 pb-4">
-                    <div className="flex items-center space-x-4">
-                      <img src="/logo_amacsa.png" alt="AMACSA" className="h-12 object-contain" />
-                      <div>
-                        <h1 className="text-xl font-black text-slate-900 leading-none mb-1">ADEMES Y MAQUINARIA DE CUAUHTÉMOC S.A. DE C.V.</h1>
-                        <p className="text-xs text-slate-600 font-bold">Sucursal Campo 6 1/2, Cuauhtémoc, Chihuahua.</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <h2 className="text-xl font-black tracking-widest text-slate-800">
-                        {esHojaDiseno ? 'HOJA DE DISEÑO' : 'COTIZACIÓN'}
-                      </h2>
-                      <p className="text-xs font-bold text-slate-500 mt-1">Fecha: {fechaCotizacion}</p>
-                    </div>
-                  </div>
+                  <div className="flex items-center justify-between mb-6 border-b-2 border-slate-800 pb-4 gap-3">
+     <div className="flex items-center space-x-3 overflow-hidden">
+       <img src="/logo_amacsa.png" alt="AMACSA" className="h-10 sm:h-12 object-contain shrink-0" />
+       <div className="min-w-0">
+         <h1 className="text-[11px] sm:text-sm font-black text-slate-900 leading-tight truncate">ADEMES Y MAQUINARIA DE CUAUHTÉMOC S.A. DE C.V.</h1>
+         <p className="text-[9px] sm:text-xs text-slate-600 font-bold">Sucursal Campo 6 1/2, Cuauhtémoc, Chihuahua.</p>
+       </div>
+     </div>
+     <div className="text-right shrink-0">
+       <h2 className="text-sm sm:text-xl font-black tracking-widest text-slate-800">
+         {esHojaDiseno ? 'HOJA DE DISEÑO' : 'COTIZACIÓN'}
+       </h2>
+       <p className="text-[10px] font-bold text-slate-500 mt-0.5">Fecha: {fechaCotizacion}</p>
+     </div>
+   </div>
 
                   <h2 className="text-2xl font-black mb-6 border-b-4 border-slate-900 pb-2 uppercase flex items-center text-slate-800 print:hidden"><FileText className="w-6 h-6 mr-3"/> {esHojaDiseno ? 'HOJA DE DISEÑO (INTERNO)' : 'COTIZACIÓN OFICIAL'}</h2>
                   
@@ -2035,10 +2089,10 @@ let capacidadLbs = '7,000 LBS';
                             <div className="flex justify-between font-black mt-1 text-xl items-center print:text-lg"><span>Saldo Pendiente</span><span className="text-white print:text-slate-900">{formatoMoneda(saldoPendiente)}</span></div>
                           </>
                         )}
-                        <p className="text-slate-400 print:text-slate-500 text-[9px] mt-4 text-center print:mt-2">Cotización válida por 15 días. Sujeta a cambios de ingeniería y planta. Razón Social: Ademes y Maquinaria de Cuauhtémoc S.A. de C.V.</p>
+                        <p className="text-slate-400 print:text-slate-500 text-[9px] mt-4 text-center print:mt-2">Cotización válida por 15 días. Sujeta a cambios de precios, ingeniería y planta sin previo aviso. Razón Social: Ademes y Maquinaria de Cuauhtémoc S.A. de C.V.</p>
                       </div>
 
-                      <div className="hidden print:block mt-6 pt-2 border-t border-slate-300 text-center mx-auto w-48"><p className="text-[11px] font-bold text-slate-800">{currentUser?.name}</p><p className="text-[9px] text-slate-500">Representante de Ventas AMACSA</p></div>
+                      <div className="block mt-6 pt-2 border-t border-slate-300 text-center mx-auto w-48"><p className="text-[11px] font-bold text-slate-800">{currentUser?.name}</p><p className="text-[9px] text-slate-500">Representante de Ventas AMACSA</p></div>
                     </>
                   )}
                 </div>
