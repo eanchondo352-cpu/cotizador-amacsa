@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Truck, FileText, Printer, Settings, Save, Plus, Trash2, Shield, Disc, DoorOpen, Layers, Zap, Lightbulb, Lock, Unlock, LogOut, ClipboardList, Star, Users, History, User, Key, Database, Globe, Image, RefreshCw, Send } from 'lucide-react';import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // --- 1. CONFIGURACIÓN DE LA NUBE (FIREBASE) ---
 const LOCAL_FIREBASE_CONFIG = {
@@ -18,11 +19,12 @@ const envConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__fireba
 const firebaseConfig = envConfig || LOCAL_FIREBASE_CONFIG;
 const isFirebaseConfigured = Object.keys(firebaseConfig).length > 0 && !!firebaseConfig.apiKey;
 
-let app, auth, db_fs;
+let app, auth, db_fs, storage;
 if (isFirebaseConfigured) {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db_fs = getFirestore(app);
+  storage = getStorage(app);
 }
 
 // Lógica inteligente para rutas de Firebase independientemente del entorno
@@ -341,6 +343,29 @@ function CotizadorNube() {
   const [adminUnlockPass, setAdminUnlockPass] = useState('');
   const [mostrarExtras, setMostrarExtras] = useState(false);
   const [isGeneratingIA, setIsGeneratingIA] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImageUpload = async (e, section, index) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setNotification({ type: 'error', message: 'Por favor, selecciona un archivo de imagen válido.' });
+      return;
+    }
+    setUploadingImage(true);
+    try {
+      const fileRef = ref(storage, `catalogo/${Date.now()}_${file.name}`);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      handleDbChange(section, index, 'foto', url);
+      setNotification({ type: 'success', message: '¡Imagen subida correctamente a la nube!' });
+    } catch (error) {
+      console.error("Error al subir la imagen:", error);
+      setNotification({ type: 'error', message: 'Error al subir. Verifica los permisos de Storage en Firebase.' });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
   // ESTADOS PRINCIPALES
   const [cliente, setCliente] = useState({ nombre: '', telefono: '', anticipo: 0, descuentoPct: 0, ajusteRedondeo: 0, cantidad: 1 });
   const [dim, setDim] = useState({ largo: '20ft', ancho: '84in' });
@@ -1136,7 +1161,7 @@ let capacidadLbs = '7,000 LBS';
     }} 
     className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl font-bold flex items-center shadow-sm transition-all mr-3">
     🖨️ Hoja de Diseño
-    <button onClick={() => setView('catalogo')} className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-sm font-bold transition shadow-sm text-white mr-2"><Image className="w-4 h-4"/> <span className="hidden md:inline">Ver Modelos</span></button>
+    <button onClick={() => setView('📖catalogo')} className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-sm font-bold transition shadow-sm text-white mr-2"><Image className="w-4 h-4"/> <span className="hidden md:inline">Ver Modelos</span></button>
 </button>
             </>
           ) : (
@@ -1325,7 +1350,21 @@ let capacidadLbs = '7,000 LBS';
                         
                         {sectionDef?.isCatalog && (
                           <>
-                            <div className="w-full sm:w-2/5 mt-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Enlace de la Foto (URL)</label><input type="text" value={item.foto || ''} onChange={e => handleDbChange(adminSection, index, 'foto', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-medium text-sm" placeholder="Ej. https://... o /img_ganso.png" /></div>
+                            <div className="w-full sm:w-2/5 mt-2">
+  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Foto del Remolque</label>
+  <div className="flex items-center space-x-3">
+    {item.foto ? (
+      <div className="w-10 h-10 rounded border border-slate-300 overflow-hidden shrink-0"><img src={item.foto} alt="Preview" className="w-full h-full object-cover" /></div>
+    ) : (
+      <div className="w-10 h-10 rounded border border-dashed border-slate-400 bg-slate-50 flex items-center justify-center shrink-0"><Image className="w-5 h-5 text-slate-400" /></div>
+    )}
+    <label className={`flex-1 cursor-pointer border py-2 px-3 rounded-md text-xs font-bold text-center transition flex items-center justify-center ${uploadingImage ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700'}`}>
+       {uploadingImage ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+       {uploadingImage ? 'Subiendo...' : (item.foto ? 'Cambiar Foto' : 'Subir desde la PC')}
+       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, adminSection, index)} disabled={uploadingImage} />
+    </label>
+  </div>
+</div>
                             <div className="w-full sm:w-3/5 mt-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Especificaciones Breves</label><input type="text" value={item.especificaciones || ''} onChange={e => handleDbChange(adminSection, index, 'especificaciones', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-medium text-sm" placeholder="Ej. 2 Ejes 7k, Piso Madera, Cuello Ganso..." /></div>
                             <div className="w-40 mt-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Precio Base Referencia</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 font-bold">$</span><input type="number" value={item.precio || 0} onChange={e => handleDbChange(adminSection, index, 'precio', parseFloat(e.target.value) || 0)} className="w-full p-2.5 pl-7 border border-blue-300 bg-blue-50 rounded-md font-black text-right text-blue-800" /></div></div>
                           </>
