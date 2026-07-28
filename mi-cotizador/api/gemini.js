@@ -1,10 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Instanciamos el cliente de Gemini usando la llave de las variables de entorno de Vercel
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export default async function handler(req, res) {
-  // Verificamos que sea una petición por POST y que traiga el 'prompt'
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido. Usa POST.' });
   }
@@ -16,18 +14,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Usamos el modelo más rápido y recomendado para textos cortos
+    // Aquí puedes colocar el nombre del modelo que confirmaste que soporta tu cuenta y versión
     const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
-    // Enviamos el prompt a la IA
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    // Si todo sale bien, devolvemos el texto puro al frontend
     res.status(200).json({ text: text });
   } catch (error) {
-    // Si falla la IA o la red, lo imprimimos en la consola de Vercel y se lo avisamos al frontend
     console.error('Error al conectar con Gemini:', error);
     res.status(500).json({ 
       error: 'Error interno al generar contenido con la IA', 
