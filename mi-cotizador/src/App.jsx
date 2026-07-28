@@ -303,7 +303,7 @@ export default function App() {
 function CotizadorNube() {
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [isCloudLoaded, setIsCloudLoaded] = useState(false);
-  const [isAuthenticated, setIsAuth] = useState(() => localStorage.getItem('amacsa_auth') === 'true');
+  const [isAuthenticated, setIsAuth] = useState(() => localStorage.getItem('amacsa_auth') === 'true' || sessionStorage.getItem('amacsa_auth') === 'true');
   const [loginUser, setLoginUser] = useState('');
   const [loginPass, setLoginPass] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -316,10 +316,10 @@ function CotizadorNube() {
   const [cotizaciones, setCotizaciones] = useState([]);
   const [esHojaDiseno, setEsHojaDiseno] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => {
-    
-    try { const saved = localStorage.getItem('amacsa_current_user'); return saved ? JSON.parse(saved) : null; }
+    try { const saved = localStorage.getItem('amacsa_current_user') || sessionStorage.getItem('amacsa_current_user'); return saved ? JSON.parse(saved) : null; }
     catch { return null; }
   });
+  const [rememberMe, setRememberMe] = useState(false);
 
   const [profileForm, setProfileForm] = useState({ name: '', username: '', password: '' });
 
@@ -497,13 +497,26 @@ function CotizadorNube() {
   const handleLogin = (e) => {
     e.preventDefault();
     const userMatch = users.find(u => u.username === loginUser && u.password === loginPass);
-    if (userMatch) { setCurrentUser(userMatch); setIsAuth(true); localStorage.setItem('amacsa_auth', 'true'); setLoginError(''); logAction(`Inició sesión en el sistema.`); } 
+    if (userMatch) { 
+      setCurrentUser(userMatch); 
+      setIsAuth(true); 
+      if (rememberMe) {
+        localStorage.setItem('amacsa_auth', 'true');
+      } else {
+        sessionStorage.setItem('amacsa_auth', 'true');
+      }
+      setLoginError(''); 
+      logAction(`Inició sesión en el sistema.`); 
+    } 
     else { setLoginError('Usuario o contraseña incorrectos'); setLoginPass(''); }
   };
 
-  const handleLogout = () => { setCurrentUser(null); setIsAuth(false); localStorage.removeItem('amacsa_auth'); setIsAppUnlocked(false); setView('cotizador'); };
+  const handleLogout = () => { setCurrentUser(null); setIsAuth(false); localStorage.removeItem('amacsa_auth'); localStorage.removeItem('amacsa_current_user'); sessionStorage.removeItem('amacsa_auth'); sessionStorage.removeItem('amacsa_current_user'); setIsAppUnlocked(false); setView('cotizador'); };
 
-  const handleAdminAccess = () => { if (isAppUnlocked) { setIsAppUnlocked(false); setView('cotizador'); } else { setAdminUnlockPrompt(true); } };
+  const handleAdminAccess = () => { 
+    if (isAppUnlocked) { setIsAppUnlocked(false); setView('cotizador'); } 
+    else { setIsAppUnlocked(true); setView('admin'); } 
+  };
 
   const handleUnlockSubmit = (e) => {
     e.preventDefault();
@@ -1035,10 +1048,14 @@ let capacidadLbs = '7,000 LBS';
               <label className="block text-sm font-bold text-slate-700 mb-2">Usuario</label>
               <div className="relative"><User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" /><input type="text" value={loginUser} onChange={(e) => setLoginUser(e.target.value)} className="w-full p-3 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none font-medium" placeholder="ej. admin" /></div>
             </div>
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="block text-sm font-bold text-slate-700 mb-2">Contraseña</label>
               <div className="relative"><Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" /><input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} className="w-full p-3 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none font-medium" placeholder="••••••••" /></div>
               {loginError && <p className="text-red-500 text-sm font-bold mt-2">{loginError}</p>}
+            </div>
+            <div className="mb-6 flex items-center">
+              <input type="checkbox" id="rememberMe" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="mr-2 w-4 h-4 text-green-600 rounded focus:ring-green-500 border-slate-300 cursor-pointer" />
+              <label htmlFor="rememberMe" className="text-sm font-bold text-slate-700 cursor-pointer">Mantener sesión iniciada</label>
             </div>
             <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-lg transition">Ingresar al Sistema</button>
           </form>
@@ -1101,7 +1118,7 @@ let capacidadLbs = '7,000 LBS';
             <>
               <button onClick={handleNuevaCotizacion} className="flex items-center space-x-1 bg-red-600 hover:bg-red-500 px-3 py-2 rounded text-sm font-bold transition text-white" title="Nueva cotización de fábrica"><RefreshCw className="w-4 h-4"/> <span className="hidden md:inline">Nueva Cot.</span></button>
               <button onClick={handleAdminAccess} className={`flex items-center space-x-1 px-4 py-2 rounded text-sm font-bold transition text-white ${isAppUnlocked ? 'bg-red-600 hover:bg-red-500' : 'bg-slate-800 hover:bg-slate-700'}`}>
-                {isAppUnlocked ? <><Unlock className="w-4 h-4"/> <span className="hidden md:inline">Cerrar Catálogo</span></> : <><Lock className="w-4 h-4"/> <span className="hidden md:inline">Panel Historial</span></>}
+  <Settings className="w-4 h-4"/> <span className="hidden md:inline">{isAppUnlocked ? 'Cerrar Panel' : 'Panel Historial'}</span>
               </button>
               <button onClick={() => window.print()} className="flex items-center space-x-1 bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm font-bold transition text-white"><Printer className="w-4 h-4"/> <span>Imprimir</span></button>
              <button 
