@@ -695,7 +695,7 @@ function CotizadorNube() {
  const [isGeneratingCatalogAI, setIsGeneratingCatalogAI] = useState(false);
 
   const handleMejorarConIACatalogo = async (index) => {
-    const itemActual = db.modelosLinea[index]; // O el arreglo que uses para tus modelos de línea
+    const itemActual = db[adminSection][index];
     const textoBase = itemActual.especificaciones || itemActual.nombre || "Remolque AMACSA";
 
     setIsGeneratingCatalogAI(true);
@@ -721,26 +721,28 @@ Ejemplo de respuesta esperada:
       });
 
       const data = await response.json();
+      console.log("🤖 Respuesta de la IA:", data); // Agregué esto para espiar qué nos dice si falla
+
       if (response.ok && data.text) {
         // Limpiamos posibles marcas de markdown del JSON
         let jsonStr = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
         const resultado = JSON.parse(jsonStr);
 
-        // Actualizamos el estado de tu catálogo con lo que sugirió la IA
-        const nuevosModelos = [...db.modelosLinea];
-        nuevosModelos[index] = {
-          ...nuevosModelos[index],
-          especificaciones: resultado.specs || nuevosModelos[index].especificaciones,
-          precioBase: resultado.precio || nuevosModelos[index].precioBase
-        };
+        // USAMOS TU FUNCIÓN PARA GUARDAR EN FIREBASE DIRECTAMENTE
+        if (resultado.specs) {
+          handleDbChange(adminSection, index, 'especificaciones', resultado.specs);
+        }
+        if (resultado.precio) {
+          handleDbChange(adminSection, index, 'precio', resultado.precio); // Corregido: Era 'precio', no 'precioBase'
+        }
         
-        // Actualiza tu estado de base de datos correspondiente (ej. setDb)
-        setDb({ ...db, modelosLinea: nuevosModelos });
         setNotification({ type: 'success', message: '¡Especificaciones y precio optimizados por IA con éxito!' });
+      } else {
+         setNotification({ type: 'error', message: 'Error de la IA: No devolvió el texto esperado.' });
       }
     } catch (error) {
       console.error('Error con la IA del catálogo:', error);
-      setNotification({ type: 'error', message: 'No se pudo conectar con la IA en este momento.' });
+      setNotification({ type: 'error', message: 'No se pudo conectar con la IA de Google en este momento.' });
     } finally {
       setIsGeneratingCatalogAI(false);
     }
