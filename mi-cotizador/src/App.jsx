@@ -4,6 +4,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 // --- 1. CONFIGURACIÓN DE LA NUBE (FIREBASE) ---
 const LOCAL_FIREBASE_CONFIG = {
@@ -601,10 +603,42 @@ function CotizadorNube() {
     return subtotalDescuento + subtotalIva + (cliente.ajusteRedondeo || 0);
   };
 
-  const handleGuardarCotizacion = () => {
+  const handleGuardarCotizacion = async () => {
     const totalCalc = calcularTotalActual();
+    const nuevaCotId = `COT-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // Avisamos al usuario que estamos trabajando
+    setNotification({ type: 'success', message: 'Generando PDF y subiendo a la nube...' });
+
+    let urlPdf = null;
+    try {
+      // 1. Buscamos el cuadro de la cotización
+      const ticketElement = document.getElementById('ticket-cotizacion');
+      if (ticketElement) {
+        // 2. Tomamos la "foto" digital
+        const canvas = await html2canvas(ticketElement, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+        
+        // 3. Creamos el PDF tamaño Carta (A4)
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        
+        // 4. Lo convertimos a archivo y lo subimos a Firebase Storage
+        const pdfBlob = pdf.output('blob');
+        const pdfRef = ref(storage, `cotizaciones/${nuevaCotId}.pdf`);
+        await uploadBytes(pdfRef, pdfBlob);
+        
+        // 5. Obtenemos el link público
+        urlPdf = await getDownloadURL(pdfRef);
+      }
+    } catch (error) {
+      console.error("Error creando PDF:", error);
+    }
+
     const nuevaCot = {
-      id: `COT-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: nuevaCotId,
       fecha: new Date().toLocaleDateString('es-MX'),
       cliente: cliente.nombre || 'Mostrador',
       telefono: cliente.telefono || 'N/A',
@@ -612,13 +646,15 @@ function CotizadorNube() {
       medida: `${getObj(db.largos, dim.largo).valor}' x ${getObj(db.anchos, dim.ancho).valor}"`,
       total: formatoMoneda(totalCalc),
       vendedor: currentUser?.name || 'Ventas',
+      pdfUrl: urlPdf, // <--- AQUÍ SE GUARDA EL ENLACE MÁGICO
       config: { market, tipoRemolque, isSpecialClient, cliente, dim, acople, rodado, carroceria, monturero, acabados, accesorios, camaBajaOpts }
     };
+
     const updated = [nuevaCot, ...cotizaciones].slice(0, 200);
     setCotizaciones(updated);
     setDoc(doc(db_fs, getDocPath('cotizaciones')), { list: updated });
-    logAction(`Guardó cotización ${nuevaCot.id}`);
-    setNotification({ type: 'success', message: `Cotización ${nuevaCot.id} guardada con éxito.` });
+    logAction(`Guardó cotización ${nuevaCot.id} con PDF en la nube.`);
+    setNotification({ type: 'success', message: `Cotización ${nuevaCot.id} guardada y PDF respaldado con éxito.` });
   };
 
   const handleCargarCotizacion = (cot) => {
@@ -1252,9 +1288,12 @@ let capacidadLbs = '7,000 LBS';
                            <tr key={i} className="border-b last:border-0 hover:bg-slate-50">
                              <td className="p-3 font-black text-green-700">{cot.id}</td><td className="p-3 text-slate-600 font-medium">{cot.fecha}</td><td className="p-3 font-bold text-slate-800">{cot.cliente}</td><td className="p-3 text-slate-600">{cot.remolque} ({cot.medida})</td><td className="p-3 font-black text-slate-800 text-right">{cot.total}</td>
                              <td className="p-3 text-center space-x-2 whitespace-nowrap">
-                                <button onClick={() => handleCargarCotizacion(cot)} className="bg-green-50 hover:bg-green-100 text-green-600 px-3 py-1 rounded text-xs font-black transition border border-green-200 shadow-sm">Cargar / Reimprimir</button>
-                                <button onClick={() => handleEliminarCotizacion(cot.id)} className="text-red-500 hover:text-red-700 p-1 transition align-middle" title="Eliminar del historial"><Trash2 className="w-5 h-5 inline" /></button>
-                             </td>
+                                  {cot.pdfUrl && (
+                                    <a href={cot.pdfUrl} target="_blank" rel="noopener noreferrer" className="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded text-xs font-black transition border border-blue-200 shadow-sm inline-block" title="Abrir PDF Original">Ver PDF</a>
+                                  )}
+                                  <button onClick={() => handleCargarCotizacion(cot)} className="bg-green-50 hover:bg-green-100 text-green-600 px-3 py-1.5 rounded text-xs font-black transition border border-green-200 shadow-sm">Cargar</button>
+                                  <button onClick={() => handleEliminarCotizacion(cot.id)} className="text-red-500 hover:text-red-700 p-1 transition align-middle" title="Eliminar del historial"><Trash2 className="w-5 h-5 inline" /></button>
+                                </td>
                            </tr>
                          ))}
                        </tbody>
