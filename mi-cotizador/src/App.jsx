@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { AlertTriangle, Truck, FileText, Printer, Settings, Save, Plus, Trash2, Shield, Disc, DoorOpen, Layers, Zap, Lightbulb, Lock, Unlock, LogOut, ClipboardList, Star, Users, History, User, Key, Database, Globe, Image, RefreshCw, Send, Menu, X } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
