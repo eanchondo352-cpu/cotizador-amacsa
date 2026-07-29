@@ -735,6 +735,50 @@ const handleGuardarComoCatalogo = () => {
 
  const [isGeneratingCatalogAI, setIsGeneratingCatalogAI] = useState(false);
 
+const handleCotizarDesdeCatalogo = (modelo) => {
+    // 1. Inyectar las dimensiones
+    if (modelo.largo || modelo.ancho) {
+      setDim(prev => ({ ...prev, largo: modelo.largo || prev.largo, ancho: modelo.ancho || prev.ancho }));
+    }
+    // 2. Inyectar capacidad, suspensión y llantas
+    if (modelo.capacidad || modelo.suspension || modelo.llanta) {
+      setRodado(prev => ({ ...prev, capacidad: modelo.capacidad || prev.capacidad, suspension: modelo.suspension || prev.suspension, llanta: modelo.llanta || prev.llanta }));
+    }
+    // 3. Inyectar jalón y gato
+    if (modelo.jalon || modelo.gato) {
+      setAcople(prev => ({ ...prev, jalon: modelo.jalon || prev.jalon, gato: modelo.gato || prev.gato }));
+    }
+    // 4. Inyectar techo y redila
+    if (modelo.techo || modelo.redila) {
+      setCarroceria(prev => ({ ...prev, techo: modelo.techo || prev.techo, redila: modelo.redila || prev.redila }));
+    }
+    // 5. Inyectar acabados
+    if (modelo.piso || modelo.pintura || modelo.luces || modelo.color) {
+      setAcabados(prev => ({ ...prev, piso: modelo.piso || prev.piso, pintura: modelo.pintura || prev.pintura, luces: modelo.luces || prev.luces, color: modelo.color || prev.color }));
+    }
+    // 6. Inyectar monturero
+    if (modelo.monturero) {
+      setMonturero(prev => ({ ...prev, tipo: modelo.monturero || prev.tipo }));
+    }
+
+    // 7. Adivinar el tipo de remolque por el nombre para cambiar la tarjeta visual
+    if (modelo.nombre) {
+      const nombreLower = modelo.nombre.toLowerCase();
+      if (nombreLower.includes('cama baja')) setTipoRemolque('cama_baja');
+      else if (nombreLower.includes('cama alta')) setTipoRemolque('cama_alta');
+      else if (nombreLower.includes('volteo')) setTipoRemolque('volteo');
+      else if (nombreLower.includes('ganadero')) {
+        setTipoRemolque('ganadero');
+        if (nombreLower.includes('redondo')) setTipoGanadero('redondo');
+        else setTipoGanadero('ganso');
+      }
+    }
+
+    // 8. Cambiar de pantalla y avisar al usuario
+    setView('cotizador');
+    setNotification({ type: 'success', message: `¡Configuración cargada! El modelo "${modelo.nombre}" está listo para cotizar.` });
+  };
+
   const handleMejorarConIACatalogo = async (index) => {
     const itemActual = db[adminSection][index];
     const textoBase = itemActual.especificaciones || itemActual.nombre || "Remolque AMACSA";
@@ -1362,7 +1406,9 @@ let capacidadLbs = '7,000 LBS';
           <button onClick={() => setIsMenuOpen(false)} className="text-slate-400 hover:text-white transition bg-slate-800 p-1.5 rounded-lg"><X className="w-5 h-5" /></button>
         </div>
         <div className="p-4 space-y-3 flex-1 overflow-y-auto">
-          <button onClick={() => { setView('catalogo'); setIsMenuOpen(false); }} className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold transition ${view === 'catalogo' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50' : 'text-slate-300 hover:bg-slate-800'}`}><Image className="w-5 h-5"/> <span>Catálogo de Modelos</span></button>
+         <button onClick={() => { setView('catalogo'); setIsMenuOpen(false); }} className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold transition ${view === 'catalogo' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50' : 'text-slate-300 hover:bg-slate-800'}`}>
+            <span className="text-xl leading-none">📖</span> <span>Catálogo de Modelos</span>
+          </button>
           <button onClick={() => { handleAdminAccess(); setIsMenuOpen(false); }} className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold transition ${view === 'admin' ? 'bg-amber-600 text-white shadow-md shadow-amber-900/50' : 'text-slate-300 hover:bg-slate-800'}`}><Settings className="w-5 h-5"/> <span>Configuraciones</span></button>
           {/* Aquí puedes ir agregando botones en el futuro */}
         </div>
@@ -1411,7 +1457,7 @@ let capacidadLbs = '7,000 LBS';
                   <p className="text-sm text-slate-600 font-medium mb-4 flex-1 whitespace-pre-wrap">{item.especificaciones}</p>
                   <div className="border-t border-slate-100 pt-4 flex justify-between items-end mt-auto">
                     <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Precio Referencia</p><span className="text-2xl font-black text-blue-700">{formatoMoneda(item.precio)}</span></div>
-                    <button onClick={() => setView('cotizador')} className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md">Ir a Cotizar</button>
+                    <button onClick={() => handleCotizarDesdeCatalogo(item)} className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md">Ir a Cotizar</button>
                   </div>
                 </div>
               </div>
@@ -1615,6 +1661,9 @@ let capacidadLbs = '7,000 LBS';
 
                             {/* --- NUEVA CUADRÍCULA CON TODAS LAS OPCIONES --- */}
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Mercado (Bandera)</label><select value={item.market || ''} onChange={e => handleDbChange(adminSection, index, 'market', e.target.value)} className="w-full p-2 border border-amber-300 rounded-md text-xs font-black bg-amber-50 text-amber-900"><option value="">-- Seleccionar --</option><option value="usa">USA</option><option value="mexico">México</option></select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tipo Remolque</label><select value={item.tipoRemolque || ''} onChange={e => handleDbChange(adminSection, index, 'tipoRemolque', e.target.value)} className="w-full p-2 border border-amber-300 rounded-md text-xs font-black bg-amber-50 text-amber-900"><option value="">-- Seleccionar --</option><option value="ganadero_ganso">Ganadero Ganso</option><option value="ganadero_redondo">Ganadero Redondo</option><option value="cama_baja">Cama Baja</option><option value="cama_alta">Cama Alta</option><option value="volteo">Volteo</option></select></div>
+                              
                               <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Largo</label><select value={item.largo || ''} onChange={e => handleDbChange(adminSection, index, 'largo', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.largos?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
                               <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Ancho</label><select value={item.ancho || ''} onChange={e => handleDbChange(adminSection, index, 'ancho', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.anchos?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
                               <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Capacidad</label><select value={item.capacidad || ''} onChange={e => handleDbChange(adminSection, index, 'capacidad', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.capacidades?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
@@ -2302,8 +2351,8 @@ let capacidadLbs = '7,000 LBS';
                   
                   {/* Botón exclusivo de Administrador */}
                   {currentUser?.role === 'admin' && (
-                    <button onClick={handleGuardarComoCatalogo} className="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition shadow-md mt-1 border border-amber-600">
-                      <Image className="w-5 h-5 mr-2" /> <span>Agregar como Modelo de Línea al Catálogo</span>
+                    <button onClick={handleGuardarComoCatalogo} className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/50 active:scale-95 mt-1 border border-orange-600/50">
+                      <span className="text-2xl leading-none mr-2">🌟</span> <span>Guardar en Catálogo de Línea</span>
                     </button>
                   )}
                 </div>
