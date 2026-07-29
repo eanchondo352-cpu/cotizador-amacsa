@@ -2412,12 +2412,10 @@ let capacidadLbs = '7,000 LBS';
                     <button onClick={handleGuardarCotizacion} className="bg-slate-800 hover:bg-slate-700 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-700/50 active:scale-95"><Save className="w-5 h-5 mr-2" /> <span>Guardar en Historial</span></button>
                   </div>
                   
-                  {/* Botón exclusivo de Administrador */}
-                  {currentUser?.role === 'admin' && (
-                    <button onClick={handleGuardarComoCatalogo} className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/50 active:scale-95 mt-1 border border-orange-600/50">
-                      <span className="text-2xl leading-none mr-2">🌟</span> <span>Guardar en Catálogo de Línea</span>
-                    </button>
-                  )}
+                  {/* Botón de Guardar en Catálogo (Habilitado para Ventas y Admin) */}
+                  <button onClick={handleGuardarComoCatalogo} className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/50 active:scale-95 mt-1 border border-orange-600/50">
+                    <span className="text-2xl leading-none mr-2">🌟</span> <span>Guardar en Catálogo de Línea</span>
+                  </button>
                 </div>
               )}
             </div>
