@@ -615,9 +615,11 @@ const handleGuardarComoCatalogo = () => {
     const nuevoModeloCatalogo = {
       id: `cat_${Date.now()}`,
       nombre: nombreModelo,
-      precio: totalCalc, // Guarda el precio calculado automáticamente
-      foto: '', // Se deja vacía para subirla después desde el panel
+      precio: totalCalc,
+      foto: '', 
       especificaciones: specsBreves,
+      market: market, // <--- NUEVO
+      tipoRemolque: tipoRemolque === 'ganadero' ? `ganadero_${tipoGanadero}` : tipoRemolque, // <--- NUEVO
       largo: dim.largo,
       ancho: dim.ancho,
       capacidad: rodado.capacidad,
@@ -736,43 +738,29 @@ const handleGuardarComoCatalogo = () => {
  const [isGeneratingCatalogAI, setIsGeneratingCatalogAI] = useState(false);
 
 const handleCotizarDesdeCatalogo = (modelo) => {
-    // 1. Inyectar las dimensiones
-    if (modelo.largo || modelo.ancho) {
-      setDim(prev => ({ ...prev, largo: modelo.largo || prev.largo, ancho: modelo.ancho || prev.ancho }));
-    }
-    // 2. Inyectar capacidad, suspensión y llantas
-    if (modelo.capacidad || modelo.suspension || modelo.llanta) {
-      setRodado(prev => ({ ...prev, capacidad: modelo.capacidad || prev.capacidad, suspension: modelo.suspension || prev.suspension, llanta: modelo.llanta || prev.llanta }));
-    }
-    // 3. Inyectar jalón y gato
-    if (modelo.jalon || modelo.gato) {
-      setAcople(prev => ({ ...prev, jalon: modelo.jalon || prev.jalon, gato: modelo.gato || prev.gato }));
-    }
-    // 4. Inyectar techo y redila
-    if (modelo.techo || modelo.redila) {
-      setCarroceria(prev => ({ ...prev, techo: modelo.techo || prev.techo, redila: modelo.redila || prev.redila }));
-    }
-    // 5. Inyectar acabados
-    if (modelo.piso || modelo.pintura || modelo.luces || modelo.color) {
-      setAcabados(prev => ({ ...prev, piso: modelo.piso || prev.piso, pintura: modelo.pintura || prev.pintura, luces: modelo.luces || prev.luces, color: modelo.color || prev.color }));
-    }
-    // 6. Inyectar monturero
-    if (modelo.monturero) {
-      setMonturero(prev => ({ ...prev, tipo: modelo.monturero || prev.tipo }));
+    // 1. Inyectar mercado y tarjeta visual de remolque
+    if (modelo.market) setMarket(modelo.market);
+    if (modelo.tipoRemolque) {
+       if (modelo.tipoRemolque.startsWith('ganadero')) {
+           setTipoRemolque('ganadero');
+           setTipoGanadero(modelo.tipoRemolque.includes('redondo') ? 'redondo' : 'ganso');
+       } else {
+           setTipoRemolque(modelo.tipoRemolque);
+       }
     }
 
-    // 7. Adivinar el tipo de remolque por el nombre para cambiar la tarjeta visual
-    if (modelo.nombre) {
-      const nombreLower = modelo.nombre.toLowerCase();
-      if (nombreLower.includes('cama baja')) setTipoRemolque('cama_baja');
-      else if (nombreLower.includes('cama alta')) setTipoRemolque('cama_alta');
-      else if (nombreLower.includes('volteo')) setTipoRemolque('volteo');
-      else if (nombreLower.includes('ganadero')) {
-        setTipoRemolque('ganadero');
-        if (nombreLower.includes('redondo')) setTipoGanadero('redondo');
-        else setTipoGanadero('ganso');
-      }
-    }
+    // 2. Inyectar las dimensiones
+    if (modelo.largo || modelo.ancho) setDim(prev => ({ ...prev, largo: modelo.largo || prev.largo, ancho: modelo.ancho || prev.ancho }));
+    // 3. Inyectar capacidad, suspensión y llantas
+    if (modelo.capacidad || modelo.suspension || modelo.llanta) setRodado(prev => ({ ...prev, capacidad: modelo.capacidad || prev.capacidad, suspension: modelo.suspension || prev.suspension, llanta: modelo.llanta || prev.llanta }));
+    // 4. Inyectar jalón y gato
+    if (modelo.jalon || modelo.gato) setAcople(prev => ({ ...prev, jalon: modelo.jalon || prev.jalon, gato: modelo.gato || prev.gato }));
+    // 5. Inyectar techo y redila
+    if (modelo.techo || modelo.redila) setCarroceria(prev => ({ ...prev, techo: modelo.techo || prev.techo, redila: modelo.redila || prev.redila }));
+    // 6. Inyectar acabados
+    if (modelo.piso || modelo.pintura || modelo.luces || modelo.color) setAcabados(prev => ({ ...prev, piso: modelo.piso || prev.piso, pintura: modelo.pintura || prev.pintura, luces: modelo.luces || prev.luces, color: modelo.color || prev.color }));
+    // 7. Inyectar monturero
+    if (modelo.monturero) setMonturero(prev => ({ ...prev, tipo: modelo.monturero || prev.tipo }));
 
     // 8. Cambiar de pantalla y avisar al usuario
     setView('cotizador');
