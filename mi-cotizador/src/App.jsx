@@ -1394,11 +1394,12 @@ let capacidadLbs = '7,000 LBS';
           <button onClick={() => setIsMenuOpen(false)} className="text-slate-400 hover:text-white transition bg-slate-800 p-1.5 rounded-lg"><X className="w-5 h-5" /></button>
         </div>
         <div className="p-4 space-y-3 flex-1 overflow-y-auto">
-         <button onClick={() => { setView('catalogo'); setIsMenuOpen(false); }} className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold transition ${view === 'catalogo' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50' : 'text-slate-300 hover:bg-slate-800'}`}>
+          <button onClick={() => { setView('catalogo'); setIsMenuOpen(false); }} className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold transition-all duration-300 active:scale-95 ${view === 'catalogo' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50 -translate-y-0.5' : 'text-slate-300 hover:bg-slate-800 hover:text-white hover:-translate-y-1 hover:shadow-md'}`}>
             <span className="text-xl leading-none">📖</span> <span>Catálogo de Modelos</span>
           </button>
-          <button onClick={() => { handleAdminAccess(); setIsMenuOpen(false); }} className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold transition ${view === 'admin' ? 'bg-amber-600 text-white shadow-md shadow-amber-900/50' : 'text-slate-300 hover:bg-slate-800'}`}><Settings className="w-5 h-5"/> <span>Configuraciones</span></button>
-          {/* Aquí puedes ir agregando botones en el futuro */}
+          <button onClick={() => { handleAdminAccess(); setIsMenuOpen(false); }} className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold transition-all duration-300 active:scale-95 ${view === 'admin' ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/50 -translate-y-0.5' : 'text-slate-300 hover:bg-slate-800 hover:text-white hover:-translate-y-1 hover:shadow-md'}`}>
+            <Settings className="w-5 h-5"/> <span>Configuraciones</span>
+          </button>
         </div>
         <div className="p-4 border-t border-slate-800 text-[10px] font-bold text-slate-500 text-center uppercase tracking-widest">
           AMACSA ERP V2.0
@@ -1408,7 +1409,7 @@ let capacidadLbs = '7,000 LBS';
       {/* HEADER PRINCIPAL */}
       <header className="bg-green-950 border-b-4 border-green-600 text-white p-3 sm:p-4 sticky top-0 z-50 flex justify-between items-center shadow-lg print:hidden">
         <div className="flex items-center space-x-3 sm:space-x-4">
-          <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-slate-800 hover:bg-green-600 hover:text-white rounded-xl transition shadow-sm text-slate-300"><Menu className="w-6 h-6"/></button>
+          <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-slate-800 hover:bg-green-500 hover:text-white rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-green-500/50 active:scale-95 text-slate-300"><Menu className="w-6 h-6"/></button>
           <div className="relative h-10 sm:h-11 flex items-center justify-center min-w-[40px] sm:min-w-[45px] bg-white rounded-lg p-1.5 shadow-inner hidden sm:flex"><img src="/logo_amacsa.png" alt="AMACSA" className="h-full object-contain" /></div>
           <div><h1 className="text-xl sm:text-2xl font-black tracking-widest leading-none text-white">AMACSA</h1><p className="text-[9px] sm:text-[10px] text-amber-400 font-black tracking-[0.2em] uppercase mt-0.5">ERP Ventas</p></div>
         </div>
@@ -1418,15 +1419,15 @@ let capacidadLbs = '7,000 LBS';
           
           {view === 'cotizador' ? (
             <>
-              <button onClick={handleNuevaCotizacion} className="p-2.5 sm:p-3 bg-red-600 hover:bg-red-500 rounded-xl transition text-white shadow-sm flex items-center justify-center" title="Nueva Cotización"><RefreshCw className="w-5 h-5"/></button>
-              <button onClick={() => window.print()} className="p-2.5 sm:p-3 bg-green-600 hover:bg-green-500 rounded-xl transition text-white shadow-sm flex items-center justify-center" title="Imprimir Cotización"><Printer className="w-5 h-5"/></button>
-              <button onClick={() => { setEsHojaDiseno(true); setTimeout(() => { window.print(); setEsHojaDiseno(false); }, 100); }} className="p-2.5 sm:p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition text-white shadow-sm mr-1 sm:mr-3 flex items-center justify-center text-lg leading-none" title="Imprimir Hoja de Diseño">🖨️</button>
+              <button onClick={handleNuevaCotizacion} className="p-2.5 sm:p-3 bg-red-600 hover:bg-red-500 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/50 active:scale-95 text-white flex items-center justify-center" title="Nueva Cotización"><RefreshCw className="w-5 h-5"/></button>
+              <button onClick={() => window.print()} className="p-2.5 sm:p-3 bg-green-600 hover:bg-green-500 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-green-500/50 active:scale-95 text-white flex items-center justify-center" title="Imprimir Cotización"><Printer className="w-5 h-5"/></button>
+              <button onClick={() => { setEsHojaDiseno(true); setTimeout(() => { window.print(); setEsHojaDiseno(false); }, 100); }} className="p-2.5 sm:p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/50 active:scale-95 text-white mr-1 sm:mr-3 flex items-center justify-center text-lg leading-none" title="Imprimir Hoja de Diseño">🖨️</button>
             </>
           ) : (
-            <button onClick={() => setView('cotizador')} className="p-2.5 sm:p-3 bg-green-600 hover:bg-green-500 rounded-xl transition text-white shadow-sm flex items-center justify-center mr-1 sm:mr-3" title="Volver al Cotizador"><Save className="w-5 h-5"/></button>
+            <button onClick={() => setView('cotizador')} className="p-2.5 sm:p-3 bg-green-600 hover:bg-green-500 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-green-500/50 active:scale-95 text-white flex items-center justify-center mr-1 sm:mr-3" title="Volver al Cotizador"><Save className="w-5 h-5"/></button>
           )}
           <div className="w-px h-8 bg-slate-700 mx-1 hidden sm:block"></div>
-          <button onClick={handleLogout} className="p-2.5 sm:p-3 bg-slate-800 hover:bg-red-600 rounded-xl transition text-slate-400 hover:text-white shadow-sm flex items-center justify-center" title="Cerrar Sesión"><LogOut className="w-5 h-5"/></button>
+          <button onClick={handleLogout} className="p-2.5 sm:p-3 bg-slate-800 hover:bg-red-600 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/50 active:scale-95 text-slate-400 hover:text-white flex items-center justify-center" title="Cerrar Sesión"><LogOut className="w-5 h-5"/></button>
         </div>
       </header>
 
@@ -1439,7 +1440,7 @@ let capacidadLbs = '7,000 LBS';
               <img src="/logo_amacsa.png" alt="AMACSA" className="h-10 hidden print:block mr-4 object-contain" />
               <h2 className="text-3xl font-black text-slate-800 tracking-tight">Catálogo de Modelos de Línea</h2>
             </div>
-            <button onClick={() => window.print()} className="print:hidden bg-slate-800 hover:bg-slate-700 text-white font-black py-2.5 px-5 rounded-xl flex items-center transition shadow-md">
+           <button onClick={() => window.print()} className="print:hidden bg-slate-800 hover:bg-slate-700 text-white font-black py-2.5 px-5 rounded-xl flex items-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-700/50 active:scale-95">
               <Printer className="w-5 h-5 mr-2" /> Imprimir Catálogo
             </button>
           </div>
@@ -1464,7 +1465,8 @@ let capacidadLbs = '7,000 LBS';
                       <span className="text-2xl font-black text-blue-700 print:text-slate-900 print:text-xl">{formatoMoneda(item.precio)}</span>
                     </div>
                     {/* Ocultamos el botón al imprimir */}
-                    <button onClick={() => handleCotizarDesdeCatalogo(item)} className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md print:hidden">Ir a Cotizar</button>
+                    {/* Ocultamos el botón al imprimir */}
+                    <button onClick={() => handleCotizarDesdeCatalogo(item)} className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-700/50 active:scale-95 print:hidden">Ir a Cotizar</button>
                   </div>
                 </div>
                 
@@ -1781,10 +1783,10 @@ let capacidadLbs = '7,000 LBS';
 
             {/* BOTONES USA / MEXICO CON IMAGEN DE BANDERAS */}
             <div className="p-1.5 bg-slate-200 rounded-xl flex items-center shadow-inner">
-                <button onClick={() => setMarket('usa')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'usa' ? 'bg-white shadow text-green-900 scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}>
+                <button onClick={() => setMarket('usa')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all duration-300 active:scale-95 ${market === 'usa' ? 'bg-white shadow-lg shadow-green-900/20 text-green-900 scale-[1.02] -translate-y-0.5' : 'text-slate-500 hover:text-slate-700 hover:-translate-y-1 hover:shadow-md'}`}>
                     <img src="https://flagcdn.com/w40/us.png" alt="USA" className="w-5 h-auto mr-2 rounded-sm shadow-sm" /> USA
                 </button>
-                <button onClick={() => setMarket('mexico')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'mexico' ? 'bg-white shadow text-green-700 scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}>
+                <button onClick={() => setMarket('mexico')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all duration-300 active:scale-95 ${market === 'mexico' ? 'bg-white shadow-lg shadow-green-700/20 text-green-700 scale-[1.02] -translate-y-0.5' : 'text-slate-500 hover:text-slate-700 hover:-translate-y-1 hover:shadow-md'}`}>
                     <img src="https://flagcdn.com/w40/mx.png" alt="México" className="w-5 h-auto mr-2 rounded-sm shadow-sm" /> MÉXICO
                 </button>
             </div>
@@ -1793,48 +1795,48 @@ let capacidadLbs = '7,000 LBS';
             <div className={`grid gap-3 ${market === 'mexico' ? 'grid-cols-2 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-2 max-w-md'}`}>
                 
                 {/* 1. Ganadero Ganso (Visible siempre) */}
-                <button onClick={() => { setTipoRemolque('ganadero'); setTipoGanadero('ganso'); }} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'bg-amber-50 border-amber-500 shadow-md' : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow'}`}>
+                <button onClick={() => { setTipoRemolque('ganadero'); setTipoGanadero('ganso'); }} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 hover:-translate-y-1 active:scale-95 overflow-hidden group ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'bg-amber-50 border-amber-500 shadow-lg shadow-amber-500/40 -translate-y-1' : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow-xl hover:shadow-amber-500/20'}`}>
                     <div className="h-12 w-full flex items-center justify-center mb-2 relative">
                         <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'text-amber-600' : 'text-slate-500'}`} />
-                        <img src="/img_ganso.png" alt="Ganso" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                        <img src="/img_ganso.png" alt="Ganso" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative transition-transform duration-300 group-hover:scale-110" onError={(e) => e.target.style.display='none'} />
                     </div>
-                    <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'text-amber-800' : 'text-slate-600'}`}>Ganadero<br/>Ganso</span>
+                    <span className={`font-black z-10 text-center text-[11px] leading-tight transition-colors duration-300 ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'text-amber-800' : 'text-slate-600 group-hover:text-amber-700'}`}>Ganadero<br/>Ganso</span>
                 </button>
 
                 {/* 2. Ganadero Redondo (Visible siempre) */}
-                <button onClick={() => { setTipoRemolque('ganadero'); setTipoGanadero('redondo'); }} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'bg-amber-50 border-amber-500 shadow-md' : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow'}`}>
+                <button onClick={() => { setTipoRemolque('ganadero'); setTipoGanadero('redondo'); }} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 hover:-translate-y-1 active:scale-95 overflow-hidden group ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'bg-amber-50 border-amber-500 shadow-lg shadow-amber-500/40 -translate-y-1' : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow-xl hover:shadow-amber-500/20'}`}>
                     <div className="h-12 w-full flex items-center justify-center mb-2 relative">
                         <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'text-amber-600' : 'text-slate-500'}`} />
-                        <img src="/img_redondo.png" alt="Redondo" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                        <img src="/img_redondo.png" alt="Redondo" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative transition-transform duration-300 group-hover:scale-110" onError={(e) => e.target.style.display='none'} />
                     </div>
-                    <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'text-amber-800' : 'text-slate-600'}`}>Ganadero<br/>Redondo</span>
+                    <span className={`font-black z-10 text-center text-[11px] leading-tight transition-colors duration-300 ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'text-amber-800' : 'text-slate-600 group-hover:text-amber-700'}`}>Ganadero<br/>Redondo</span>
                 </button>
 
                 {/* EXCLUSIVOS DE MÉXICO */}
                 {market === 'mexico' && (
                     <>
-                        <button onClick={() => setTipoRemolque('cama_baja')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'cama_baja' ? 'bg-indigo-50 border-indigo-500 shadow-md' : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow'}`}>
+                        <button onClick={() => setTipoRemolque('cama_baja')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 hover:-translate-y-1 active:scale-95 overflow-hidden group ${tipoRemolque === 'cama_baja' ? 'bg-indigo-50 border-indigo-500 shadow-lg shadow-indigo-500/40 -translate-y-1' : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/20'}`}>
                             <div className="h-12 w-full flex items-center justify-center mb-2 relative">
                                 <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'cama_baja' ? 'text-indigo-600' : 'text-slate-500'}`} />
-                                <img src="/img_camabaja.png" alt="Cama Baja" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                                <img src="/img_camabaja.png" alt="Cama Baja" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative transition-transform duration-300 group-hover:scale-110" onError={(e) => e.target.style.display='none'} />
                             </div>
-                            <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'cama_baja' ? 'text-indigo-800' : 'text-slate-600'}`}>Cama<br/>Baja</span>
+                            <span className={`font-black z-10 text-center text-[11px] leading-tight transition-colors duration-300 ${tipoRemolque === 'cama_baja' ? 'text-indigo-800' : 'text-slate-600 group-hover:text-indigo-700'}`}>Cama<br/>Baja</span>
                         </button>
 
-                        <button onClick={() => setTipoRemolque('cama_alta')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'cama_alta' ? 'bg-emerald-50 border-emerald-500 shadow-md' : 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow'}`}>
+                        <button onClick={() => setTipoRemolque('cama_alta')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 hover:-translate-y-1 active:scale-95 overflow-hidden group ${tipoRemolque === 'cama_alta' ? 'bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-500/40 -translate-y-1' : 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow-xl hover:shadow-emerald-500/20'}`}>
                             <div className="h-12 w-full flex items-center justify-center mb-2 relative">
                                 <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'cama_alta' ? 'text-emerald-600' : 'text-slate-500'}`} />
-                                <img src="/img_camaalta.png" alt="Cama Alta" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                                <img src="/img_camaalta.png" alt="Cama Alta" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative transition-transform duration-300 group-hover:scale-110" onError={(e) => e.target.style.display='none'} />
                             </div>
-                            <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'cama_alta' ? 'text-emerald-800' : 'text-slate-600'}`}>Cama<br/>Alta</span>
+                            <span className={`font-black z-10 text-center text-[11px] leading-tight transition-colors duration-300 ${tipoRemolque === 'cama_alta' ? 'text-emerald-800' : 'text-slate-600 group-hover:text-emerald-700'}`}>Cama<br/>Alta</span>
                         </button>
 
-                        <button onClick={() => setTipoRemolque('volteo')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'volteo' ? 'bg-red-50 border-red-500 shadow-md' : 'bg-white border-slate-200 hover:border-red-300 hover:shadow'}`}>
+                        <button onClick={() => setTipoRemolque('volteo')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 hover:-translate-y-1 active:scale-95 overflow-hidden group ${tipoRemolque === 'volteo' ? 'bg-red-50 border-red-500 shadow-lg shadow-red-500/40 -translate-y-1' : 'bg-white border-slate-200 hover:border-red-300 hover:shadow-xl hover:shadow-red-500/20'}`}>
                             <div className="h-12 w-full flex items-center justify-center mb-2 relative">
                                 <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'volteo' ? 'text-red-600' : 'text-slate-500'}`} />
-                                <img src="/img_volteo.png" alt="Volteo" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                                <img src="/img_volteo.png" alt="Volteo" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative transition-transform duration-300 group-hover:scale-110" onError={(e) => e.target.style.display='none'} />
                             </div>
-                            <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'volteo' ? 'text-red-800' : 'text-slate-600'}`}>Remolque<br/>Volteo</span>
+                            <span className={`font-black z-10 text-center text-[11px] leading-tight transition-colors duration-300 ${tipoRemolque === 'volteo' ? 'text-red-800' : 'text-slate-600 group-hover:text-red-700'}`}>Remolque<br/>Volteo</span>
                         </button>
                     </>
                 )}
@@ -2359,7 +2361,7 @@ let capacidadLbs = '7,000 LBS';
                       {isGeneratingIA ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
                       <span>{isGeneratingIA ? 'Redactando con IA...' : 'WhatsApp con PDF'}</span>
                     </button>
-                    <button onClick={handleGuardarCotizacion} className="bg-slate-800 hover:bg-slate-700 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition shadow-md"><Save className="w-5 h-5 mr-2" /> <span>Guardar en Historial</span></button>
+                    <button onClick={handleGuardarCotizacion} className="bg-slate-800 hover:bg-slate-700 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-700/50 active:scale-95"><Save className="w-5 h-5 mr-2" /> <span>Guardar en Historial</span></button>
                   </div>
                   
                   {/* Botón exclusivo de Administrador */}
