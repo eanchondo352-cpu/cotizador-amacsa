@@ -1487,213 +1487,272 @@ let capacidadLbs = '7,000 LBS';
                    </div>
                 </div>
              ) : (
-              <>
                 <div className="flex flex-col h-full">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-black text-slate-800">{ADMIN_SECTIONS.find(s => s.id === adminSection)?.title}</h2>
-                  {!ADMIN_SECTIONS.find(s => s.id === adminSection)?.isFixed && (
-                    <button onClick={() => handleDbAdd(adminSection)} className="flex items-center space-x-1 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm"><Plus className="w-5 h-5"/> <span>Agregar Elemento</span></button>
-                  )}
-                </div>
-                
-                {/* MATRIZ DE PRECIOS POR TIPO DE REMOLQUE */}
-                {!ADMIN_SECTIONS.find(s => s.id === adminSection)?.isColor && (
-                  <div className="flex space-x-2 mb-4 bg-slate-100 p-1.5 rounded-lg overflow-x-auto">
-                    {[
-                      { id: 'gen', name: 'General (Base)' },
-                      { id: 'ganadero_ganso', name: 'Ganso / USA' },
-                      { id: 'ganadero_redondo', name: 'Redondo (Mex)' },
-                      { id: 'volteo', name: 'Volteo' },
-                      { id: 'cama_baja', name: 'Cama Baja' },
-                      { id: 'cama_alta', name: 'Cama Alta' }
-                    ].map(tab => (
-                      <button key={tab.id} onClick={() => setAdminTrailerTab(tab.id)} className={`px-4 py-2 rounded-md text-sm font-black whitespace-nowrap transition-all ${adminTrailerTab === tab.id ? 'bg-white text-green-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200'}`}>
-                        {tab.name}
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-black text-slate-800">{ADMIN_SECTIONS.find(s => s.id === adminSection)?.title}</h2>
+                    {!ADMIN_SECTIONS.find(s => s.id === adminSection)?.isFixed && (
+                      <button onClick={() => handleDbAdd(adminSection)} className="flex items-center space-x-1 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm">
+                        <Plus className="w-5 h-5"/> <span>Agregar Elemento</span>
                       </button>
-                    ))}
+                    )}
                   </div>
-                )}
+                  
+                  {/* MATRIZ DE PRECIOS POR TIPO DE REMOLQUE */}
+                  {!ADMIN_SECTIONS.find(s => s.id === adminSection)?.isColor && (
+                    <div className="flex space-x-2 mb-4 bg-slate-100 p-1.5 rounded-lg overflow-x-auto">
+                      {[
+                        { id: 'gen', name: 'General (Base)' },
+                        { id: 'ganadero_ganso', name: 'Ganso / USA' },
+                        { id: 'ganadero_redondo', name: 'Redondo (Mex)' },
+                        { id: 'volteo', name: 'Volteo' },
+                        { id: 'cama_baja', name: 'Cama Baja' },
+                        { id: 'cama_alta', name: 'Cama Alta' }
+                      ].map(tab => (
+                        <button key={tab.id} onClick={() => setAdminTrailerTab(tab.id)} className={`px-4 py-2 rounded-md text-sm font-black whitespace-nowrap transition-all ${adminTrailerTab === tab.id ? 'bg-white text-green-700 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200'}`}>
+                          {tab.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
-                <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-2">
-                  {db[adminSection]?.map((item, index) => {
-                    const sectionDef = ADMIN_SECTIONS.find(s => s.id === adminSection);
-                    const isGeneral = adminTrailerTab === 'gen';
-                    const pKey = sectionDef?.isPiso ? 'precioSqFt' : 'precio';
-                    const extraKey = 'precioExtra';
-                    const activePKey = isGeneral ? pKey : `${pKey}_${adminTrailerTab}`;
-                    const activeExtraKey = isGeneral ? extraKey : `${extraKey}_${adminTrailerTab}`;
-                    
-                    return (
-                      <div key={item.id || index} className="flex flex-wrap items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl hover:shadow-sm transition relative">
-                        {!isGeneral && item[activePKey] === undefined && !sectionDef?.isColor && (
-                          <div className="absolute top-2 right-4 text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Usando precio General</div>
-                        )}
-                        <div className="flex-1 min-w-[200px]">
-                          <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre Comercial</label>
-                          <input type="text" value={item.nombre} onChange={e => handleDbChange(adminSection, index, 'nombre', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 focus:ring-2 focus:ring-green-500 outline-none" />
-                        </div>
-                        
-                        {sectionDef?.hasValor && (
-                          <div className="w-24">
-                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef.valorLabel}</label>
-                            <input type="number" value={item.valor || 0} onChange={e => handleDbChange(adminSection, index, 'valor', parseFloat(e.target.value) || 0)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 text-center focus:ring-2" />
-                          </div>
-                        )}
-                        
-                        {sectionDef?.hasPrecioExtra && (
-                          <div className="w-36">
-                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Extra {isGeneral ? '(Base)' : ''}</label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
-                              <input type="number" value={item[activeExtraKey] ?? item.precioExtra ?? 0} onChange={e => handleDbChange(adminSection, index, activeExtraKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-bold ${!isGeneral && item[activeExtraKey] !== undefined ? 'border-green-400 bg-green-50 text-green-800' : 'border-slate-300'}`} />
-                            </div>
-                          </div>
-                        )}
-                        
-                        {!sectionDef?.isColor && !sectionDef?.isCatalog && (
-                          <div className="w-36">
-                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'P. SqFt' : 'Precio'} {isGeneral ? '(Base)' : ''}</label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
-                              <input type="number" value={item[activePKey] ?? item[pKey] ?? 0} onChange={e => handleDbChange(adminSection, index, activePKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-black text-right ${!isGeneral && item[activePKey] !== undefined ? 'border-green-400 bg-green-50 text-green-700' : 'border-slate-300 text-slate-700'}`} />
-                            </div>
-                          </div>
-                        )}
-                        
-                        {sectionDef?.isCatalog && (
-                          <>
-                            <div className="w-full sm:w-2/5 mt-2">
-                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Foto del Remolque</label>
-                              <div className="flex items-center space-x-3">
-                                {item.foto ? (
-                                  <div className="w-10 h-10 rounded border border-slate-300 overflow-hidden shrink-0"><img src={item.foto} alt="Preview" className="w-full h-full object-cover" /></div>
-                                ) : (
-                                  <div className="w-10 h-10 rounded border border-dashed border-slate-400 bg-slate-50 flex items-center justify-center shrink-0"><Image className="w-5 h-5 text-slate-400" /></div>
-                                )}
-                                <label className={`flex-1 cursor-pointer border py-2 px-3 rounded-md text-xs font-bold text-center transition flex items-center justify-center ${uploadingImage ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700'}`}>
-                                   {uploadingImage ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
-                                   {uploadingImage ? 'Subiendo...' : (item.foto ? 'Cambiar Foto' : 'Subir desde la PC')}
-                                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, adminSection, index)} disabled={uploadingImage} />
-                                </label>
+                  <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-2">
+                    {db[adminSection]?.map((item, index) => {
+                      const sectionDef = ADMIN_SECTIONS.find(s => s.id === adminSection);
+                      const isCatalog = sectionDef?.isCatalog;
+
+                      if (isCatalog) {
+                        return (
+                          <div key={item.id || index} className="p-5 bg-white border-2 border-slate-200 rounded-2xl shadow-sm space-y-4 mb-4">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                              <div className="flex-1 w-full">
+                                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre Comercial del Modelo</label>
+                                <input 
+                                  type="text" 
+                                  value={item.nombre || ''} 
+                                  onChange={e => handleDbChange(adminSection, index, 'nombre', e.target.value)} 
+                                  className="w-full p-2.5 border border-slate-300 rounded-lg font-black text-slate-800 text-lg" 
+                                />
                               </div>
-                            </div>
-
-                            <div className="w-full sm:w-3/5 mt-2">
-                              <div className="flex items-center justify-between mb-1">
-                                <label className="text-xs font-bold text-slate-700 uppercase">Especificaciones Breves</label>
-                                <button
-                                  type="button"
-                                  onClick={() => handleMejorarConIACatalogo(index)}
-                                  disabled={isGeneratingCatalogAI}
-                                  className="text-xs bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded-md font-bold flex items-center gap-1 transition shadow-sm"
-                                >
-                                  ✨ {isGeneratingCatalogAI ? 'Analizando...' : 'Autocompletar con IA'}
-                                </button>
-                              </div>
-                              <input 
-                                type="text" 
-                                value={item.especificaciones || ''} 
-                                onChange={e => handleDbChange(adminSection, index, 'especificaciones', e.target.value)} 
-                                className="w-full p-2.5 border border-slate-300 rounded-md font-medium text-sm" 
-                                placeholder="Ej. 2 Ejes 7k, Piso Madera, Cuello Ganso..." 
-                              />
-                            </div>
-
-                           <div className="w-40 mt-2">
-                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Precio Base Referencia</label>
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 font-bold">$</span>
+                              <div className="w-full sm:w-48">
+                                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Precio Base ($)</label>
                                 <input 
                                   type="number" 
                                   value={item.precio || 0} 
                                   onChange={e => handleDbChange(adminSection, index, 'precio', parseFloat(e.target.value) || 0)} 
-                                  className="w-full p-2.5 pl-7 border border-blue-300 bg-blue-50 rounded-md font-black text-right text-blue-800" 
+                                  className="w-full p-2.5 border border-blue-300 bg-blue-50 rounded-lg font-black text-blue-800 text-right" 
                                 />
                               </div>
                             </div>
-                          </>
-                        )}
-                        
-                        {!sectionDef?.isFixed && (
-                          <div className="pt-5">
-                            <button onClick={() => handleDbDelete(adminSection, index)} className="p-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition shadow-sm">
-                              <Trash2 className="w-5 h-5"/>
-                            </button>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                              <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Fotografía</label>
+                                <div className="flex items-center space-x-3">
+                                  {item.foto ? (
+                                    <div className="w-12 h-12 rounded-lg border overflow-hidden shrink-0"><img src={item.foto} alt="" className="w-full h-full object-cover"/></div>
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-lg border border-dashed bg-slate-50 flex items-center justify-center shrink-0"><Image className="w-5 h-5 text-slate-400"/></div>
+                                  )}
+                                  <label className="flex-1 cursor-pointer border py-2.5 px-3 rounded-lg text-xs font-bold text-center bg-slate-50 hover:bg-slate-100 text-slate-700 transition">
+                                    {uploadingImage ? 'Subiendo...' : (item.foto ? 'Cambiar Foto' : 'Subir Imagen')}
+                                    <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e, adminSection, index)} disabled={uploadingImage} />
+                                  </label>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => handleMejorarConIACatalogo(index)}
+                                  disabled={isGeneratingCatalogAI}
+                                  className="w-full bg-amber-500 hover:bg-amber-600 text-white p-3 rounded-lg font-black text-xs flex items-center justify-center gap-2 transition shadow-sm"
+                                >
+                                  ✨ {isGeneratingCatalogAI ? 'Analizando con IA...' : 'Autocompletar Especificaciones y Precio con IA'}
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
+                              <div>
+                                <label className="text-[11px] font-bold text-slate-600 uppercase block mb-1">Suspensión</label>
+                                <select 
+                                  value={item.suspension || ''} 
+                                  onChange={e => handleDbChange(adminSection, index, 'suspension', e.target.value)}
+                                  className="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold bg-white"
+                                >
+                                  <option value="">-- Seleccionar Suspensión --</option>
+                                  {db.suspension?.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="text-[11px] font-bold text-slate-600 uppercase block mb-1">Llantas</label>
+                                <select 
+                                  value={item.llanta || ''} 
+                                  onChange={e => handleDbChange(adminSection, index, 'llanta', e.target.value)}
+                                  className="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold bg-white"
+                                >
+                                  <option value="">-- Seleccionar Llantas --</option>
+                                  {db.llantas?.map(l => <option key={l.id} value={l.id}>{l.nombre}</option>)}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="text-[11px] font-bold text-slate-600 uppercase block mb-1">Piso</label>
+                                <select 
+                                  value={item.piso || ''} 
+                                  onChange={e => handleDbChange(adminSection, index, 'piso', e.target.value)}
+                                  className="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold bg-white"
+                                >
+                                  <option value="">-- Seleccionar Piso --</option>
+                                  {db.pisos?.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                                </select>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Especificaciones Breves (Catálogo)</label>
+                              <input 
+                                type="text" 
+                                value={item.especificaciones || ''} 
+                                onChange={e => handleDbChange(adminSection, index, 'especificaciones', e.target.value)} 
+                                className="w-full p-2.5 border border-slate-300 rounded-lg font-medium text-xs bg-slate-50" 
+                                placeholder="Ej. 2 Ejes 7k, Piso Madera..." 
+                              />
+                            </div>
+
+                            <div className="flex justify-end pt-2 border-t border-slate-100">
+                              <button 
+                                onClick={() => handleDbDelete(adminSection, index)} 
+                                className="flex items-center space-x-1 text-xs font-bold text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition border border-red-200"
+                              >
+                                <Trash2 className="w-4 h-4"/> <span>Eliminar Modelo</span>
+                              </button>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                        );
+                      }
+
+                      const isGeneral = adminTrailerTab === 'gen';
+                      const pKey = sectionDef?.isPiso ? 'precioSqFt' : 'precio';
+                      const extraKey = 'precioExtra';
+                      const activePKey = isGeneral ? pKey : `${pKey}_${adminTrailerTab}`;
+                      const activeExtraKey = isGeneral ? extraKey : `${extraKey}_${adminTrailerTab}`;
+
+                      return (
+                        <div key={item.id || index} className="flex flex-wrap items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl hover:shadow-sm transition relative">
+                          {!isGeneral && item[activePKey] === undefined && !sectionDef?.isColor && (
+                            <div className="absolute top-2 right-4 text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Usando precio General</div>
+                          )}
+                          <div className="flex-1 min-w-[200px]">
+                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre Comercial</label>
+                            <input type="text" value={item.nombre} onChange={e => handleDbChange(adminSection, index, 'nombre', e.target.value)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 focus:ring-2 focus:ring-green-500 outline-none" />
+                          </div>
+                          
+                          {sectionDef?.hasValor && (
+                            <div className="w-24">
+                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef.valorLabel}</label>
+                              <input type="number" value={item.valor || 0} onChange={e => handleDbChange(adminSection, index, 'valor', parseFloat(e.target.value) || 0)} className="w-full p-2.5 border border-slate-300 rounded-md font-bold text-slate-800 text-center focus:ring-2" />
+                            </div>
+                          )}
+                          
+                          {sectionDef?.hasPrecioExtra && (
+                            <div className="w-36">
+                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Extra {isGeneral ? '(Base)' : ''}</label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
+                                <input type="number" value={item[activeExtraKey] ?? item.precioExtra ?? 0} onChange={e => handleDbChange(adminSection, index, activeExtraKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-bold ${!isGeneral && item[activeExtraKey] !== undefined ? 'border-green-400 bg-green-50 text-green-800' : 'border-slate-300'}`} />
+                              </div>
+                            </div>
+                          )}
+                          
+                          {!sectionDef?.isColor && !sectionDef?.isCatalog && (
+                            <div className="w-36">
+                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'P. SqFt' : 'Precio'} {isGeneral ? '(Base)' : ''}</label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
+                                <input type="number" value={item[activePKey] ?? item[pKey] ?? 0} onChange={e => handleDbChange(adminSection, index, activePKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-black text-right ${!isGeneral && item[activePKey] !== undefined ? 'border-green-400 bg-green-50 text-green-700' : 'border-slate-300 text-slate-700'}`} />
+                              </div>
+                            </div>
+                          )}
+                          
+                          {!sectionDef?.isFixed && (
+                            <div className="pt-5">
+                              <button onClick={() => handleDbDelete(adminSection, index)} className="p-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition shadow-sm">
+                                <Trash2 className="w-5 h-5"/>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
+             )}
+          </div>
         </div>
-      </div>
-    ) : (
-      <main className="max-w-[1400px] mx-auto p-4 sm:p-6 flex flex-col xl:flex-row gap-6 print:block">
+      ) : (
+        <main className="max-w-[1400px] mx-auto p-4 sm:p-6 flex flex-col xl:flex-row gap-6">
+          {/* ====== COLUMNA IZQUIERDA (FORMULARIOS) ====== */}
           <div className="w-full xl:w-2/3 space-y-6 print:hidden">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* BOTONES USA / MEXICO CON IMAGEN DE BANDERAS */}
-                <div className="p-1.5 bg-slate-200 rounded-xl flex items-center shadow-inner">
-                    <button onClick={() => setMarket('usa')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'usa' ? 'bg-white shadow text-green-900 scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}>
-                        <img src="https://flagcdn.com/w40/us.png" alt="USA" className="w-5 h-auto mr-2 rounded-sm shadow-sm" /> USA
-                    </button>
-                    <button onClick={() => setMarket('mexico')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'mexico' ? 'bg-white shadow text-green-700 scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}>
-                        <img src="https://flagcdn.com/w40/mx.png" alt="México" className="w-5 h-auto mr-2 rounded-sm shadow-sm" /> MÉXICO
-                    </button>
-                </div>
 
-                {/* NUEVAS TARJETAS VISUALES DE REMOLQUES */}
-                <div className={`grid gap-3 ${market === 'mexico' ? 'grid-cols-2 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-2 max-w-md'}`}>
-                    
-                    {/* 1. Ganadero Ganso (Visible siempre) */}
-                    <button onClick={() => { setTipoRemolque('ganadero'); setTipoGanadero('ganso'); }} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'bg-amber-50 border-amber-500 shadow-md' : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow'}`}>
-                        <div className="h-12 w-full flex items-center justify-center mb-2 relative">
-                            <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'text-amber-600' : 'text-slate-500'}`} />
-                            <img src="/img_ganso.png" alt="Ganso" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
-                        </div>
-                        <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'text-amber-800' : 'text-slate-600'}`}>Ganadero<br/>Ganso</span>
-                    </button>
+            {/* BOTONES USA / MEXICO CON IMAGEN DE BANDERAS */}
+            <div className="p-1.5 bg-slate-200 rounded-xl flex items-center shadow-inner">
+                <button onClick={() => setMarket('usa')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'usa' ? 'bg-white shadow text-green-900 scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}>
+                    <img src="https://flagcdn.com/w40/us.png" alt="USA" className="w-5 h-auto mr-2 rounded-sm shadow-sm" /> USA
+                </button>
+                <button onClick={() => setMarket('mexico')} className={`flex-1 py-3 px-4 rounded-lg font-black text-sm flex items-center justify-center transition-all ${market === 'mexico' ? 'bg-white shadow text-green-700 scale-[1.02]' : 'text-slate-500 hover:text-slate-700'}`}>
+                    <img src="https://flagcdn.com/w40/mx.png" alt="México" className="w-5 h-auto mr-2 rounded-sm shadow-sm" /> MÉXICO
+                </button>
+            </div>
 
-                    {/* 2. Ganadero Redondo (Visible siempre) */}
-                    <button onClick={() => { setTipoRemolque('ganadero'); setTipoGanadero('redondo'); }} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'bg-amber-50 border-amber-500 shadow-md' : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow'}`}>
-                        <div className="h-12 w-full flex items-center justify-center mb-2 relative">
-                            <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'text-amber-600' : 'text-slate-500'}`} />
-                            <img src="/img_redondo.png" alt="Redondo" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
-                        </div>
-                        <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'text-amber-800' : 'text-slate-600'}`}>Ganadero<br/>Redondo</span>
-                    </button>
+            {/* NUEVAS TARJETAS VISUALES DE REMOLQUES */}
+            <div className={`grid gap-3 ${market === 'mexico' ? 'grid-cols-2 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-2 max-w-md'}`}>
+                
+                {/* 1. Ganadero Ganso (Visible siempre) */}
+                <button onClick={() => { setTipoRemolque('ganadero'); setTipoGanadero('ganso'); }} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'bg-amber-50 border-amber-500 shadow-md' : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow'}`}>
+                    <div className="h-12 w-full flex items-center justify-center mb-2 relative">
+                        <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'text-amber-600' : 'text-slate-500'}`} />
+                        <img src="/img_ganso.png" alt="Ganso" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                    </div>
+                    <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'ganadero' && tipoGanadero === 'ganso' ? 'text-amber-800' : 'text-slate-600'}`}>Ganadero<br/>Ganso</span>
+                </button>
 
-                    {/* EXCLUSIVOS DE MÉXICO */}
-                    {market === 'mexico' && (
-                        <>
-                            <button onClick={() => setTipoRemolque('cama_baja')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'cama_baja' ? 'bg-indigo-50 border-indigo-500 shadow-md' : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow'}`}>
-                                <div className="h-12 w-full flex items-center justify-center mb-2 relative">
-                                    <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'cama_baja' ? 'text-indigo-600' : 'text-slate-500'}`} />
-                                    <img src="/img_camabaja.png" alt="Cama Baja" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
-                                </div>
-                                <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'cama_baja' ? 'text-indigo-800' : 'text-slate-600'}`}>Cama<br/>Baja</span>
-                            </button>
+                {/* 2. Ganadero Redondo (Visible siempre) */}
+                <button onClick={() => { setTipoRemolque('ganadero'); setTipoGanadero('redondo'); }} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'bg-amber-50 border-amber-500 shadow-md' : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow'}`}>
+                    <div className="h-12 w-full flex items-center justify-center mb-2 relative">
+                        <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'text-amber-600' : 'text-slate-500'}`} />
+                        <img src="/img_redondo.png" alt="Redondo" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                    </div>
+                    <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' ? 'text-amber-800' : 'text-slate-600'}`}>Ganadero<br/>Redondo</span>
+                </button>
 
-                            <button onClick={() => setTipoRemolque('cama_alta')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'cama_alta' ? 'bg-emerald-50 border-emerald-500 shadow-md' : 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow'}`}>
-                                <div className="h-12 w-full flex items-center justify-center mb-2 relative">
-                                    <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'cama_alta' ? 'text-emerald-600' : 'text-slate-500'}`} />
-                                    <img src="/img_camaalta.png" alt="Cama Alta" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
-                                </div>
-                                <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'cama_alta' ? 'text-emerald-800' : 'text-slate-600'}`}>Cama<br/>Alta</span>
-                            </button>
+                {/* EXCLUSIVOS DE MÉXICO */}
+                {market === 'mexico' && (
+                    <>
+                        <button onClick={() => setTipoRemolque('cama_baja')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'cama_baja' ? 'bg-indigo-50 border-indigo-500 shadow-md' : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow'}`}>
+                            <div className="h-12 w-full flex items-center justify-center mb-2 relative">
+                                <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'cama_baja' ? 'text-indigo-600' : 'text-slate-500'}`} />
+                                <img src="/img_camabaja.png" alt="Cama Baja" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                            </div>
+                            <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'cama_baja' ? 'text-indigo-800' : 'text-slate-600'}`}>Cama<br/>Baja</span>
+                        </button>
 
-                            <button onClick={() => setTipoRemolque('volteo')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'volteo' ? 'bg-red-50 border-red-500 shadow-md' : 'bg-white border-slate-200 hover:border-red-300 hover:shadow'}`}>
-                                <div className="h-12 w-full flex items-center justify-center mb-2 relative">
-                                    <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'volteo' ? 'text-red-600' : 'text-slate-500'}`} />
-                                    <img src="/img_volteo.png" alt="Volteo" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
-                                </div>
-                                <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'volteo' ? 'text-red-800' : 'text-slate-600'}`}>Remolque<br/>Volteo</span>
-                            </button>
-                        </>
-                    )}
-                </div>
+                        <button onClick={() => setTipoRemolque('cama_alta')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'cama_alta' ? 'bg-emerald-50 border-emerald-500 shadow-md' : 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow'}`}>
+                            <div className="h-12 w-full flex items-center justify-center mb-2 relative">
+                                <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'cama_alta' ? 'text-emerald-600' : 'text-slate-500'}`} />
+                                <img src="/img_camaalta.png" alt="Cama Alta" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                            </div>
+                            <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'cama_alta' ? 'text-emerald-800' : 'text-slate-600'}`}>Cama<br/>Alta</span>
+                        </button>
+
+                        <button onClick={() => setTipoRemolque('volteo')} className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all overflow-hidden group ${tipoRemolque === 'volteo' ? 'bg-red-50 border-red-500 shadow-md' : 'bg-white border-slate-200 hover:border-red-300 hover:shadow'}`}>
+                            <div className="h-12 w-full flex items-center justify-center mb-2 relative">
+                                <Truck className={`w-8 h-8 absolute opacity-20 transition-opacity group-hover:opacity-40 ${tipoRemolque === 'volteo' ? 'text-red-600' : 'text-slate-500'}`} />
+                                <img src="/img_volteo.png" alt="Volteo" className="max-h-full max-w-full object-contain drop-shadow-md z-10 relative" onError={(e) => e.target.style.display='none'} />
+                            </div>
+                            <span className={`font-black z-10 text-center text-[11px] leading-tight ${tipoRemolque === 'volteo' ? 'text-red-800' : 'text-slate-600'}`}>Remolque<br/>Volteo</span>
+                        </button>
+                    </>
+                )}
             </div>
 
             {market === 'usa' && tipoRemolque === 'ganadero' && (
@@ -1818,18 +1877,18 @@ let capacidadLbs = '7,000 LBS';
               {tipoRemolque === 'ganadero' && (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-<div>
-  <label className="text-xs font-bold text-amber-700 uppercase block mb-1">Techo</label>
-  <div className="flex gap-2">
-    <select value={carroceria.techo} onChange={e => setCarroceria({...carroceria, techo: e.target.value})} className="w-full p-2 border border-amber-300 rounded-md">{db.techos.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select>
-    {carroceria.techo === 'media_especial' && (
-      <div className="flex items-center bg-amber-50 border border-amber-300 rounded-md px-2 w-24 shadow-sm" title="Largo máximo limitado al tamaño del remolque">
-        <input type="number" min="1" max={parseInt(dim.largo.replace('ft', ''))} value={carroceria.techoEspecialLargo || ''} onChange={e => { let max = parseInt(dim.largo.replace('ft', '')); let val = parseInt(e.target.value)||''; setCarroceria({...carroceria, techoEspecialLargo: val > max ? max : val})}} className="w-full bg-transparent font-black text-amber-900 text-center outline-none" placeholder="Pies"/>
-        <span className="text-[10px] font-bold text-amber-700 pr-1">FT</span>
-      </div>
-    )}
-  </div>
-</div>
+                    <div>
+                      <label className="text-xs font-bold text-amber-700 uppercase block mb-1">Techo</label>
+                      <div className="flex gap-2">
+                        <select value={carroceria.techo} onChange={e => setCarroceria({...carroceria, techo: e.target.value})} className="w-full p-2 border border-amber-300 rounded-md">{db.techos.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select>
+                        {carroceria.techo === 'media_especial' && (
+                          <div className="flex items-center bg-amber-50 border border-amber-300 rounded-md px-2 w-24 shadow-sm" title="Largo máximo limitado al tamaño del remolque">
+                            <input type="number" min="1" max={parseInt(dim.largo.replace('ft', ''))} value={carroceria.techoEspecialLargo || ''} onChange={e => { let max = parseInt(dim.largo.replace('ft', '')); let val = parseInt(e.target.value)||''; setCarroceria({...carroceria, techoEspecialLargo: val > max ? max : val})}} className="w-full bg-transparent font-black text-amber-900 text-center outline-none" placeholder="Pies"/>
+                            <span className="text-[10px] font-bold text-amber-700 pr-1">FT</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                      <div>
                       <label className="text-xs font-bold text-amber-700 uppercase block mb-1">Frente</label>
                       <select value={carroceria.frente} onChange={e => setCarroceria({...carroceria, frente: e.target.value})} className="w-full p-2 border border-amber-300 rounded-md font-bold">
@@ -1941,22 +2000,13 @@ let capacidadLbs = '7,000 LBS';
                    </div>
                 </>
               )}
-              {['cama_baja', 'cama_alta'].includes(tipoRemolque) && (
-                <>
-                   {tipoRemolque === 'cama_baja' && ( <div className="mb-4"><label className="text-xs font-bold text-indigo-700 uppercase block mb-1">Redila Plataforma</label><select value={carroceria.redila} onChange={e => setCarroceria({...carroceria, redila: e.target.value})} className="w-full sm:w-1/2 p-2 border border-indigo-300 rounded-md font-bold">{redilasDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div> )}
-                   <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t ${tipoRemolque === 'cama_alta' ? 'border-emerald-200' : 'border-indigo-200'}`}>
-                     <div><label className={`text-xs font-bold uppercase block mb-1 ${tipoRemolque === 'cama_alta' ? 'text-emerald-700' : 'text-indigo-700'}`}>Rampas / Cola de Pato</label><select value={camaBajaOpts.rampas} onChange={e => setCamaBajaOpts({...camaBajaOpts, rampas: e.target.value})} className={`w-full p-2 border rounded-md font-bold ${tipoRemolque === 'cama_alta' ? 'border-emerald-300 text-emerald-900' : 'border-indigo-300 text-indigo-900'}`}>{rampasDisponibles.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}</select></div>
-                     {tipoRemolque === 'cama_baja' && ( <div className="flex items-end pb-2"><label className="flex items-center space-x-2 cursor-pointer font-medium text-sm text-indigo-900 bg-white px-3 py-1.5 rounded border border-indigo-200 shadow-sm"><input type="checkbox" checked={camaBajaOpts.fenderReforzado} onChange={() => toggle(setCamaBajaOpts, 'fenderReforzado')} className="w-4 h-4 text-indigo-600"/> <span>Fender Reforzado</span></label></div> )}
-                   </div>
-                </>
-              )}
             </div>
 
             {tipoRemolque === 'ganadero' && (
               <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                 <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><DoorOpen className="w-5 h-5 mr-2 text-green-600"/> 4. Monturero</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-<select value={monturero.tipo} onChange={e => setMonturero({...monturero, tipo: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium">{monturerosDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select>
+                  <select value={monturero.tipo} onChange={e => setMonturero({...monturero, tipo: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium">{monturerosDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select>
                   {(monturero.tipo !== 'ninguno' || carroceria.frente === 'cachucha') && (<label className="flex items-center space-x-2 cursor-pointer font-medium"><input type="checkbox" checked={monturero.puertaPerro} onChange={() => toggle(setMonturero, 'puertaPerro')} className="w-4 h-4 text-green-600"/> <span>Incluir Puerta Perro Lateral</span></label>)}
                 </div>
                 {monturero.tipo === 'diagonal' && (
@@ -2049,11 +2099,12 @@ let capacidadLbs = '7,000 LBS';
               </div>
             </div>
 
-                    {/* --- NOTAS Y OBSERVACIONES --- */}
+            {/* --- NOTAS Y OBSERVACIONES --- */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mt-6 print:hidden">
                 <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><FileText className="w-5 h-5 mr-2 text-green-600"/> 6. Notas y Observaciones para Diseño</h2>
                 <textarea value={cliente.observaciones || ''} onChange={e => setCliente({...cliente, observaciones: e.target.value})} className="w-full p-3 border border-slate-300 rounded-md font-medium text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Ej. El techo debe llevar una caída diferente en la parte trasera, cliente solicita ganchos extra, etc..." rows="3"></textarea>
             </div>
+            
             {/* --- EXTRAS ESPECIALES DESPLEGABLES --- */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mt-6 print:hidden">
                 <button onClick={() => setMostrarExtras(!mostrarExtras)} className="w-full text-left flex justify-between items-center group">
@@ -2089,31 +2140,31 @@ let capacidadLbs = '7,000 LBS';
                 )}
             </div>
 
-          </div> {/* <--- CIERRA LA COLUMNA IZQUIERDA PERFECTAMENTE */}
+          </div>
 
           {/* ====== COLUMNA DERECHA (TICKET) ====== */}
           <div className="w-full xl:w-1/3 print:w-full print:block">
             <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto pb-8 pr-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
               
               {activeTab === 'cotizacion' && (
-  <div id="ticket-cotizacion" className="bg-white p-6 rounded-xl shadow-xl border-t-8 border-slate-900 print:relative print:top-0 print:border-t-0 print:shadow-none print:w-full print:p-0 animar-entrada">
+                <div id="ticket-cotizacion" className="bg-white p-6 rounded-xl shadow-xl border-t-8 border-slate-900 print:relative print:top-0 print:border-t-0 print:shadow-none print:w-full print:p-0 animar-entrada">
 
                   {/* MEMBRETE */}
                   <div className="flex items-center justify-between mb-6 border-b-2 border-slate-800 pb-4 gap-3">
-     <div className="flex items-center space-x-3 overflow-hidden">
-       <img src="/logo_amacsa.png" alt="AMACSA" className="h-10 sm:h-12 object-contain shrink-0" />
-       <div className="min-w-0">
-         <h1 className="text-[11px] sm:text-sm font-black text-slate-900 leading-tight truncate">ADEMES Y MAQUINARIA DE CUAUHTÉMOC S.A. DE C.V.</h1>
-         <p className="text-[9px] sm:text-xs text-slate-600 font-bold">Sucursal Campo 6 1/2, Cuauhtémoc, Chihuahua.</p>
-       </div>
-     </div>
-     <div className="text-right shrink-0">
-       <h2 className="text-sm sm:text-xl font-black tracking-widest text-slate-800">
-         {esHojaDiseno ? 'HOJA DE DISEÑO' : 'COTIZACIÓN'}
-       </h2>
-       <p className="text-[10px] font-bold text-slate-500 mt-0.5">Fecha: {fechaCotizacion}</p>
-     </div>
-   </div>
+                    <div className="flex items-center space-x-3 overflow-hidden">
+                      <img src="/logo_amacsa.png" alt="AMACSA" className="h-10 sm:h-12 object-contain shrink-0" />
+                      <div className="min-w-0">
+                        <h1 className="text-[11px] sm:text-sm font-black text-slate-900 leading-tight truncate">ADEMES Y MAQUINARIA DE CUAUHTÉMOC S.A. DE C.V.</h1>
+                        <p className="text-[9px] sm:text-xs text-slate-600 font-bold">Sucursal Campo 6 1/2, Cuauhtémoc, Chihuahua.</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <h2 className="text-sm sm:text-xl font-black tracking-widest text-slate-800">
+                        {esHojaDiseno ? 'HOJA DE DISEÑO' : 'COTIZACIÓN'}
+                      </h2>
+                      <p className="text-[10px] font-bold text-slate-500 mt-0.5">Fecha: {fechaCotizacion}</p>
+                    </div>
+                  </div>
 
                   <h2 className="text-2xl font-black mb-6 border-b-4 border-slate-900 pb-2 uppercase flex items-center text-slate-800 print:hidden"><FileText className="w-6 h-6 mr-3"/> {esHojaDiseno ? 'HOJA DE DISEÑO (INTERNO)' : 'COTIZACIÓN OFICIAL'}</h2>
                   
@@ -2139,7 +2190,7 @@ let capacidadLbs = '7,000 LBS';
                     <ul className="space-y-3 text-slate-700 print:text-slate-900 text-xs">
                       <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Tipo y Tamaño:</span><br className="print:hidden"/> Remolque {tipoRemolque === 'ganadero' ? 'Ganadero' : tipoRemolque === 'cama_alta' ? 'Cama Alta' : tipoRemolque === 'volteo' ? 'Volteo' : 'Cama Baja'} AMACSA {oLargo.valor}' Largo x {oAncho.valor}" Ancho</li>
                       
-<li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Capacidad y Ejes:</span><br className="print:hidden"/> <span className="font-bold text-green-700 print:text-slate-900">{nombreCapacidadTicket}</span> — {oSusp.nombre} — Llantas {oLlantas.nombre} {rodado.cantFrenos > 0 ? `(${rodado.cantFrenos}x Ejes c/Frenos)` : ''}</li>
+                      <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Capacidad y Ejes:</span><br className="print:hidden"/> <span className="font-bold text-green-700 print:text-slate-900">{nombreCapacidadTicket}</span> — {oSusp.nombre} — Llantas {oLlantas.nombre} {rodado.cantFrenos > 0 ? `(${rodado.cantFrenos}x Ejes c/Frenos)` : ''}</li>
                       <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Tipo de Jalón:</span><br className="print:hidden"/> <span className="font-bold">{oJalon.nombre}</span> {market === 'usa' ? '(Ganso 3/8 x 35")' : (acople.cadena !== 'ninguna' ? `(${oCadena.nombre})` : '')} {acople.sujetaCadenas ? '+ Sujeta Cadenas' : ''}</li>
                       
                       {tipoRemolque !== 'cama_alta' && <li><span className="font-black uppercase text-slate-500 print:text-slate-700 mr-2">Redila:</span><br className="print:hidden"/> <span className="font-bold">{oRedila.nombre}</span></li>}
@@ -2215,7 +2266,8 @@ let capacidadLbs = '7,000 LBS';
                   )}
                 </div>
               )}
-                {activeTab === 'cotizacion' && (
+
+              {activeTab === 'cotizacion' && (
                 <div className="print:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                   <button onClick={handleWhatsAppPDF} disabled={isGeneratingIA} className={`font-black py-3 px-4 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-green-500/50 active:scale-95 ${isGeneratingIA ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-[#25D366] hover:bg-[#128C7E] text-white'}`}>
                     {isGeneratingIA ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
@@ -2230,4 +2282,4 @@ let capacidadLbs = '7,000 LBS';
       )}
     </div>
   );
-}     
+}
