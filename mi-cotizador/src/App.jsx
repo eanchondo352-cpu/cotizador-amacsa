@@ -1431,27 +1431,52 @@ let capacidadLbs = '7,000 LBS';
       </header>
 
       {view === 'catalogo' ? (
-        <div className="max-w-[1400px] mx-auto p-4 sm:p-6 animar-entrada">
-          <h2 className="text-3xl font-black text-slate-800 mb-8 flex items-center border-b-4 border-slate-900 pb-3"><Image className="w-8 h-8 mr-3 text-blue-600"/> Catálogo de Modelos de Línea</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="max-w-[1400px] mx-auto p-4 sm:p-6 animar-entrada print:p-0 print:max-w-none">
+          
+          <div className="flex justify-between items-center mb-8 border-b-4 border-slate-900 pb-3 print:border-b-2">
+            <div className="flex items-center">
+              <span className="text-3xl mr-3 print:hidden">📖</span>
+              <img src="/logo_amacsa.png" alt="AMACSA" className="h-10 hidden print:block mr-4 object-contain" />
+              <h2 className="text-3xl font-black text-slate-800 tracking-tight">Catálogo de Modelos de Línea</h2>
+            </div>
+            <button onClick={() => window.print()} className="print:hidden bg-slate-800 hover:bg-slate-700 text-white font-black py-2.5 px-5 rounded-xl flex items-center transition shadow-md">
+              <Printer className="w-5 h-5 mr-2" /> Imprimir Catálogo
+            </button>
+          </div>
+
+          {/* Ajustamos la cuadrícula para que en impresión salgan 2 o 3 columnas y no se desparrame */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 print:grid-cols-2 print:gap-4 gap-6">
             {db.modelosLinea?.map(item => (
-              <div key={item.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                <div className="h-56 bg-slate-100 relative group">
-                  <img src={item.foto || '/img_ganso.png'} alt={item.nombre} className="w-full h-full object-cover transition duration-500 group-hover:scale-110" onError={e => e.target.src='/img_ganso.png'} />
-                  <div className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-md tracking-wider">MODELO ESTÁNDAR</div>
+              <div key={item.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col print:shadow-none print:border-2 print:border-slate-300 print:break-inside-avoid print:rounded-xl">
+                
+                <div className="h-56 bg-slate-100 relative group print:h-48 print:bg-transparent">
+                  <img src={item.foto || '/img_ganso.png'} alt={item.nombre} className="w-full h-full object-cover transition duration-500 group-hover:scale-110 print:object-contain" onError={e => e.target.src='/img_ganso.png'} />
+                  <div className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-md tracking-wider print:bg-white print:text-slate-800 print:border print:border-slate-400 print:shadow-none">ESTÁNDAR</div>
                 </div>
-                <div className="p-5 flex flex-col flex-1">
-                  <h3 className="font-black text-slate-800 text-xl leading-tight mb-2">{item.nombre}</h3>
-                  <p className="text-sm text-slate-600 font-medium mb-4 flex-1 whitespace-pre-wrap">{item.especificaciones}</p>
-                  <div className="border-t border-slate-100 pt-4 flex justify-between items-end mt-auto">
-                    <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Precio Referencia</p><span className="text-2xl font-black text-blue-700">{formatoMoneda(item.precio)}</span></div>
-                    <button onClick={() => handleCotizarDesdeCatalogo(item)} className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md">Ir a Cotizar</button>
+                
+                <div className="p-5 flex flex-col flex-1 print:p-4">
+                  <h3 className="font-black text-slate-800 text-xl leading-tight mb-2 print:text-lg">{item.nombre}</h3>
+                  <p className="text-sm text-slate-600 font-medium mb-4 flex-1 whitespace-pre-wrap print:text-xs print:mb-2">{item.especificaciones}</p>
+                  
+                  <div className="border-t border-slate-100 pt-4 flex justify-between items-end mt-auto print:border-slate-300 print:pt-2">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 print:text-slate-500">Precio Referencia</p>
+                      <span className="text-2xl font-black text-blue-700 print:text-slate-900 print:text-xl">{formatoMoneda(item.precio)}</span>
+                    </div>
+                    {/* Ocultamos el botón al imprimir */}
+                    <button onClick={() => handleCotizarDesdeCatalogo(item)} className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md print:hidden">Ir a Cotizar</button>
                   </div>
                 </div>
+                
               </div>
             ))}
+
             {(!db.modelosLinea || db.modelosLinea.length === 0) && (
-              <div className="col-span-full py-16 text-center bg-white rounded-2xl border border-dashed border-slate-300"><Image className="w-16 h-16 text-slate-300 mx-auto mb-4"/><p className="text-slate-500 font-bold text-lg">No hay modelos de línea registrados.</p><p className="text-slate-400 text-sm mt-1">Agrega tus remolques más populares desde el Panel Historial.</p></div>
+              <div className="col-span-full py-16 text-center bg-white rounded-2xl border border-dashed border-slate-300 print:hidden">
+                <span className="text-5xl block mb-3 opacity-50">📖</span>
+                <p className="text-slate-500 font-bold text-lg">No hay modelos de línea registrados.</p>
+                <p className="text-slate-400 text-sm mt-1">Agrega tus remolques más populares desde el cotizador.</p>
+              </div>
             )}
           </div>
         </div>
