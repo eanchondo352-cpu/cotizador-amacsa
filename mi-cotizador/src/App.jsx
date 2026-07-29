@@ -579,7 +579,11 @@ function CotizadorNube() {
 
   // AYUDANTES MATEMÁTICOS PARA EL PDF Y GUARDADO
   const formatoMoneda = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num || 0).replace('$', '$ ');
-  const tipoPrecio = tipoRemolque === 'ganadero' ? (tipoGanadero === 'redondo' && market === 'mexico' ? 'ganadero_redondo' : 'ganadero_ganso') : tipoRemolque;
+  const tipoPrecio = tipoRemolque === 'ganadero' 
+  ? (tipoGanadero === 'redondo' && market === 'mexico' ? 'ganadero_redondo' 
+     : tipoGanadero === 'ganso' && market === 'mexico' ? 'ganadero_ganso_mex' 
+     : 'ganadero_ganso') 
+  : tipoRemolque;
   const getP = (obj, key = 'precio') => obj ? (obj[`${key}_${tipoPrecio}`] !== undefined ? obj[`${key}_${tipoPrecio}`] : (obj[key] || 0)) : 0;
   const getExtraPrice = (id) => { const ext = db.extras?.find(e => e.id === id); return ext ? (ext[`precio_${tipoPrecio}`] ?? ext.precio ?? 0) : 0; };
   const getObj = (arr, id) => arr?.find(x => x.id === id) || arr?.[0] || { nombre: 'N/A', precio: 0, valor: 0 };
@@ -728,6 +732,29 @@ const handleGuardarComoCatalogo = () => {
       setNotification({ type: 'success', message: `Cotización ${cot.id} cargada con éxito. Ya puedes reimprimirla o enviarla.` });
     } else {
       setNotification({ type: 'error', message: `La cotización ${cot.id} es de una versión anterior y no se puede recargar automáticamente.` });
+    }
+  };
+
+const handleDuplicarCotizacion = (cot) => {
+    if (cot.config) {
+      setMarket(cot.config.market || 'mexico');
+      setTipoRemolque(cot.config.tipoRemolque || 'ganadero');
+      setIsSpecialClient(cot.config.isSpecialClient !== undefined ? cot.config.isSpecialClient : true);
+      // Cargamos los datos agregando "(Copia)" para identificar que es un nuevo presupuesto
+      setCliente({ ...cot.config.cliente, nombre: `${cot.config.cliente.nombre || 'Cliente'} (Copia)` });
+      setDim(cot.config.dim);
+      setAcople(cot.config.acople);
+      setRodado(cot.config.rodado);
+      setCarroceria(cot.config.carroceria);
+      setMonturero(cot.config.monturero);
+      setAcabados(cot.config.acabados);
+      setAccesorios(cot.config.accesorios);
+      setCamaBajaOpts(cot.config.camaBajaOpts || { rampas: 'ninguna', fenderReforzado: false, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, luzPortaplaca: false });
+      setView('cotizador');
+      setNotification({ type: 'success', message: `¡Cotización duplicada! Modifica los cambios necesarios y guárdala con un nuevo folio.` });
+      logAction(`Duplicó la cotización ${cot.id} para generar un nuevo presupuesto.`);
+    } else {
+      setNotification({ type: 'error', message: `La cotización ${cot.id} es de una versión anterior y no se puede duplicar automáticamente.` });
     }
   };
 
@@ -1523,6 +1550,7 @@ let capacidadLbs = '7,000 LBS';
                                     <a href={cot.pdfUrl} target="_blank" rel="noopener noreferrer" className="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded text-xs font-black transition border border-blue-200 shadow-sm inline-block" title="Abrir PDF Original">Ver PDF</a>
                                   )}
                                   <button onClick={() => handleCargarCotizacion(cot)} className="bg-green-50 hover:bg-green-100 text-green-600 px-3 py-1.5 rounded text-xs font-black transition border border-green-200 shadow-sm">Cargar</button>
+<button onClick={() => handleDuplicarCotizacion(cot)} className="bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-1.5 rounded text-xs font-black transition border border-amber-200 shadow-sm">Duplicar</button>
                                   <button onClick={() => handleEliminarCotizacion(cot.id)} className="text-red-500 hover:text-red-700 p-1 transition align-middle" title="Eliminar del historial"><Trash2 className="w-5 h-5 inline" /></button>
                                 </td>
                            </tr>
@@ -1605,6 +1633,7 @@ let capacidadLbs = '7,000 LBS';
                       {[
                         { id: 'gen', name: 'General (Base)' },
                         { id: 'ganadero_ganso', name: 'Ganso / USA' },
+                        { id: 'ganadero_ganso_mex', name: 'Ganso / Mex' },
                         { id: 'ganadero_redondo', name: 'Redondo (Mex)' },
                         { id: 'volteo', name: 'Volteo' },
                         { id: 'cama_baja', name: 'Cama Baja' },
