@@ -2186,6 +2186,54 @@ let capacidadLbs = '7,000 LBS';
               </div>
             </div>
 
+{/* --- PANEL INTELIGENTE DE UPSELLING (VENTA CRUZADA - FLOTANTE COMPACTO) --- */}
+            {(() => {
+              const sugerencias = [];
+              
+              // Textos más cortos para ahorrar espacio
+              if (tipoRemolque === 'ganadero' && !carroceria.plexiglass) {
+                sugerencias.push({ id: 'plexi', texto: 'Añadir Plexiglass (Protege al ganado)', boton: '+ Añadir Plexiglass', accion: () => toggle(setCarroceria, 'plexiglass') });
+              }
+              if (tipoRemolque === 'ganadero' && accesorios.lucesInteriores === 0) {
+                sugerencias.push({ id: 'luzint', texto: 'Luces Interiores (Para carga nocturna)', boton: '+ 1 Luz Interior', accion: () => handleCant(setAccesorios, 'lucesInteriores', 1) });
+              }
+              if (acople.gato.includes('hidraulico') && !acople.cargadorSolar && !(isSpecialClient && market === 'usa')) {
+                sugerencias.push({ id: 'solar', texto: 'Cargador Solar (Previene batería muerta)', boton: '+ Cargador Solar', accion: () => toggle(setAcople, 'cargadorSolar') });
+              }
+              if (tipoRemolque === 'cama_baja' && !camaBajaOpts.fenderReforzado) {
+                sugerencias.push({ id: 'fenderCB', texto: 'Fender Reforzado (Soporta maquinaria)', boton: '+ Fender Reforzado', accion: () => toggle(setCamaBajaOpts, 'fenderReforzado') });
+              }
+              if (tipoRemolque === 'volteo' && !volteoOpts.fenderReforzado) {
+                sugerencias.push({ id: 'fenderV', texto: 'Fender Reforzado (Mayor durabilidad)', boton: '+ Fender Reforzado', accion: () => setVolteoOpts({...volteoOpts, fenderReforzado: true}) });
+              }
+            
+
+              if (sugerencias.length === 0) return null;
+
+              return (
+                <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-[100] w-[calc(100vw-2rem)] sm:w-[240px] bg-white/95 backdrop-blur-xl p-3 rounded-xl shadow-[0_10px_30px_rgba(245,158,11,0.2)] border border-amber-300 print:hidden transition-all duration-300 hover:-translate-y-1">
+                  
+                  {/* Foquito más pequeño */}
+                  <div className="absolute -top-3 -right-3 bg-gradient-to-br from-amber-400 to-orange-500 w-7 h-7 rounded-full flex items-center justify-center shadow-md shadow-orange-500/40 animate-bounce">
+                    <Lightbulb className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  
+                  <h2 className="text-[10px] font-black text-amber-900 mb-2 uppercase tracking-wider">💡 Sugerencia</h2>
+                  
+                  <div className="flex flex-col gap-2">
+                    {/* SOLO MOSTRAMOS 1 A LA VEZ */}
+                    {sugerencias.slice(0, 1).map(s => (
+                      <div key={s.id} className="bg-amber-50/50 p-2 rounded-lg border border-amber-100">
+                        <p className="text-[11px] font-bold text-slate-700 mb-2 leading-tight">{s.texto}</p>
+                        <button onClick={s.accion} className="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-1.5 px-2 rounded-md text-[10px] uppercase transition-all duration-300 shadow-sm hover:shadow-amber-500/40 active:scale-95">
+                          {s.boton}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
             {/* --- NOTAS Y OBSERVACIONES --- */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mt-6 print:hidden">
                 <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><FileText className="w-5 h-5 mr-2 text-green-600"/> 6. Notas y Observaciones para Diseño</h2>
