@@ -603,6 +603,47 @@ function CotizadorNube() {
     return subtotalDescuento + subtotalIva + (cliente.ajusteRedondeo || 0);
   };
 
+const handleGuardarComoCatalogo = () => {
+    // 1. Calculamos el precio total actual del equipo armado
+    const totalCalc = calcularTotalActual();
+    
+    // 2. Generamos un nombre automático y especificaciones breves
+    const nombreModelo = `Remolque ${tipoRemolque.replace('_', ' ').toUpperCase()} ${getObj(db.largos, dim.largo).valor}' x ${getObj(db.anchos, dim.ancho).valor}"`;
+    const specsBreves = `${nombreCapacidadTicket}, Susp. ${getObj(db.suspension, rodado.suspension).nombre}, Piso ${getObj(db.pisos, acabados.piso).nombre}, Jalón ${getObj(db.jalones, acople.jalon).nombre}`;
+
+    // 3. Empaquetamos toda la configuración actual en el formato del catálogo
+    const nuevoModeloCatalogo = {
+      id: `cat_${Date.now()}`,
+      nombre: nombreModelo,
+      precio: totalCalc, // Guarda el precio calculado automáticamente
+      foto: '', // Se deja vacía para subirla después desde el panel
+      especificaciones: specsBreves,
+      largo: dim.largo,
+      ancho: dim.ancho,
+      capacidad: rodado.capacidad,
+      suspension: rodado.suspension,
+      llanta: rodado.llanta,
+      jalon: acople.jalon,
+      gato: acople.gato,
+      techo: carroceria.techo,
+      redila: carroceria.redila,
+      piso: acabados.piso,
+      monturero: monturero.tipo,
+      pintura: acabados.pintura,
+      luces: acabados.luces,
+      color: acabados.color
+    };
+
+    // 4. Lo inyectamos a la base de datos de Firebase
+    const newDb = { ...db };
+    newDb.modelosLinea = [nuevoModeloCatalogo, ...(newDb.modelosLinea || [])];
+    setDb(newDb);
+    setDoc(doc(db_fs, getDocPath('catalog')), newDb);
+
+    logAction(`Guardó un nuevo modelo en el catálogo desde el cotizador: ${nombreModelo}`);
+    setNotification({ type: 'success', message: `¡${nombreModelo} agregado al Catálogo de Línea con éxito!` });
+  };
+
   const handleGuardarCotizacion = async () => {
     const totalCalc = calcularTotalActual();
     const nuevaCotId = `COT-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -1572,43 +1613,25 @@ let capacidadLbs = '7,000 LBS';
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
-                              <div>
-                                <label className="text-[11px] font-bold text-slate-600 uppercase block mb-1">Suspensión</label>
-                                <select 
-                                  value={item.suspension || ''} 
-                                  onChange={e => handleDbChange(adminSection, index, 'suspension', e.target.value)}
-                                  className="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold bg-white"
-                                >
-                                  <option value="">-- Seleccionar Suspensión --</option>
-                                  {db.suspension?.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-                                </select>
-                              </div>
-                              <div>
-                                <label className="text-[11px] font-bold text-slate-600 uppercase block mb-1">Llantas</label>
-                                <select 
-                                  value={item.llanta || ''} 
-                                  onChange={e => handleDbChange(adminSection, index, 'llanta', e.target.value)}
-                                  className="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold bg-white"
-                                >
-                                  <option value="">-- Seleccionar Llantas --</option>
-                                  {db.llantas?.map(l => <option key={l.id} value={l.id}>{l.nombre}</option>)}
-                                </select>
-                              </div>
-                              <div>
-                                <label className="text-[11px] font-bold text-slate-600 uppercase block mb-1">Piso</label>
-                                <select 
-                                  value={item.piso || ''} 
-                                  onChange={e => handleDbChange(adminSection, index, 'piso', e.target.value)}
-                                  className="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold bg-white"
-                                >
-                                  <option value="">-- Seleccionar Piso --</option>
-                                  {db.pisos?.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                                </select>
-                              </div>
+                            {/* --- NUEVA CUADRÍCULA CON TODAS LAS OPCIONES --- */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Largo</label><select value={item.largo || ''} onChange={e => handleDbChange(adminSection, index, 'largo', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.largos?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Ancho</label><select value={item.ancho || ''} onChange={e => handleDbChange(adminSection, index, 'ancho', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.anchos?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Capacidad</label><select value={item.capacidad || ''} onChange={e => handleDbChange(adminSection, index, 'capacidad', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.capacidades?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Suspensión</label><select value={item.suspension || ''} onChange={e => handleDbChange(adminSection, index, 'suspension', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.suspension?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Llantas</label><select value={item.llanta || ''} onChange={e => handleDbChange(adminSection, index, 'llanta', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.llantas?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Jalón</label><select value={item.jalon || ''} onChange={e => handleDbChange(adminSection, index, 'jalon', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.jalones?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Gato</label><select value={item.gato || ''} onChange={e => handleDbChange(adminSection, index, 'gato', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.gatos?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Techo</label><select value={item.techo || ''} onChange={e => handleDbChange(adminSection, index, 'techo', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.techos?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Redila</label><select value={item.redila || ''} onChange={e => handleDbChange(adminSection, index, 'redila', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.redilas?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Piso</label><select value={item.piso || ''} onChange={e => handleDbChange(adminSection, index, 'piso', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.pisos?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Monturero</label><select value={item.monturero || ''} onChange={e => handleDbChange(adminSection, index, 'monturero', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.montureros?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Pintura</label><select value={item.pintura || ''} onChange={e => handleDbChange(adminSection, index, 'pintura', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.pinturas?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Luces</label><select value={item.luces || ''} onChange={e => handleDbChange(adminSection, index, 'luces', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.luces?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                              <div><label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Color</label><select value={item.color || ''} onChange={e => handleDbChange(adminSection, index, 'color', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs font-bold bg-white"><option value="">-- Seleccionar --</option>{db.colores?.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
                             </div>
 
-                            <div>
+                            <div className="pt-2">
                               <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Especificaciones Breves (Catálogo)</label>
                               <input 
                                 type="text" 
@@ -2268,12 +2291,21 @@ let capacidadLbs = '7,000 LBS';
               )}
 
               {activeTab === 'cotizacion' && (
-                <div className="print:hidden grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                  <button onClick={handleWhatsAppPDF} disabled={isGeneratingIA} className={`font-black py-3 px-4 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-green-500/50 active:scale-95 ${isGeneratingIA ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-[#25D366] hover:bg-[#128C7E] text-white'}`}>
-                    {isGeneratingIA ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
-                    <span>{isGeneratingIA ? 'Redactando con IA...' : 'WhatsApp con PDF'}</span>
-                  </button>
-                  <button onClick={handleGuardarCotizacion} className="bg-slate-800 hover:bg-slate-700 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition shadow-md"><Save className="w-5 h-5 mr-2" /> <span>Guardar en Historial</span></button>
+                <div className="print:hidden flex flex-col gap-3 mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button onClick={handleWhatsAppPDF} disabled={isGeneratingIA} className={`font-black py-3 px-4 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-green-500/50 active:scale-95 ${isGeneratingIA ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-[#25D366] hover:bg-[#128C7E] text-white'}`}>
+                      {isGeneratingIA ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Send className="w-5 h-5 mr-2" />}
+                      <span>{isGeneratingIA ? 'Redactando con IA...' : 'WhatsApp con PDF'}</span>
+                    </button>
+                    <button onClick={handleGuardarCotizacion} className="bg-slate-800 hover:bg-slate-700 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition shadow-md"><Save className="w-5 h-5 mr-2" /> <span>Guardar en Historial</span></button>
+                  </div>
+                  
+                  {/* Botón exclusivo de Administrador */}
+                  {currentUser?.role === 'admin' && (
+                    <button onClick={handleGuardarComoCatalogo} className="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-3 px-4 rounded-xl flex items-center justify-center transition shadow-md mt-1 border border-amber-600">
+                      <Image className="w-5 h-5 mr-2" /> <span>Agregar como Modelo de Línea al Catálogo</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
