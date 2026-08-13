@@ -1692,10 +1692,13 @@ let capacidadLbs = '7,000 LBS';
               <div className="text-xs font-black text-slate-400 uppercase tracking-widest mt-2 mb-1 px-4">Historial</div>
               <button onClick={() => setAdminSection('cotizaciones')} className={`flex items-center text-left px-4 py-3 rounded-lg text-sm font-bold transition ${adminSection === 'cotizaciones' ? 'bg-green-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}><FileText className="w-4 h-4 mr-2"/> Cotizaciones Guardadas</button>
               
+              <div className="text-xs font-black text-slate-400 uppercase tracking-widest mt-6 mb-1 px-4">Catálogo</div>
+              <button onClick={() => setAdminSection('modelosLinea')} className={`text-left px-4 py-3 rounded-lg text-sm font-bold transition ${adminSection === 'modelosLinea' ? 'bg-green-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>Modelos de Línea (Estándar)</button>
+
               {currentUser?.role === 'admin' && (
                 <>
                   <div className="text-xs font-black text-slate-400 uppercase tracking-widest mt-6 mb-1 px-4">Inventario y Precios</div>
-                  {ADMIN_SECTIONS.map(sec => (
+                  {ADMIN_SECTIONS.filter(sec => sec.id !== 'modelosLinea').map(sec => (
                     <button key={sec.id} onClick={() => setAdminSection(sec.id)} className={`text-left px-4 py-3 rounded-lg text-sm font-bold transition ${adminSection === sec.id ? 'bg-green-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>{sec.title}</button>
                   ))}
                 </>
@@ -1849,15 +1852,22 @@ let capacidadLbs = '7,000 LBS';
                                   className="w-full p-2.5 border border-slate-300 rounded-lg font-black text-slate-800 text-lg" 
                                 />
                               </div>
-                              <div className="w-full sm:w-48">
-                                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Precio Base ($)</label>
-                                <input 
-                                  type="number" 
-                                  value={item.precio || 0} 
-                                  onChange={e => handleDbChange(adminSection, index, 'precio', parseFloat(e.target.value) || 0)} 
-                                  className="w-full p-2.5 border border-blue-300 bg-blue-50 rounded-lg font-black text-blue-800 text-right" 
-                                />
-                              </div>
+                              {currentUser?.role === 'admin' ? (
+                                <div className="w-full sm:w-48">
+                                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Precio Base ($)</label>
+                                    <input 
+                                        type="number" 
+                                        value={item.precio || 0} 
+                                        onChange={e => handleDbChange(adminSection, index, 'precio', parseFloat(e.target.value) || 0)} 
+                                        className="w-full p-2.5 border border-blue-300 bg-blue-50 rounded-lg font-black text-blue-800 text-right" 
+                                    />
+                                </div>
+                            ) : (
+                                <div className="w-full sm:w-48 p-2.5 bg-slate-100 rounded-lg border border-slate-200 text-right">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase block">Precio Referencia</span>
+                                    <span className="font-black text-slate-600">Restringido</span>
+                                </div>
+                            )}
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
