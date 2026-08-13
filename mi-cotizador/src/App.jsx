@@ -43,36 +43,38 @@ const PRECIO_LITRO_BODY = 250;
 const PRECIO_LITRO_PINTURA = 180;
 
 // --- DICCIONARIO DE REGLAS ---
-const CAMA_BAJA_COMBOS = {
-  '50in': ['7ft', '90in', '8ft'],
-  '60in': ['10ft', '12ft', '14ft'],
-  '75in': ['10ft', '12ft', '14ft', '16ft'],
-  '76in': ['10ft', '12ft', '14ft', '16ft', '18ft'],
-  '82in': ['10ft', '12ft', '14ft', '16ft', '18ft', '20ft'],
-  '84in': ['10ft', '12ft', '14ft', '16ft', '18ft', '20ft']
-};
+  const CAMA_BAJA_COMBOS = {
+    '50in': ['7ft', '90in', '8ft'],
+    '60in': ['10ft', '11ft', '12ft', '13ft', '14ft', '15ft', '16ft'],
+    '72in': ['10ft', '11ft', '12ft', '13ft', '14ft', '15ft', '16ft'],
+    '75in': ['10ft', '11ft', '12ft', '13ft', '14ft', '15ft', '16ft'],
+    '76in': ['10ft', '11ft', '12ft', '13ft', '14ft', '15ft', '16ft', '17ft', '18ft'],
+    '82in': ['10ft', '11ft', '12ft', '13ft', '14ft', '15ft', '16ft', '17ft', '18ft', '19ft', '20ft'],
+    '84in': ['10ft', '11ft', '12ft', '13ft', '14ft', '15ft', '16ft', '17ft', '18ft', '19ft', '20ft']
+  };
 
-const CAMA_ALTA_LARGOS = ['16ft', '20ft', '22ft', '24ft', '32ft', '42ft'];
-const CAMA_ALTA_CAPS = ['6t', '9t', '10t'];
-const VOLTEO_COMBOS = {
-  '60in': ['10ft', '12ft', '14ft'],
-  '76in': ['10ft', '12ft', '14ft', '16ft'],
-  '82in': ['10ft', '12ft', '14ft', '16ft']
-};
+  const CAMA_ALTA_LARGOS = ['16ft', '18ft', '20ft', '22ft', '24ft', '26ft', '28ft', '30ft', '32ft', '40ft', '42ft'];
+  const CAMA_ALTA_CAPS = ['6t', '7t', '9t', '10t'];
+  
+  const VOLTEO_COMBOS = {
+    '60in': ['10ft', '11ft', '12ft', '13ft', '14ft'],
+    '76in': ['10ft', '11ft', '12ft', '13ft', '14ft', '15ft', '16ft'],
+    '82in': ['10ft', '11ft', '12ft', '13ft', '14ft', '15ft', '16ft']
+  };
 
 const getCapacidadesCamaBaja = (anchoId, largoId) => {
   let caps = [];
   if (anchoId === '50in') caps.push('850kg');
-  else if (anchoId === '60in') caps.push('1_5t', '3t');
+  else if (anchoId === '60in') caps.push('1_5t', '3t', '6t');
   else if (anchoId === '84in') caps.push('3t', '6t');
-  else if (['75in', '76in', '82in'].includes(anchoId)) {
+  else if (['72in', '75in', '76in', '82in'].includes(anchoId)) {
     caps.push('3t', '6t');
-    if (['10ft', '12ft', '14ft'].includes(largoId)) caps.push('1_5t');
+    // Aquí agregamos el 11ft y 13ft para que no desaparezca la opción de 1.5 Ton
+    if (['10ft', '11ft', '12ft', '13ft', '14ft'].includes(largoId)) caps.push('1_5t');
     if (['75in', '76in'].includes(anchoId)) caps.push('4t');
   }
-  return caps.length > 0 ? caps : ['3t']; 
+  return caps.length > 0 ? caps : ['3t'];
 };
-
 // --- BASE DE DATOS MAESTRA ---
 const DEFAULT_DB = {
   largos: [
@@ -109,17 +111,22 @@ const DEFAULT_DB = {
     { id: '96in', nombre: '96 Pulgadas (8\')', valor: 96, precio: 8500 }
   ],
   capacidades: [
-    { id: '850kg', nombre: '850 Kg (1 Eje Ligero)', precio: -6000 },
-    { id: '1_5t', nombre: '1.5 Ton (1 Eje)', precio: -3000 },
+    // Ligeros (Si cobras menos por estos, pon el número en negativo, ej: -3000)
+    { id: '850kg', nombre: '850 Kg (1 Eje Ligero)', precio: -6000 }, // <--- REVISAR/CAMBIAR
+    { id: '1_5t', nombre: '1.5 Ton (1 Eje)', precio: -3000 },        // <--- REVISAR/CAMBIAR
     { id: '2t_5200', nombre: '2 Ton (1 Eje 5,200 lbs)', precio: -1500 },
     { id: '2t_6200', nombre: '2 Ton (1 Eje 6,200 lbs)', precio: -500 },
-    { id: '3t', nombre: '3 Ton (1 o 2 Ejes 3,500 lbs)', precio: 0 },
-    { id: '4t_5200', nombre: '4 Ton (2 Ejes 5,200 lbs)', precio: 6000 },
-    { id: '4t_6200', nombre: '4 Ton (2 Ejes 6,200 lbs)', precio: 7500 },
-    { id: '6t', nombre: '6 Ton (2 Ejes 7,000 lbs)', precio: 14500 },
-    { id: '7t', nombre: '7 Ton (2 Ejes 8,000 lbs)', precio: 22000 },
-    { id: '9t', nombre: '9 Ton (3 Ejes 7,000 lbs)', precio: 34000 },
-    { id: '10t', nombre: '10 Ton (2 Ejes 10k lbs ó 3 Ejes 8k lbs)', precio: 48000 }
+    
+    // Estándar (Este déjalo en 0, es la base)
+    { id: '3t', nombre: '3 Ton (1 o 2 Ejes 3,500 lbs)', precio: 0 }, 
+    
+    // Pesados (Pon exactamente cuánto extra cobras por subir a estos ejes)
+    { id: '4t_5200', nombre: '4 Ton (2 Ejes 5,200 lbs)', precio: 6000 },  // <--- CAMBIAR AQUÍ
+    { id: '4t_6200', nombre: '4 Ton (2 Ejes 6,200 lbs)', precio: 7500 },  // <--- CAMBIAR AQUÍ
+    { id: '6t', nombre: '6 Ton (2 Ejes 7,000 lbs)', precio: 14500 },      // <--- CAMBIAR AQUÍ
+    { id: '7t', nombre: '7 Ton (2 Ejes 8,000 lbs)', precio: 22000 },      // <--- CAMBIAR AQUÍ
+    { id: '9t', nombre: '9 Ton (3 Ejes 7,000 lbs)', precio: 34000 },      // <--- CAMBIAR AQUÍ
+    { id: '10t', nombre: '10 Ton (2 Ejes 10k lbs ó 3 Ejes 8k lbs)', precio: 48000 } // <--- CAMBIAR AQUÍ
   ],
   suspension: [
     { id: 'susp_1_5t', nombre: 'Kit Suspensión 1.5 Ton', precio: -1000 },
@@ -231,7 +238,9 @@ const DEFAULT_DB = {
     { id: 'cola_4', nombre: 'Cola de Pato 4\' con Rampas', precio: 6500 },
     { id: 'cola_5', nombre: 'Cola de Pato 5\' con Rampas', precio: 8500 }
   ],
+  preciosFijos: [],
   extras: [
+    { id: 'precioPieExtra', nombre: 'Precio por Pie Extra (Medidas Especiales)', precio: 2500 },
     { id: 'precioBase', nombre: 'Precio Base del Remolque', precio: 95000 },
     { id: 'frenos', nombre: 'Frenos Eléctricos (Por Eje)', precio: 6800 },
     { id: 'portaExtra', nombre: 'Porta Extra (Unidad)', precio: 1200 },
@@ -268,8 +277,11 @@ const DEFAULT_USERS = [
 ];
 
 const ADMIN_SECTIONS = [
-  { id: 'largos', title: 'Largos Disponibles', hasValor: true, valorLabel: 'Largo (Pies)' },
-  { id: 'anchos', title: 'Anchos (Pulgadas)', hasValor: true, valorLabel: 'Ancho (In)' },
+  { id: 'preciosFijos', title: 'Tabulador Precios Base (Por Tipo y Medida)', isTabulador: true },
+  { id: 'preciosTechos', title: 'Matriz Precios: Techos', isMatrizTecho: true },
+  { id: 'preciosPisos', title: 'Matriz Precios: Pisos', isMatrizPiso: true },
+  //{ id: 'largos', title: 'Largos Disponibles', hasValor: true, valorLabel: 'Largo (Pies)' },
+  //{ id: 'anchos', title: 'Anchos y Costo por Pie Extra', hasValor: true, valorLabel: 'Ancho (In)' },
   { id: 'capacidades', title: 'Configuraciones de Carga (Ejes)' },
   { id: 'llantas', title: 'Tipos de Llantas', hasPrecioExtra: true },
   { id: 'redilas', title: 'Tipos de Redila' },
@@ -333,6 +345,8 @@ function CotizadorNube() {
   const [adminSection, setAdminSection] = useState('cotizaciones');
   const [adminTrailerTab, setAdminTrailerTab] = useState('gen');
   const [activeTab, setActiveTab] = useState('cotizacion');
+  const [usarLargoCustom, setUsarLargoCustom] = useState(false);
+  const [largoCustom, setLargoCustom] = useState('');
   
   const [market, setMarket] = useState('usa'); 
   const [tipoRemolque, setTipoRemolque] = useState('ganadero');
@@ -371,7 +385,7 @@ function CotizadorNube() {
     }
   };
   // ESTADOS PRINCIPALES
-  const [cliente, setCliente] = useState({ nombre: '', telefono: '', anticipo: 0, descuentoPct: 0, ajusteRedondeo: 0, cantidad: 1 });
+  const [cliente, setCliente] = useState({ nombre: '', telefono: '', anticipo: 0, descuentoPct: 0, descuentoExtraPct: 0, ajusteRedondeo: 0, cantidad: 1 });
   const [dim, setDim] = useState({ largo: '20ft', ancho: '84in' });
   const [acople, setAcople] = useState({ jalon: 'ganso_facil', cadena: 'ganso_38', sujetaCadenas: true, gato: 'manual', cantGatos: 1, cargadorSolar: false, cargador110: false });
   const [rodado, setRodado] = useState({ capacidad: '6t', suspension: 'torflex', llanta: '16in_14', cantFrenos: 2, llantaExtra: 0, portaExtra: 1, cantEjesGanso: 2 });
@@ -381,6 +395,7 @@ function CotizadorNube() {
   const [accesorios, setAccesorios] = useState({ lucesInteriores: 0 });
   const [extrasCustom, setExtrasCustom] = useState([]); 
   const [inputExtra, setInputExtra] = useState({ nombre: '', precio: '' });  
+  const [precioManual, setPrecioManual] = useState('');  
   const [camaBajaOpts, setCamaBajaOpts] = useState({ rampas: 'ninguna', fenderReforzado: false, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, luzPortaplaca: false });
   const [volteoOpts, setVolteoOpts] = useState({ sistemaElevacion: 'hidraulico', puertaTrasera: 'libro', fenderReforzado: false, luzPortaplaca: false });
     
@@ -577,53 +592,217 @@ function CotizadorNube() {
     setNotification({ type: 'success', message: 'Cotizador listo para una nueva cotización.' });
   };
 
-  // AYUDANTES MATEMÁTICOS PARA EL PDF Y GUARDADO
+  // --- AYUDANTES MATEMÁTICOS Y CÁLCULOS ---
   const formatoMoneda = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num || 0).replace('$', '$ ');
+  
   const tipoPrecio = tipoRemolque === 'ganadero' 
-  ? (tipoGanadero === 'redondo' && market === 'mexico' ? 'ganadero_redondo' 
-     : tipoGanadero === 'ganso' && market === 'mexico' ? 'ganadero_ganso_mex' 
-     : 'ganadero_ganso') 
-  : tipoRemolque;
+    ? (tipoGanadero === 'redondo' && market === 'mexico' ? 'ganadero_redondo' 
+       : tipoGanadero === 'ganso' && market === 'mexico' ? 'ganadero_ganso_mex' 
+       : 'ganadero_ganso') 
+    : tipoRemolque;
+
   const getP = (obj, key = 'precio') => obj ? (obj[`${key}_${tipoPrecio}`] !== undefined ? obj[`${key}_${tipoPrecio}`] : (obj[key] || 0)) : 0;
   const getExtraPrice = (id) => { const ext = db.extras?.find(e => e.id === id); return ext ? (ext[`precio_${tipoPrecio}`] ?? ext.precio ?? 0) : 0; };
   const getObj = (arr, id) => arr?.find(x => x.id === id) || arr?.[0] || { nombre: 'N/A', precio: 0, valor: 0 };
-  
-  const calcularTotalActual = () => {
-    const oLargo = getObj(db.largos, dim.largo); const oAncho = getObj(db.anchos, dim.ancho); const oJalon = getObj(db.jalones, acople.jalon); const oCadena = getObj(db.cadenas, acople.cadena); const oGato = getObj(db.gatos, acople.gato); const oSusp = getObj(db.suspension, rodado.suspension); const oLlantas = getObj(db.llantas, rodado.llanta); const oTecho = getObj(db.techos, carroceria.techo); const oRedila = getObj(db.redilas, carroceria.redila); const oPTras = getObj(db.puertasTraseras, carroceria.puertaTras); const oPiso = getObj(db.pisos, acabados.piso); const oMont = getObj(db.montureros, monturero.tipo); const oPint = getObj(db.pinturas, acabados.pintura); const oCap = getObj(db.capacidades, rodado.capacidad); const oRampa = db.rampas?.find(r => r.id === camaBajaOpts.rampas) || {precio: 0};
-    const anchoEnPies = (oAncho.valor || 0) / 12; const areaSqFt = (oLargo.valor || 0) * anchoEnPies; const costoPisoTotal = areaSqFt * (getP(oPiso, 'precioSqFt') || getP(oPiso) || 0) * (oPiso.id === 'madera' ? 2 : 1);
-    let costoGatos = acople.gato === 'hidraulico_bomba' ? ((getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500) * acople.cantGatos) + (getP(oGato) - 6500) : getP(oGato) * acople.cantGatos;
-    const totalGatos = costoGatos + (acople.cargadorSolar ? 2500 : 0) + (acople.cargador110 ? 1500 : 0) + (acople.sujetaCadenas ? 450 : 0);
-    const totalRodado = getP(oCap) + getP(oSusp) + getP(oLlantas) + (rodado.cantFrenos > 0 ? getExtraPrice('frenos') * rodado.cantFrenos : 0) + (rodado.llantaExtra > 0 ? (rodado.llantaExtra * getP(oLlantas, 'precioExtra')) : 0) + (rodado.portaExtra * getExtraPrice('portaExtra'));
-    let piesPlexi = (oLargo.valor || 0) * 4;
-    const costoPtasInt = carroceria.puertasIntList?.length > 0 ? carroceria.puertasIntList.reduce((acc, pta) => acc + (getP(getObj(db.puertasInteriores, pta.tipo)) || 0), 0) : 0;
-    const totalCarroceria = getP(oTecho) + getP(oRedila) + costoPtasInt + getP(oPTras) + (carroceria.frente === 'cachucha' ? getExtraPrice('frenteCachucha') : 0) + (carroceria.plexiglass && piesPlexi > 0 ? Math.ceil(piesPlexi / 46.5) * getExtraPrice('hojaPlexiglass') : 0) + (carroceria.aperturaEstribo ? getExtraPrice('aperturaEstribo') : 0) + (carroceria.aperturaLimpieza ? getExtraPrice('aperturaLimpieza') : 0);
-    const totalMonturero = tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' ? getP(oMont) : 0;
-    const oLuces = getObj(db.luces, acabados.luces);
-    const totalAcabados = getP(oPint) + getP(oLuces) + (accesorios.lucesInteriores * getExtraPrice('lucesInteriores')) + (acabados.bodyLitros * getExtraPrice('litroBody')) + (acabados.cajaHtas === 'std' ? getExtraPrice('cajaHtasStd') : acabados.cajaHtas === 'grande' ? getExtraPrice('cajaHtasGrande') : acabados.cajaHtas === 'especial' ? 8500 : 0);
-    const totalExtrasCustom = extrasCustom.reduce((sum, item) => sum + (Number(item.precio) || 0), 0);
-    const subtotalNeto = (getExtraPrice('precioBase') + getP(oLargo) + getP(oAncho) + getP(oJalon) + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : getP(oRedila)) + totalMonturero + totalAcabados + totalExtrasCustom) * (cliente.cantidad || 1);
-    const subtotalDescuento = subtotalNeto * (1 - (cliente.descuentoPct || 0) / 100);
-    const subtotalIva = market === 'usa' ? 0 : subtotalDescuento * 0.16;
-    return subtotalDescuento + subtotalIva + (cliente.ajusteRedondeo || 0);
+
+  const oCap = getObj(db.capacidades, rodado.capacidad);
+
+  let cantEjes = 2;
+  if (tipoRemolque === 'cama_alta') { 
+      if (oCap.id === '6t') cantEjes = 2; 
+      else if (oCap.id === '10t') cantEjes = (rodado.cantEjesGanso >= 3) ? 3 : 2; 
+      else if (oCap.id === '9t') cantEjes = 3; 
+  } else if (tipoRemolque === 'volteo' || tipoRemolque === 'cama_baja' || (tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'mexico')) {
+      if (oCap.id === '6t' || oCap.id === '7t') cantEjes = 2;
+      else if (oCap.id === '3t') cantEjes = 2;
+      else if (oCap.id === '1_5t' || oCap.id === '850kg') cantEjes = 1;
+  } else { 
+      if (oCap.id === '9t') cantEjes = 3;
+      else if (['7t', '6t', '4t_5200', '4t_6200'].includes(oCap.id)) cantEjes = 2;
+      else if (['850kg', '1_5t', '2t_5200', '2t_6200'].includes(oCap.id)) cantEjes = 1;
+      else if (oCap.id === '10t') cantEjes = (rodado.cantEjesGanso >= 3) ? 3 : 2; 
+      else if (oCap.id === '3t') cantEjes = (rodado.cantEjesGanso === 2) ? 2 : 1;
+  }
+
+  let nombreCapacidadTicket = oCap.nombre;
+  if (oCap.id === '10t') {
+      if (rodado.cantEjesGanso === 310) nombreCapacidadTicket = '10 Ton (3 Ejes de 10,000 lbs)';
+      else if (rodado.cantEjesGanso === 3) nombreCapacidadTicket = '10 Ton (3 Ejes de 8,000 lbs)';
+      else nombreCapacidadTicket = '10 Ton (2 Ejes de 10,000 lbs)';
+  }
+  else if (oCap.id === '9t') nombreCapacidadTicket = '9 Ton (3 Ejes de 7,000 lbs)';
+  else if (oCap.id === '7t') nombreCapacidadTicket = '7 Ton (2 Ejes de 8,000 lbs)';
+  else if (oCap.id === '4t_5200') nombreCapacidadTicket = '4 Ton (2 Ejes de 5,200 lbs)';
+  else if (oCap.id === '4t_6200') nombreCapacidadTicket = '4 Ton (2 Ejes de 6,200 lbs)';
+  else if (oCap.id === '2t_5200') nombreCapacidadTicket = '2 Ton (1 Eje de 5,200 lbs)';
+  else if (oCap.id === '2t_6200') nombreCapacidadTicket = '2 Ton (1 Eje de 6,200 lbs)';
+  else if (oCap.id === '1_5t') nombreCapacidadTicket = '1.5 Ton (1 Eje de 3,500 lbs)';
+  else if (oCap.id === '3t') {
+      if (tipoRemolque === 'volteo' || tipoRemolque === 'cama_baja') nombreCapacidadTicket = '3 Ton (2 Ejes de 3,500 lbs)';
+      else nombreCapacidadTicket = `3 Ton (${cantEjes} Eje(s) de 3,500 lbs)`;
+  }
+
+  const oLargo = getObj(db.largos, dim.largo); 
+  const oAncho = getObj(db.anchos, dim.ancho); 
+  const oJalon = getObj(db.jalones, acople.jalon); 
+  const oCadena = getObj(db.cadenas, acople.cadena); 
+  const oGato = getObj(db.gatos, acople.gato); 
+  const oSusp = getObj(db.suspension, rodado.suspension); 
+  const oLlantas = getObj(db.llantas, rodado.llanta); 
+  const oTecho = getObj(db.techos, carroceria.techo); 
+  const oRedila = getObj(db.redilas, carroceria.redila); 
+  const oPInt = getObj(db.puertasInteriores, carroceria.puertaInt); 
+  const oPTras = getObj(db.puertasTraseras, carroceria.puertaTras); 
+  const oPiso = getObj(db.pisos, acabados.piso); 
+  const oMont = getObj(db.montureros, monturero.tipo); 
+  const oPint = getObj(db.pinturas, acabados.pintura); 
+  const oLuces = getObj(db.luces, acabados.luces); 
+  const oRampa = (camaBajaOpts.rampas && camaBajaOpts.rampas !== 'ninguna') 
+  ? (db.rampas?.find(r => r.id === camaBajaOpts.rampas) || {precio: 0}) 
+  : {precio: 0};
+
+  const findMatrizPrice = (matrix, tipoKey, currentTipo) => {
+    if (!matrix || matrix.length === 0) return null;
+    const matches = matrix.filter(p => {
+        if (p[tipoKey] && p[tipoKey] !== currentTipo) return false;
+        if (p.largo && p.largo !== dim.largo) return false;
+        if (p.ancho && p.ancho !== dim.ancho) return false;
+        if (p.capacidad && p.capacidad !== rodado.capacidad) return false;
+        return true;
+    });
+    if (matches.length === 0) return null;
+    matches.sort((a, b) => Object.keys(b).filter(k => b[k]).length - Object.keys(a).filter(k => a[k]).length);
+    return Number(matches[0].precio);
   };
 
-const handleGuardarComoCatalogo = () => {
-    // 1. Calculamos el precio total actual del equipo armado
-    const totalCalc = calcularTotalActual();
-    
-    // 2. Generamos un nombre automático y especificaciones breves
-    const nombreModelo = `Remolque ${tipoRemolque.replace('_', ' ').toUpperCase()} ${getObj(db.largos, dim.largo).valor}' x ${getObj(db.anchos, dim.ancho).valor}"`;
-    const specsBreves = `${nombreCapacidadTicket}, Susp. ${getObj(db.suspension, rodado.suspension).nombre}, Piso ${getObj(db.pisos, acabados.piso).nombre}, Jalón ${getObj(db.jalones, acople.jalon).nombre}`;
+  const precioMatrizPiso = findMatrizPrice(db.preciosPisos, 'piso', acabados.piso);
+  const anchoEnPies = (oAncho.valor || 0) / 12;
+  const areaSqFt = (oLargo.valor || 0) * anchoEnPies;
+  const costoPisoTotal = precioMatrizPiso !== null ? precioMatrizPiso : (areaSqFt * (getP(oPiso, 'precioSqFt') || getP(oPiso) || 0) * (oPiso.id === 'madera' ? 2 : 1));
 
-    // 3. Empaquetamos toda la configuración actual en el formato del catálogo
+  const precioMatrizTecho = findMatrizPrice(db.preciosTechos, 'techo', carroceria.techo);
+  const costoTecho = precioMatrizTecho !== null ? precioMatrizTecho : getP(oTecho);
+
+  let costoGatos = acople.gato === 'hidraulico_bomba' ? ((getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500) * acople.cantGatos) + (getP(oGato) - (getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500)) : getP(oGato) * acople.cantGatos;
+  const totalGatos = costoGatos + (acople.cargadorSolar ? 2500 : 0) + (acople.cargador110 ? 1500 : 0) + (acople.sujetaCadenas ? 450 : 0) + getP(oCadena);
+
+  const totalRodado = getP(oCap) + getP(oSusp) + getP(oLlantas) + (rodado.cantFrenos > 0 ? getExtraPrice('frenos') * rodado.cantFrenos : 0) + (rodado.llantaExtra > 0 ? (rodado.llantaExtra * getP(oLlantas, 'precioExtra')) : 0) + (rodado.portaExtra * getExtraPrice('portaExtra'));
+  
+  let piesPlexi = (oLargo.valor || 0) * 4;
+  if (oMont.id === 'recto_3') piesPlexi -= 12; else if (oMont.id === 'recto_4') piesPlexi -= 16; else if (oMont.id === 'diagonal') piesPlexi -= (((monturero.paredLarga || 0) + (monturero.paredCorta || 0)) / 12 * 2);
+  if (carroceria.puertaPiloto) piesPlexi -= ((carroceria.puertaPilotoAncho || 0) / 12) * 4;
+  if (carroceria.frente === 'cachucha' && carroceria.puertaPerroCachucha) piesPlexi -= 13.33;
+  if (monturero.puertaPerro) piesPlexi -= 13.33;
+  
+  const totalCarroceria = costoTecho + getP(oRedila) + (getP(oPInt) * carroceria.cantPtasInt) + getP(oPTras) + (carroceria.frente === 'cachucha' ? getExtraPrice('frenteCachucha') : carroceria.frente === 'canasta' ? getExtraPrice('frenteCanasta') : 0) + (carroceria.plexiglass && piesPlexi > 0 ? Math.ceil(piesPlexi / 46.5) * getExtraPrice('hojaPlexiglass') : 0) + (carroceria.rackPacas ? getExtraPrice('rackPacas') : 0) + (carroceria.ventEst * getExtraPrice('ventEst')) + (carroceria.ventCirc * getExtraPrice('ventCirc')) + (carroceria.polverasEspeciales ? getExtraPrice('polverasEspeciales') : 0) + (carroceria.puertaPerroCachucha ? getExtraPrice('puertaPerroCachucha') : 0);
+
+  const totalMonturero = tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' ? getP(oMont) + (monturero.basesMontura * getExtraPrice('basesMontura')) + (monturero.tubosCobija * getExtraPrice('tubosCobija')) + (monturero.puertaPerro ? getExtraPrice('puertaPerroLateral') : 0) : 0;
+  const totalAcabados = getP(oPint) + getP(oLuces) + (accesorios.lucesInteriores * getExtraPrice('lucesInteriores')) + (acabados.bodyLitros * getExtraPrice('litroBody')) + (acabados.cajaHtas === 'std' ? getExtraPrice('cajaHtasStd') : acabados.cajaHtas === 'grande' ? getExtraPrice('cajaHtasGrande') : acabados.cajaHtas === 'especial' ? 8500 : 0);
+
+  // --- 3. BUSCADOR INTELIGENTE EN EL TABULADOR ---
+  const tipoFiltroTab = tipoRemolque === 'ganadero' ? `ganadero_${tipoGanadero}` : tipoRemolque;
+  const largoFiltroNum = parseFloat(dim.largo.replace('ft', '')) || 0;
+
+  // --- 1. BUSCADOR EN EL CATÁLOGO OFICIAL (5 PILARES) ---
+  const matchesTabulador = (db.preciosFijos || []).filter(p => {
+      if (p.market && p.market !== market) return false;
+      if (p.tipo && p.tipo !== tipoFiltroTab) return false;
+      if (p.ancho && p.ancho !== dim.ancho) return false;
+      if (p.capacidad && p.capacidad !== rodado.capacidad) return false;
+      if (p.largo && Number(p.largo) !== largoFiltroNum) return false;
+      return true; 
+  });
+
+  matchesTabulador.sort((a, b) => Object.keys(b).filter(k => b[k]).length - Object.keys(a).filter(k => a[k]).length);
+  const matchTabulador = matchesTabulador[0];
+
+  let subtotalNeto = 0;
+  const totalExtrasCustom = extrasCustom.reduce((sum, item) => sum + (Number(item.precio) || 0), 0);
+
+  // --- 2. CÁLCULO DE EXTRAS Y LISTA NEGRA (FUERA DE DESCUENTO) ---
+  const costoLlantasExtra = rodado.llantaExtra > 0 ? (rodado.llantaExtra * getP(getObj(db.llantas, rodado.llanta), 'precioExtra')) : 0;
+  const costoPortaExtra = rodado.portaExtra > 0 ? (rodado.portaExtra * (getExtraPrice('portaExtra') || 800)) : 0;
+  const costoFrenos = rodado.cantFrenos > 0 ? ((getExtraPrice('frenos') || 3000) * rodado.cantFrenos) : 0;
+  const costoControlFreno = acople.controlFreno ? (getExtraPrice('controlFreno') || 2500) : 0;
+
+  // Acoplamiento, Gatos y Llantas Dinámicas
+  const costoJalon = getP(oJalon);
+  const costoCadena = getP(oCadena);
+  const costoSujetaCadenas = acople.sujetaCadenas ? (getExtraPrice('sujetaCadenas') || 450) : 0;
+  const costoGatosFinal = acople.gato === 'hidraulico_bomba' ? ((getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500) * acople.cantGatos) + (getP(oGato) - (getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500)) : getP(oGato) * acople.cantGatos;
+  const accesoriosSolaresFinal = (acople.cargadorSolar ? 2500 : 0) + (acople.cargador110 ? 1500 : 0);
+  const totalAcople = costoJalon + costoCadena + costoSujetaCadenas + costoGatosFinal + accesoriosSolaresFinal;
+
+  const llantasPorEjeBase = (tipoRemolque === 'cama_alta' && rodado.capacidad === '10t') ? 4 : 2;
+  const cantLlantasPiso = cantEjes * llantasPorEjeBase; 
+  const costoLlantasDinamico = getP(oLlantas) * cantLlantasPiso;
+  const costoUpgradesBase = costoLlantasDinamico + getP(oSusp) + costoTecho + getP(oPint) + getP(oLuces);
+
+  // Sistema Hidráulico Extra y Carrocería (Lista Negra)
+  const costoGatoExtra = acople.gatoExtra ? (getExtraPrice('gatoExtra') || 1500) : 0; 
+  const costoPiston = acople.pistonHidraulico ? (getExtraPrice('pistonHidraulico') || 5000) : 0;
+  const costoBomba = acople.bombaElectrica ? (getExtraPrice('bombaElectrica') || 4000) : 0;
+  
+  const costoPuertaLateral = carroceria.puertaLateral ? (getExtraPrice('portaLateral') || 2000) : 0;
+  const costoPuertaCentral = carroceria.puertaCentralExtra ? (getExtraPrice('puertaCentralExtra') || 2000) : 0;
+  const costoPuertaRampa = carroceria.puertaRampa ? (getExtraPrice('puertaRampa') || 2500) : 0;
+  const costoTechoFinal = carroceria.techo ? getP(oTecho) : 0;
+  const costoCachucha = carroceria.cachucha ? (getExtraPrice('cachucha') || 1500) : 0;
+  const costoPieExtraRedila = (carroceria.pieAdicionalRedila || 0) * (getExtraPrice('pieRedila') || 500);
+
+  // Sumatoria total blindada (Ahora declarada al final, cuando todas las variables ya existen)
+  const totalExtrasBlindados = totalAcople + costoUpgradesBase + costoLlantasExtra + costoPortaExtra + costoFrenos + costoControlFreno + 
+                               costoGatoExtra + costoPiston + costoBomba + 
+                               costoPuertaLateral + costoPuertaCentral + costoPuertaRampa + 
+                               costoTechoFinal + costoCachucha + costoPieExtraRedila + 
+                               totalMonturero + totalExtrasCustom;
+
+
+  // --- 3. DECISIÓN DEL MOTOR (PLAN A vs PLAN B) ---
+  let precioBasePuro = 0;
+
+  if (matchTabulador && Number(matchTabulador.precio) > 0) {
+      // PLAN A: Base pura del Tabulador
+      precioBasePuro = Number(matchTabulador.precio) * (cliente.cantidad || 1);
+  } else {
+      // PLAN B: Base armada pieza por pieza (Ya sin doble cobro de las llantas)
+      const precioBase = getExtraPrice('precioBase') || 0; 
+      const costoPiezasEstructurales = getP(oLargo) + getP(oAncho) + getP(oCap) + costoPisoTotal;
+      precioBasePuro = (precioBase + costoPiezasEstructurales) * (cliente.cantidad || 1);
+  }
+
+  const costoTotalExtras = totalExtrasBlindados * (cliente.cantidad || 1);
+  subtotalNeto = precioBasePuro + costoTotalExtras;
+
+  // --- 4. DESGLOSE FISCAL Y DESCUENTOS (BLINDADOS) ---
+  const montoDescuento1 = precioBasePuro * ((cliente.descuentoPct || 0) / 100);
+  const baseConDesc1 = precioBasePuro - montoDescuento1;
+  
+  const montoDescuento2 = baseConDesc1 * ((cliente.descuentoExtraPct || 0) / 100);
+  const baseConDescFinal = baseConDesc1 - montoDescuento2;
+
+  const subtotalDescuento = baseConDescFinal + costoTotalExtras;
+  
+  const subtotalSinIva = market === 'usa' ? subtotalDescuento : (subtotalDescuento / 1.16);
+  const subtotalIva = market === 'usa' ? 0 : (subtotalDescuento - subtotalSinIva);
+  
+  const totalFinal = subtotalDescuento + (cliente.ajusteRedondeo || 0);
+  const saldoPendiente = totalFinal - (cliente.anticipo || 0);
+  
+  const calcularTotalActual = () => totalFinal;
+  const handleGuardarComoCatalogo = () => {
+    const totalCalc = calcularTotalActual();
+    const nombreModelo = `Remolque ${tipoRemolque.replace('_', ' ').toUpperCase()} ${oLargo.valor}' x ${oAncho.valor}"`;
+    const specsBreves = `${nombreCapacidadTicket}, Susp. ${oSusp.nombre}, Piso ${oPiso.nombre}, Jalón ${oJalon.nombre}`;
+
     const nuevoModeloCatalogo = {
       id: `cat_${Date.now()}`,
       nombre: nombreModelo,
       precio: totalCalc,
       foto: '', 
       especificaciones: specsBreves,
-      market: market, // <--- NUEVO
-      tipoRemolque: tipoRemolque === 'ganadero' ? `ganadero_${tipoGanadero}` : tipoRemolque, // <--- NUEVO
+      market: market,
+      tipoRemolque: tipoRemolque === 'ganadero' ? `ganadero_${tipoGanadero}` : tipoRemolque,
       largo: dim.largo,
       ancho: dim.ancho,
       capacidad: rodado.capacidad,
@@ -640,7 +819,6 @@ const handleGuardarComoCatalogo = () => {
       color: acabados.color
     };
 
-    // 4. Lo inyectamos a la base de datos de Firebase
     const newDb = { ...db };
     newDb.modelosLinea = [nuevoModeloCatalogo, ...(newDb.modelosLinea || [])];
     setDb(newDb);
@@ -704,8 +882,7 @@ const handleGuardarComoCatalogo = () => {
       total: formatoMoneda(totalCalc),
       vendedor: currentUser?.name || 'Ventas',
       pdfUrl: urlPdf, // <--- AQUÍ SE GUARDA EL ENLACE MÁGICO
-      config: { market, tipoRemolque, isSpecialClient, cliente, dim, acople, rodado, carroceria, monturero, acabados, accesorios, camaBajaOpts }
-    };
+config: { market, tipoRemolque, isSpecialClient, cliente, dim, acople, rodado, carroceria, monturero, acabados, accesorios, camaBajaOpts, usarLargoCustom, largoCustom }    };
 
     const updated = [nuevaCot, ...cotizaciones].slice(0, 200);
     setCotizaciones(updated);
@@ -728,6 +905,9 @@ const handleGuardarComoCatalogo = () => {
       setAcabados(cot.config.acabados);
       setAccesorios(cot.config.accesorios);
       setCamaBajaOpts(cot.config.camaBajaOpts || { rampas: 'ninguna', fenderReforzado: false, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, luzPortaplaca: false });
+      setUsarLargoCustom(cot.config.usarLargoCustom || false);
+      setLargoCustom(cot.config.largoCustom || '');
+      setPrecioManual(cot.config.precioManual || ''); // Carga el precio manual
       setView('cotizador');
       setNotification({ type: 'success', message: `Cotización ${cot.id} cargada con éxito. Ya puedes reimprimirla o enviarla.` });
     } else {
@@ -750,6 +930,9 @@ const handleDuplicarCotizacion = (cot) => {
       setAcabados(cot.config.acabados);
       setAccesorios(cot.config.accesorios);
       setCamaBajaOpts(cot.config.camaBajaOpts || { rampas: 'ninguna', fenderReforzado: false, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, luzPortaplaca: false });
+      setUsarLargoCustom(cot.config.usarLargoCustom || false);
+      setLargoCustom(cot.config.largoCustom || '');
+      setPrecioManual(cot.config.precioManual || ''); // Carga el precio manual
       setView('cotizador');
       setNotification({ type: 'success', message: `¡Cotización duplicada! Modifica los cambios necesarios y guárdala con un nuevo folio.` });
       logAction(`Duplicó la cotización ${cot.id} para generar un nuevo presupuesto.`);
@@ -765,33 +948,48 @@ const handleDuplicarCotizacion = (cot) => {
  const [isGeneratingCatalogAI, setIsGeneratingCatalogAI] = useState(false);
 
 const handleCotizarDesdeCatalogo = (modelo) => {
-    // 1. Inyectar mercado y tarjeta visual de remolque
-    if (modelo.market) setMarket(modelo.market);
-    if (modelo.tipoRemolque) {
-       if (modelo.tipoRemolque.startsWith('ganadero')) {
-           setTipoRemolque('ganadero');
-           setTipoGanadero(modelo.tipoRemolque.includes('redondo') ? 'redondo' : 'ganso');
-       } else {
-           setTipoRemolque(modelo.tipoRemolque);
-       }
-    }
+    // 1. Cargamos mercado y tipo
+    setMarket(modelo.market || 'usa');
+    setTipoRemolque(modelo.tipoRemolque || 'ganadero');
+    
+    // 2. Cargamos dimensiones completas
+    setDim({ largo: modelo.largo, ancho: modelo.ancho });
+    
+    // 3. Cargamos toda la configuración estructural (El "Preset")
+    setRodado({ 
+        capacidad: modelo.capacidad, 
+        suspension: modelo.suspension, 
+        llanta: modelo.llanta,
+        cantFrenos: 2, // O el valor que desees por defecto
+        llantaExtra: 0,
+        portaExtra: 1
+    });
 
-    // 2. Inyectar las dimensiones
-    if (modelo.largo || modelo.ancho) setDim(prev => ({ ...prev, largo: modelo.largo || prev.largo, ancho: modelo.ancho || prev.ancho }));
-    // 3. Inyectar capacidad, suspensión y llantas
-    if (modelo.capacidad || modelo.suspension || modelo.llanta) setRodado(prev => ({ ...prev, capacidad: modelo.capacidad || prev.capacidad, suspension: modelo.suspension || prev.suspension, llanta: modelo.llanta || prev.llanta }));
-    // 4. Inyectar jalón y gato
-    if (modelo.jalon || modelo.gato) setAcople(prev => ({ ...prev, jalon: modelo.jalon || prev.jalon, gato: modelo.gato || prev.gato }));
-    // 5. Inyectar techo y redila
-    if (modelo.techo || modelo.redila) setCarroceria(prev => ({ ...prev, techo: modelo.techo || prev.techo, redila: modelo.redila || prev.redila }));
-    // 6. Inyectar acabados
-    if (modelo.piso || modelo.pintura || modelo.luces || modelo.color) setAcabados(prev => ({ ...prev, piso: modelo.piso || prev.piso, pintura: modelo.pintura || prev.pintura, luces: modelo.luces || prev.luces, color: modelo.color || prev.color }));
-    // 7. Inyectar monturero
-    if (modelo.monturero) setMonturero(prev => ({ ...prev, tipo: modelo.monturero || prev.tipo }));
+    setAcople({ 
+        jalon: modelo.jalon, 
+        gato: modelo.gato, 
+        cantGatos: 1, 
+        cargadorSolar: false, 
+        cargador110: false 
+    });
 
-    // 8. Cambiar de pantalla y avisar al usuario
+    setCarroceria({ 
+        techo: modelo.techo, 
+        redila: modelo.redila, 
+        puertaTras: 'libro' // O el valor que tenga el modelo
+        // ... agrega aquí todos los campos que falten del estado carroceria
+    });
+
+    setAcabados({ 
+        piso: modelo.piso, 
+        pintura: modelo.pintura, 
+        luces: modelo.luces, 
+        color: modelo.color 
+    });
+
+    // 4. Cambiamos de vista y avisamos
     setView('cotizador');
-    setNotification({ type: 'success', message: `¡Configuración cargada! El modelo "${modelo.nombre}" está listo para cotizar.` });
+    setNotification({ type: 'success', message: `Modelo "${modelo.nombre}" cargado. Ahora puedes personalizarlo.` });
   };
 
   const handleMejorarConIACatalogo = async (index) => {
@@ -905,7 +1103,7 @@ Ejemplo de respuesta esperada:
       total: formatoMoneda(totalCalc),
       vendedor: currentUser?.name || 'Ventas',
       pdfUrl: urlPdf,
-      config: { market, tipoRemolque, isSpecialClient, cliente, dim, acople, rodado, carroceria, monturero, acabados, accesorios, camaBajaOpts }
+      config: { market, tipoRemolque, isSpecialClient, cliente, dim, acople, rodado, carroceria, monturero, acabados, accesorios, camaBajaOpts, usarLargoCustom, largoCustom, precioManual } // <--- PRECIO MANUAL AGREGADO
     };
 
     const updated = [nuevaCot, ...cotizaciones].slice(0, 200);
@@ -960,47 +1158,8 @@ Tono: Formal, corporativo, directo y amable. Estrictamente prohíbe el uso de je
 
   const maxPuertasInt = (() => { const val = parseInt(dim.largo.replace('ft', '')); if (val <= 20) return 1; if (val <= 26) return 2; if (val <= 32) return 3; return 5; })();
   
-  const oCap = getObj(db.capacidades, rodado.capacidad);
-
-  const isGanaderoRedondoMex = tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'mexico';
+   const isGanaderoRedondoMex = tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'mexico';
   const isGanaderoRedondoUSA = tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'usa';
-
-  // 1. Lógica estricta de ejes según la capacidad seleccionada
-  let cantEjes = 2;
-  if (tipoRemolque === 'cama_alta') { 
-      if (oCap.id === '6t') cantEjes = 2; 
-      else if (oCap.id === '10t') cantEjes = (rodado.cantEjesGanso >= 3) ? 3 : 2; 
-      else if (oCap.id === '9t') cantEjes = 3; 
-  } else if (tipoRemolque === 'volteo' || tipoRemolque === 'cama_baja' || isGanaderoRedondoMex) {
-      if (oCap.id === '6t' || oCap.id === '7t') cantEjes = 2;
-      else if (oCap.id === '3t') cantEjes = 2;
-      else if (oCap.id === '1_5t' || oCap.id === '850kg') cantEjes = 1;
-  } else { 
-      if (oCap.id === '9t') cantEjes = 3;
-      else if (['7t', '6t', '4t_5200', '4t_6200'].includes(oCap.id)) cantEjes = 2;
-      else if (['850kg', '1_5t', '2t_5200', '2t_6200'].includes(oCap.id)) cantEjes = 1;
-      else if (oCap.id === '10t') cantEjes = (rodado.cantEjesGanso >= 3) ? 3 : 2; 
-      else if (oCap.id === '3t') cantEjes = (rodado.cantEjesGanso === 2) ? 2 : 1;
-  }
-
-  // 2. Formato dinámico y exacto para el Ticket
-  let nombreCapacidadTicket = oCap.nombre;
-  if (oCap.id === '10t') {
-      if (rodado.cantEjesGanso === 310) nombreCapacidadTicket = '10 Ton (3 Ejes de 10,000 lbs)';
-      else if (rodado.cantEjesGanso === 3) nombreCapacidadTicket = '10 Ton (3 Ejes de 8,000 lbs)';
-      else nombreCapacidadTicket = '10 Ton (2 Ejes de 10,000 lbs)';
-  }
-  else if (oCap.id === '9t') nombreCapacidadTicket = '9 Ton (3 Ejes de 7,000 lbs)';
-  else if (oCap.id === '7t') nombreCapacidadTicket = '7 Ton (2 Ejes de 8,000 lbs)';
-  else if (oCap.id === '4t_5200') nombreCapacidadTicket = '4 Ton (2 Ejes de 5,200 lbs)';
-  else if (oCap.id === '4t_6200') nombreCapacidadTicket = '4 Ton (2 Ejes de 6,200 lbs)';
-  else if (oCap.id === '2t_5200') nombreCapacidadTicket = '2 Ton (1 Eje de 5,200 lbs)';
-  else if (oCap.id === '2t_6200') nombreCapacidadTicket = '2 Ton (1 Eje de 6,200 lbs)';
-  else if (oCap.id === '1_5t') nombreCapacidadTicket = '1.5 Ton (1 Eje de 3,500 lbs)';
-  else if (oCap.id === '3t') {
-      if (tipoRemolque === 'volteo' || tipoRemolque === 'cama_baja') nombreCapacidadTicket = '3 Ton (2 Ejes de 3,500 lbs)';
-      else nombreCapacidadTicket = `3 Ton (${cantEjes} Eje(s) de 3,500 lbs)`;
-  }
 
 // 1. Este es el control del Mercado (USA vs México) que tenías antes
   useEffect(() => {
@@ -1233,17 +1392,49 @@ Tono: Formal, corporativo, directo y amable. Estrictamente prohíbe el uso de je
     if (tipoRemolque === 'cama_alta' && rodado.capacidad === '10t' && rodado.llanta !== '17_5in') setRodado(prev => ({...prev, llanta: '17_5in'}));
   }, [rodado.llantaExtra, rodado.portaExtra, tipoRemolque, rodado.capacidad, rodado.llanta]);
 
-  const anchosDisponibles = tipoRemolque === 'volteo' ? db.anchos?.filter(a => ['60in', '76in', '82in'].includes(a.id)) || [] : tipoRemolque === 'cama_baja' ? db.anchos?.filter(a => Object.keys(CAMA_BAJA_COMBOS).includes(a.id)) || [] : tipoRemolque === 'cama_alta' ? db.anchos?.filter(a => a.id === '96in') || [] : isGanaderoRedondoMex ? db.anchos?.filter(a => ['60in', '76in'].includes(a.id)) || [] : isGanaderoRedondoUSA ? db.anchos?.filter(a => ['75in'].includes(a.id)) || [] : db.anchos?.filter(a => !['50in', '75in', '76in', '82in'].includes(a.id)) || [];
-  const largosDisponibles = tipoRemolque === 'volteo' && VOLTEO_COMBOS[dim.ancho] ? db.largos?.filter(l => VOLTEO_COMBOS[dim.ancho].includes(l.id)) || [] : tipoRemolque === 'cama_baja' && CAMA_BAJA_COMBOS[dim.ancho] ? db.largos?.filter(l => CAMA_BAJA_COMBOS[dim.ancho].includes(l.id)) || [] : tipoRemolque === 'cama_alta' ? db.largos?.filter(l => CAMA_ALTA_LARGOS.includes(l.id)) || [] : isGanaderoRedondoMex ? db.largos?.filter(l => {
-      if (rodado.capacidad === '1_5t') return ['10ft', '12ft'].includes(l.id);
-      if (rodado.capacidad === '3t') return ['10ft', '12ft', '14ft', '16ft'].includes(l.id);
-      if (rodado.capacidad === '6t') return ['12ft', '14ft', '16ft', '18ft'].includes(l.id);
-      return false;
-  }) || [] : isGanaderoRedondoUSA ? db.largos?.filter(l => ['14ft', '16ft'].includes(l.id)) || [] : db.largos?.filter(l => l.valor >= 16) || [];
-  const capacidadesDisponibles = tipoRemolque === 'volteo' ? db.capacidades?.filter(c => dim.ancho === '60in' ? ['1_5t', '3t', '6t'].includes(c.id) : ['3t', '6t'].includes(c.id)) || [] : tipoRemolque === 'cama_baja' ? db.capacidades?.filter(c => getCapacidadesCamaBaja(dim.ancho, dim.largo).includes(c.id)) || [] : tipoRemolque === 'cama_alta' ? db.capacidades?.filter(c => CAMA_ALTA_CAPS.includes(c.id)) || [] : isGanaderoRedondoMex ? db.capacidades?.filter(c => ['1_5t', '3t', '6t'].includes(c.id)) || [] : isGanaderoRedondoUSA ? db.capacidades?.filter(c => dim.largo === '14ft' ? ['2t_5200', '2t_6200'].includes(c.id) : ['4t_5200', '4t_6200'].includes(c.id)) || [] : db.capacidades?.filter(c => {
-      if (['2t_5200', '2t_6200', '4t_5200', '4t_6200'].includes(c.id)) return acople.jalon.includes('ganso') && rodado.suspension === 'muelle_drop';
-      return ['3t', '6t', '7t', '9t', '10t'].includes(c.id);
-  }) || [];
+const anchosDisponibles = tipoRemolque === 'volteo' 
+    ? db.anchos?.filter(a => ['60in', '76in', '82in'].includes(a.id)) || [] 
+    : tipoRemolque === 'cama_baja' 
+    ? db.anchos?.filter(a => Object.keys(CAMA_BAJA_COMBOS).includes(a.id)) || [] 
+    : tipoRemolque === 'cama_alta' 
+    ? db.anchos?.filter(a => a.id === '96in') || [] 
+    : isGanaderoRedondoMex 
+    ? db.anchos?.filter(a => ['60in', '76in'].includes(a.id)) || [] 
+    : isGanaderoRedondoUSA 
+    ? db.anchos?.filter(a => ['75in'].includes(a.id)) || [] 
+    : db.anchos?.filter(a => !['50in', '75in', '76in', '82in'].includes(a.id)) || [];
+
+  const largosDisponibles = tipoRemolque === 'volteo' && VOLTEO_COMBOS[dim.ancho] 
+    ? db.largos?.filter(l => VOLTEO_COMBOS[dim.ancho].includes(l.id)) || [] 
+    : tipoRemolque === 'cama_baja' && CAMA_BAJA_COMBOS[dim.ancho] 
+    ? db.largos?.filter(l => CAMA_BAJA_COMBOS[dim.ancho].includes(l.id)) || [] 
+    : tipoRemolque === 'cama_alta' 
+    ? db.largos?.filter(l => CAMA_ALTA_LARGOS.includes(l.id)) || [] 
+    : isGanaderoRedondoMex 
+    ? db.largos?.filter(l => {
+        if (rodado.capacidad === '1_5t') return ['10ft', '12ft'].includes(l.id);
+        if (rodado.capacidad === '3t') return ['10ft', '12ft', '14ft', '16ft'].includes(l.id);
+        if (rodado.capacidad === '6t') return ['12ft', '14ft', '16ft', '18ft'].includes(l.id);
+        return false;
+      }) || [] 
+    : isGanaderoRedondoUSA 
+    ? db.largos?.filter(l => ['14ft', '16ft'].includes(l.id)) || [] 
+    : db.largos?.filter(l => l.valor >= 16) || [];
+
+  const capacidadesDisponibles = tipoRemolque === 'volteo' 
+    ? db.capacidades?.filter(c => dim.ancho === '60in' ? ['1_5t', '3t', '6t'].includes(c.id) : ['3t', '6t'].includes(c.id)) || [] 
+    : tipoRemolque === 'cama_baja' 
+    ? db.capacidades?.filter(c => getCapacidadesCamaBaja(dim.ancho, dim.largo).includes(c.id)) || [] 
+    : tipoRemolque === 'cama_alta' 
+    ? db.capacidades?.filter(c => CAMA_ALTA_CAPS.includes(c.id)) || [] 
+    : isGanaderoRedondoMex 
+    ? db.capacidades?.filter(c => ['1_5t', '3t', '6t'].includes(c.id)) || [] 
+    : isGanaderoRedondoUSA 
+    ? db.capacidades?.filter(c => dim.largo === '14ft' ? ['2t_5200', '2t_6200'].includes(c.id) : ['4t_5200', '4t_6200'].includes(c.id)) || [] 
+    : db.capacidades?.filter(c => {
+        if (['2t_5200', '2t_6200', '4t_5200', '4t_6200'].includes(c.id)) return acople.jalon.includes('ganso') && rodado.suspension === 'muelle_drop';
+        return ['3t', '6t', '7t', '9t', '10t'].includes(c.id);
+      }) || [];
 const jalonesDisponibles = tipoRemolque === 'volteo' ? db.jalones?.filter(j => ['bumper_2', 'bumper_2_516', 'bumper_ajustable_2', 'bumper_ajustable_2_516', 'argolla', 'ganso_normal', 'ganso_facil'].includes(j.id)) || [] : tipoRemolque === 'cama_baja' ? db.jalones?.filter(j => j.tipo !== 'ganso') || [] : tipoRemolque === 'cama_alta' ? db.jalones?.filter(j => ['ganso_normal', 'ganso_facil', 'argolla'].includes(j.id)) || [] : (tipoRemolque === 'ganadero' && tipoGanadero === 'redondo') ? db.jalones?.filter(j => j.tipo !== 'ganso') || [] : db.jalones || [];
   const gatosDisponibles = tipoRemolque === 'volteo' ? db.gatos?.filter(g => g.id === 'manual_12k') || [] : tipoRemolque === 'cama_baja' ? db.gatos?.filter(g => { const cap = rodado.capacidad; if (cap === '850kg') return g.id === 'tubo_2k'; if (['1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return g.id === 'normal_2k'; if (cap === '3t') return ['normal_2k', 'manual_7k'].includes(g.id); if (cap === '4t') return g.id === 'manual_7k'; if (cap === '6t') return ['manual_7k', 'manual_12k'].includes(g.id); return true; }) || [] : tipoRemolque === 'cama_alta' ? db.gatos?.filter(g => ['manual_12k', 'hidraulico_sencillo', 'hidraulico_bomba'].includes(g.id)) || [] : db.gatos?.filter(g => {
       if (market === 'usa') return ['manual_12k', 'hidraulico_sencillo', 'hidraulico_bomba'].includes(g.id);
@@ -1265,35 +1456,8 @@ const jalonesDisponibles = tipoRemolque === 'volteo' ? db.jalones?.filter(j => [
 const redilasDisponibles = tipoRemolque === 'cama_baja' ? db.redilas?.filter(r => ['sin_redila', 'ptr_abierta_2', 'ptr_abierta_3', 'ptr_abierta_4', 'cerrada_2', 'cerrada_3', 'cerrada_4'].includes(r.id)) || [] : isGanaderoRedondoMex ? db.redilas?.filter(r => ['ptr_abierta', 'cerrada', 'combinada', 'desmontable'].includes(r.id)) || [] : db.redilas?.filter(r => ['ptr_abierta', 'cerrada', 'combinada'].includes(r.id)) || [];
   const monturerosDisponibles = (tipoRemolque === 'ganadero' && tipoGanadero === 'redondo' && market === 'usa') ? db.montureros?.filter(m => ['ninguno', 'recto_3', 'recto_4'].includes(m.id)) || [] : db.montureros || [];
 const rampasDisponibles = tipoRemolque === 'cama_baja' ? db.rampas?.filter(r => { if (r.id === 'ninguna' || r.id === 'puerta_rampa') return true; const is82 = dim.ancho === '82in'; if (r.id === 'rampa_1_5m') return is82 && carroceria.redila === 'sin_redila'; if (r.id === 'rampa_39') return is82 && carroceria.redila !== 'sin_redila'; return false; }) || [] : tipoRemolque === 'cama_alta' ? db.rampas?.filter(r => ['recto_rampas', 'cola_4', 'cola_5'].includes(r.id)) || [] : [];
-  const oLargo = getObj(db.largos, dim.largo); const oAncho = getObj(db.anchos, dim.ancho); const oJalon = getObj(db.jalones, acople.jalon); const oCadena = getObj(db.cadenas, acople.cadena); const oGato = getObj(db.gatos, acople.gato); const oSusp = getObj(db.suspension, rodado.suspension); const oLlantas = getObj(db.llantas, rodado.llanta); const oTecho = getObj(db.techos, carroceria.techo); const oRedila = getObj(db.redilas, carroceria.redila); const oPInt = getObj(db.puertasInteriores, carroceria.puertaInt); const oPTras = getObj(db.puertasTraseras, carroceria.puertaTras); const oPiso = getObj(db.pisos, acabados.piso); const oMont = getObj(db.montureros, monturero.tipo); const oPint = getObj(db.pinturas, acabados.pintura); const oLuces = getObj(db.luces, acabados.luces); const oRampa = db.rampas?.find(r => r.id === camaBajaOpts.rampas) || {precio: 0};
-  const lucesDisponibles = db.luces?.filter(l => market === 'usa' ? l.id.includes('_usa') : l.id.includes('_mexico')) || [];
-  const anchoEnPies = (oAncho.valor || 0) / 12;
-  const areaSqFt = (oLargo.valor || 0) * anchoEnPies;
-  const costoPisoTotal = areaSqFt * (getP(oPiso, 'precioSqFt') || getP(oPiso) || 0) * (oPiso.id === 'madera' ? 2 : 1);
-
-  let costoGatos = acople.gato === 'hidraulico_bomba' ? ((getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500) * acople.cantGatos) + (getP(oGato) - (getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500)) : getP(oGato) * acople.cantGatos;
-  const totalGatos = costoGatos + (acople.cargadorSolar ? 2500 : 0) + (acople.cargador110 ? 1500 : 0) + (acople.sujetaCadenas ? 450 : 0) + getP(oCadena);
-
-  const totalRodado = getP(oCap) + getP(oSusp) + getP(oLlantas) + (rodado.cantFrenos > 0 ? getExtraPrice('frenos') * rodado.cantFrenos : 0) + (rodado.llantaExtra > 0 ? (rodado.llantaExtra * getP(oLlantas, 'precioExtra')) : 0) + (rodado.portaExtra * getExtraPrice('portaExtra'));
-  
-  let piesPlexi = (oLargo.valor || 0) * 4;
-  if (oMont.id === 'recto_3') piesPlexi -= 12; else if (oMont.id === 'recto_4') piesPlexi -= 16; else if (oMont.id === 'diagonal') piesPlexi -= (((monturero.paredLarga || 0) + (monturero.paredCorta || 0)) / 12 * 2);
-  if (carroceria.puertaPiloto) piesPlexi -= ((carroceria.puertaPilotoAncho || 0) / 12) * 4;
-  if (carroceria.frente === 'cachucha' && carroceria.puertaPerroCachucha) piesPlexi -= 13.33;
-  if (monturero.puertaPerro) piesPlexi -= 13.33;
-  
-  const totalCarroceria = getP(oTecho) + getP(oRedila) + (getP(oPInt) * carroceria.cantPtasInt) + getP(oPTras) + (carroceria.frente === 'cachucha' ? getExtraPrice('frenteCachucha') : carroceria.frente === 'canasta' ? getExtraPrice('frenteCanasta') : 0) + (carroceria.plexiglass && piesPlexi > 0 ? Math.ceil(piesPlexi / 46.5) * getExtraPrice('hojaPlexiglass') : 0) + (carroceria.rackPacas ? getExtraPrice('rackPacas') : 0) + (carroceria.ventEst * getExtraPrice('ventEst')) + (carroceria.ventCirc * getExtraPrice('ventCirc')) + (carroceria.polverasEspeciales ? getExtraPrice('polverasEspeciales') : 0) + (carroceria.puertaPerroCachucha ? getExtraPrice('puertaPerroCachucha') : 0);
-
-  const totalMonturero = tipoRemolque === 'ganadero' && oMont.id !== 'ninguno' ? getP(oMont) + (monturero.basesMontura * getExtraPrice('basesMontura')) + (monturero.tubosCobija * getExtraPrice('tubosCobija')) + (monturero.puertaPerro ? getExtraPrice('puertaPerroLateral') : 0) : 0;
-  const totalAcabados = getP(oPint) + getP(oLuces) + (accesorios.lucesInteriores * getExtraPrice('lucesInteriores')) + (acabados.bodyLitros * getExtraPrice('litroBody')) + (acabados.cajaHtas === 'std' ? getExtraPrice('cajaHtasStd') : acabados.cajaHtas === 'grande' ? getExtraPrice('cajaHtasGrande') : acabados.cajaHtas === 'especial' ? 8500 : 0);
-
-  const subtotalNeto = getExtraPrice('precioBase') + getP(oLargo) + getP(oAncho) + getP(oJalon) + totalGatos + costoPisoTotal + totalRodado + (tipoRemolque === 'ganadero' ? totalCarroceria : getP(oRedila)) + totalMonturero + totalAcabados + (['cama_baja', 'cama_alta'].includes(tipoRemolque) ? getP(oRampa) : 0) + (tipoRemolque === 'cama_baja' && camaBajaOpts.fenderReforzado ? getExtraPrice('fenderReforzado') : 0) + (['cama_baja', 'cama_alta'].includes(tipoRemolque) && camaBajaOpts.luzPortaplaca ? getExtraPrice('luzPortaplaca') : 0);
-
-  const subtotalDescuento = subtotalNeto * (1 - (cliente.descuentoPct || 0) / 100);
-  const subtotalIva = market === 'usa' ? 0 : subtotalDescuento * 0.16;
-  const totalPrevio = subtotalDescuento + subtotalIva;
-  const totalFinal = totalPrevio + (cliente.ajusteRedondeo || 0);
-  const saldoPendiente = totalFinal - (cliente.anticipo || 0);
+    const lucesDisponibles = db.luces?.filter(l => market === 'usa' ? l.id.includes('_usa') : l.id.includes('_mexico')) || [];
+    
 let capacidadLbs = '7,000 LBS';
   if (tipoRemolque === 'cama_alta') { 
       if (oCap.id === '6t' || oCap.id === '9t') capacidadLbs = '7,000 LBS'; 
@@ -1628,7 +1792,7 @@ let capacidadLbs = '7,000 LBS';
                   </div>
                   
                   {/* MATRIZ DE PRECIOS POR TIPO DE REMOLQUE */}
-                  {!ADMIN_SECTIONS.find(s => s.id === adminSection)?.isColor && (
+                  {!ADMIN_SECTIONS.find(s => s.id === adminSection)?.isColor && adminSection !== 'preciosFijos' && (
                     <div className="flex space-x-2 mb-4 bg-slate-100 p-1.5 rounded-lg overflow-x-auto">
                       {[
                         { id: 'gen', name: 'General (Base)' },
@@ -1746,7 +1910,95 @@ let capacidadLbs = '7,000 LBS';
                           </div>
                         );
                       }
+if (sectionDef?.isMatrizTecho || sectionDef?.isMatrizPiso) {
+                          const isTecho = sectionDef.isMatrizTecho;
+                          return (
+                              <div key={item.id || index} className="flex flex-wrap items-end gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl hover:shadow-sm transition relative mb-3">
+                                  <div>
+                                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">{isTecho ? 'Tipo de Techo' : 'Material de Piso'}</label>
+                                      <select value={isTecho ? (item.techo || '') : (item.piso || '')} onChange={e => handleDbChange(adminSection, index, isTecho ? 'techo' : 'piso', e.target.value)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-36">
+                                          <option value="">- Seleccionar -</option>
+                                          {(isTecho ? db.techos : db.pisos)?.map(x => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+                                      </select>
+                                  </div>
+                                  <div>
+                                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Largo</label>
+                                      <select value={item.largo || ''} onChange={e => handleDbChange(adminSection, index, 'largo', e.target.value)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-28">
+                                          <option value="">- Todos -</option>
+                                          {db.largos?.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                                      </select>
+                                  </div>
+                                  <div>
+                                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Ancho</label>
+                                      <select value={item.ancho || ''} onChange={e => handleDbChange(adminSection, index, 'ancho', e.target.value)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-28">
+                                          <option value="">- Todos -</option>
+                                          {db.anchos?.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                                      </select>
+                                  </div>
+                                  <div>
+                                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Capacidad</label>
+                                      <select value={item.capacidad || ''} onChange={e => handleDbChange(adminSection, index, 'capacidad', e.target.value)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-32">
+                                          <option value="">- Todos -</option>
+                                          {db.capacidades?.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                                      </select>
+                                  </div>
+                                  <div className="flex-1 min-w-[140px]">
+                                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Costo Fijo Exacto ($)</label>
+                                      <input type="number" value={item.precio || 0} onChange={e => handleDbChange(adminSection, index, 'precio', parseFloat(e.target.value)||0)} className="w-full p-2 border border-green-300 bg-green-50 text-green-800 rounded-md font-black text-right" />
+                                  </div>
+                                  <button onClick={() => handleDbDelete(adminSection, index)} className="p-2 bg-white border border-red-200 text-red-600 rounded-md hover:bg-red-50"><Trash2 className="w-5 h-5"/></button>
+                              </div>
+                          );
+                      }
 
+                     const isTabulador = sectionDef?.isTabulador;
+    if (isTabulador) {
+      return (
+          <div key={item.id || index} className="flex flex-wrap items-end gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl hover:shadow-sm transition relative mb-3">
+              <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Mercado</label>
+                  <select value={item.market || 'mexico'} onChange={e => handleDbChange(adminSection, index, 'market', e.target.value)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-24">
+                      <option value="mexico">México</option>
+                      <option value="usa">USA</option>
+                  </select>
+              </div>
+              <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tipo de Remolque</label>
+                  <select value={item.tipo || ''} onChange={e => handleDbChange(adminSection, index, 'tipo', e.target.value)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-36">
+                      <option value="ganadero_ganso">Ganadero Ganso</option>
+                      <option value="ganadero_ganso_mex">Ganso Mex</option>
+                      <option value="ganadero_redondo">Ganadero Redondo</option>
+                      <option value="cama_baja">Cama Baja</option>
+                      <option value="cama_alta">Cama Alta</option>
+                      <option value="volteo">Volteo</option>
+                  </select>
+              </div>
+              <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Ancho</label>
+                  <select value={item.ancho || ''} onChange={e => handleDbChange(adminSection, index, 'ancho', e.target.value)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-28">
+                      <option value="">- Seleccionar -</option>
+                      {db.anchos?.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                  </select>
+              </div>
+              <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Capacidad</label>
+                  <select value={item.capacidad || ''} onChange={e => handleDbChange(adminSection, index, 'capacidad', e.target.value)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-32">
+                      <option value="">- Seleccionar -</option>
+                      {db.capacidades?.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  </select>
+              </div>
+              <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Largo (Pies)</label>
+                  <input type="number" value={item.largo || 0} onChange={e => handleDbChange(adminSection, index, 'largo', parseFloat(e.target.value)||0)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-20 text-center" />
+              </div>
+              <div className="flex-1 min-w-[160px]">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Precio Base Completo ($)</label>
+                  <input type="number" value={item.precio || 0} onChange={e => handleDbChange(adminSection, index, 'precio', parseFloat(e.target.value)||0)} className="w-full p-2 border border-green-300 bg-green-50 text-green-800 rounded-md font-black text-right" />
+              </div>
+              <button onClick={() => handleDbDelete(adminSection, index)} className="p-2 bg-white border border-red-200 text-red-600 rounded-md hover:bg-red-50"><Trash2 className="w-5 h-5"/></button>
+          </div>
+      );
+    }
                       const isGeneral = adminTrailerTab === 'gen';
                       const pKey = sectionDef?.isPiso ? 'precioSqFt' : 'precio';
                       const extraKey = 'precioExtra';
@@ -1782,7 +2034,7 @@ let capacidadLbs = '7,000 LBS';
                           
                           {!sectionDef?.isColor && !sectionDef?.isCatalog && (
                             <div className="w-36">
-                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'P. SqFt' : 'Precio'} {isGeneral ? '(Base)' : ''}</label>
+                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">{sectionDef?.isPiso ? 'P. SqFt' : sectionDef?.id === 'anchos' ? 'Costo Pie Extra' : 'Precio'} {isGeneral ? '(Base)' : ''}</label>
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
                                 <input type="number" value={item[activePKey] ?? item[pKey] ?? 0} onChange={e => handleDbChange(adminSection, index, activePKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-black text-right ${!isGeneral && item[activePKey] !== undefined ? 'border-green-400 bg-green-50 text-green-700' : 'border-slate-300 text-slate-700'}`} />
@@ -1894,6 +2146,7 @@ let capacidadLbs = '7,000 LBS';
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Teléfono</label><input type="text" value={cliente.telefono} onChange={e => setCliente({...cliente, telefono: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md font-medium" placeholder="Ej. 614 123 4567" /></div>
                <div><label className="text-xs font-bold text-green-700 uppercase block mb-1">Cant. Remolques</label><input type="number" min="1" value={cliente.cantidad} onChange={e => setCliente({...cliente, cantidad: parseInt(e.target.value)||1})} className="w-full p-2 border-2 border-green-400 bg-green-50 text-green-900 rounded-md font-black text-center" /></div>
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Descuento (%)</label><div className="relative"><input type="number" min="0" max="100" value={cliente.descuentoPct || ''} onChange={e => setCliente({...cliente, descuentoPct: parseFloat(e.target.value) || 0})} className="w-full p-2 border border-slate-300 rounded-md font-black text-red-600 text-center" placeholder="0" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">%</span></div></div>
+                <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Desc. Extra (%)</label><div className="relative"><input type="number" min="0" max="100" value={cliente.descuentoExtraPct || ''} onChange={e => setCliente({...cliente, descuentoExtraPct: parseFloat(e.target.value) || 0})} className="w-full p-2 border border-slate-300 rounded-md font-black text-amber-500 text-center" placeholder="0" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">%</span></div></div>
                 <div className="md:col-span-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Ajuste / Redondeo</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={cliente.ajusteRedondeo || ''} onChange={e => setCliente({...cliente, ajusteRedondeo: parseFloat(e.target.value) || 0})} className="w-full p-2 pl-7 border border-slate-300 rounded-md font-black text-purple-700" placeholder="0" /></div></div>
                 <div className="md:col-span-5 border-t border-slate-100 pt-3 mt-1"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Anticipo (MXN)</label><div className="relative max-w-[200px]"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span><input type="number" value={cliente.anticipo || ''} onChange={e => setCliente({...cliente, anticipo: parseFloat(e.target.value) || 0})} className="w-full p-2 pl-7 border border-slate-300 rounded-md font-black text-green-700 bg-green-50" placeholder="0" /></div></div>
                {/* Fila de Folio y Fechas (Ya con espacio correcto) */}
@@ -2263,6 +2516,8 @@ let capacidadLbs = '7,000 LBS';
                 </div>
               );
             })()}
+            
+
             {/* --- NOTAS Y OBSERVACIONES --- */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mt-6 print:hidden">
                 <h2 className="text-lg font-black text-slate-800 flex items-center mb-4"><FileText className="w-5 h-5 mr-2 text-green-600"/> 6. Notas y Observaciones para Diseño</h2>
@@ -2406,8 +2661,8 @@ let capacidadLbs = '7,000 LBS';
                     <>
                       <div className="mt-6 pt-4 border-t-2 border-slate-800 bg-slate-900 print:bg-transparent print:border-slate-300 print:-mx-0 print:px-0 -mx-6 px-6 pb-6 rounded-b-xl text-white print:text-slate-900 print:shadow-none print:mt-2 print:pt-2">
                         <div className="flex justify-between text-slate-300 print:text-slate-700 font-bold mb-1 text-[11px] print:mb-0"><span>Subtotal Neto</span><span>{formatoMoneda(subtotalNeto)}</span></div>
-                        {cliente.descuentoPct > 0 && ( <div className="flex justify-between text-red-400 print:text-red-700 font-bold mb-1 text-[11px] print:mb-0"><span>Descuento Comercial ({cliente.descuentoPct}%)</span><span>- {formatoMoneda(subtotalNeto - subtotalDescuento)}</span></div> )}
-                        {market !== 'usa' && ( <div className="flex justify-between text-slate-400 print:text-slate-600 font-bold mb-2 text-[11px] print:mb-0"><span>I.V.A. (16%)</span><span>{formatoMoneda(subtotalIva)}</span></div> )}
+                        {cliente.descuentoPct > 0 && ( <div className="flex justify-between text-red-400 print:text-red-700 font-bold mb-1 text-[11px] print:mb-0"><span>Descuento Comercial ({cliente.descuentoPct}%)</span><span>- {formatoMoneda(montoDescuento1)}</span></div> )}
+{cliente.descuentoExtraPct > 0 && ( <div className="flex justify-between text-amber-500 print:text-amber-700 font-bold mb-1 text-[11px] print:mb-0"><span>Descuento Extra ({cliente.descuentoExtraPct}%)</span><span>- {formatoMoneda(montoDescuento2)}</span></div> )} {market !== 'usa' && ( <div className="flex justify-between text-slate-400 print:text-slate-600 font-bold mb-2 text-[11px] print:mb-0"><span>I.V.A. (16%)</span><span>{formatoMoneda(subtotalIva)}</span></div> )}
                         {cliente.ajusteRedondeo !== 0 && ( <div className="flex justify-between text-purple-400 print:text-purple-700 font-bold mb-3 text-[11px] print:mb-0"><span>Ajuste / Redondeo</span><span>{cliente.ajusteRedondeo > 0 ? '+' : ''} {formatoMoneda(cliente.ajusteRedondeo)}</span></div> )}
 
                         <div className="text-[10px] font-bold tracking-widest text-green-500 print:text-slate-500 uppercase mb-1 border-t border-slate-700 print:border-slate-300 pt-2 print:mt-1">Precio Final {market === 'usa' ? '(Tasa 0% IVA)' : '(IVA Incluido)'}</div>
