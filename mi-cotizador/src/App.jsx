@@ -703,13 +703,18 @@ function CotizadorNube() {
   const tipoFiltroTab = tipoRemolque === 'ganadero' ? `ganadero_${tipoGanadero}` : tipoRemolque;
   const largoFiltroNum = parseFloat(dim.largo.replace('ft', '')) || 0;
 
-  // --- 1. BUSCADOR EN EL CATÁLOGO OFICIAL (5 PILARES) ---
+  // --- 1. BUSCADOR EN EL CATÁLOGO OFICIAL (7 PILARES) ---
   const matchesTabulador = (db.preciosFijos || []).filter(p => {
       if (p.market && p.market !== market) return false;
       if (p.tipo && p.tipo !== tipoFiltroTab) return false;
       if (p.ancho && p.ancho !== dim.ancho) return false;
       if (p.capacidad && p.capacidad !== rodado.capacidad) return false;
       if (p.largo && Number(p.largo) !== largoFiltroNum) return false;
+      
+      // NUEVO: Filtros estrictos de Redila y Piso 
+      if (p.redila && p.redila !== carroceria.redila) return false;
+      if (p.piso && p.piso !== acabados.piso) return false;
+      
       return true; 
   });
 
@@ -736,8 +741,14 @@ function CotizadorNube() {
   const llantasPorEjeBase = (tipoRemolque === 'cama_alta' && rodado.capacidad === '10t') ? 4 : 2;
   const cantLlantasPiso = cantEjes * llantasPorEjeBase; 
   const costoLlantasDinamico = getP(oLlantas) * cantLlantasPiso;
-  const costoUpgradesBase = costoLlantasDinamico + getP(oSusp) + costoTecho + getP(oPint) + getP(oLuces);
 
+  // --- NUEVO: CALCULADOR INTELIGENTE DE PISOS Y REDILAS ---
+  // Calculamos la diferencia exacta si el piso elegido es distinto a la madera estándar
+  const costoPisoMaderaBase = areaSqFt * (db.pisos?.find(p => p.id === 'madera')?.precioSqFt || 35) * 2;
+  const extraPorPiso = costoPisoTotal > costoPisoMaderaBase ? (costoPisoTotal - costoPisoMaderaBase) : 0;
+
+  // Integramos la Redila (que puede sumar o restar dinero) y el Piso a los upgrades estructurales
+const costoUpgradesBase = costoLlantasDinamico + getP(oSusp) + costoTecho + getP(oPint) + getP(oLuces);
   // Sistema Hidráulico Extra y Carrocería (Lista Negra)
   const costoGatoExtra = acople.gatoExtra ? (getExtraPrice('gatoExtra') || 1500) : 0; 
   const costoPiston = acople.pistonHidraulico ? (getExtraPrice('pistonHidraulico') || 5000) : 0;
@@ -1991,6 +2002,22 @@ if (sectionDef?.isMatrizTecho || sectionDef?.isMatrizPiso) {
                   <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Largo (Pies)</label>
                   <input type="number" value={item.largo || 0} onChange={e => handleDbChange(adminSection, index, 'largo', parseFloat(e.target.value)||0)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-20 text-center" />
               </div>
+              
+              <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Redila (Opcional)</label>
+                  <select value={item.redila || ''} onChange={e => handleDbChange(adminSection, index, 'redila', e.target.value)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-28">
+                      <option value="">- Cualquiera -</option>
+                      {db.redilas?.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+                  </select>
+              </div>
+              <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Piso (Opcional)</label>
+                  <select value={item.piso || ''} onChange={e => handleDbChange(adminSection, index, 'piso', e.target.value)} className="p-2 border border-slate-300 rounded-md text-xs font-bold text-slate-800 w-28">
+                      <option value="">- Cualquiera -</option>
+                      {db.pisos?.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                  </select>
+              </div>
+
               <div className="flex-1 min-w-[160px]">
                   <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Precio Base Completo ($)</label>
                   <input type="number" value={item.precio || 0} onChange={e => handleDbChange(adminSection, index, 'precio', parseFloat(e.target.value)||0)} className="w-full p-2 border border-green-300 bg-green-50 text-green-800 rounded-md font-black text-right" />
