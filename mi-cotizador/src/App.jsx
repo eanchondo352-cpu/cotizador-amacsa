@@ -1692,10 +1692,14 @@ let capacidadLbs = '7,000 LBS';
               <div className="text-xs font-black text-slate-400 uppercase tracking-widest mt-2 mb-1 px-4">Historial</div>
               <button onClick={() => setAdminSection('cotizaciones')} className={`flex items-center text-left px-4 py-3 rounded-lg text-sm font-bold transition ${adminSection === 'cotizaciones' ? 'bg-green-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}><FileText className="w-4 h-4 mr-2"/> Cotizaciones Guardadas</button>
               
-              <div className="text-xs font-black text-slate-400 uppercase tracking-widest mt-6 mb-1 px-4">Inventario y Precios</div>
-              {ADMIN_SECTIONS.map(sec => (
-                <button key={sec.id} onClick={() => setAdminSection(sec.id)} className={`text-left px-4 py-3 rounded-lg text-sm font-bold transition ${adminSection === sec.id ? 'bg-green-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>{sec.title}</button>
-              ))}
+              {currentUser?.role === 'admin' && (
+                <>
+                  <div className="text-xs font-black text-slate-400 uppercase tracking-widest mt-6 mb-1 px-4">Inventario y Precios</div>
+                  {ADMIN_SECTIONS.map(sec => (
+                    <button key={sec.id} onClick={() => setAdminSection(sec.id)} className={`text-left px-4 py-3 rounded-lg text-sm font-bold transition ${adminSection === sec.id ? 'bg-green-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>{sec.title}</button>
+                  ))}
+                </>
+              )}
 
               <div className="text-xs font-black text-slate-400 uppercase tracking-widest mt-6 mb-1 px-4">Mi Cuenta</div>
               <button onClick={() => setAdminSection('perfil')} className={`flex items-center text-left px-4 py-3 rounded-lg text-sm font-bold transition ${adminSection === 'perfil' ? 'bg-amber-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}><User className="w-4 h-4 mr-2"/> Mi Perfil</button>
@@ -1710,7 +1714,13 @@ let capacidadLbs = '7,000 LBS';
             </div>
           </div>
           <div className="w-full md:w-3/4 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-             {adminSection === 'cotizaciones' ? (
+             {currentUser?.role !== 'admin' && adminSection !== 'cotizaciones' && adminSection !== 'perfil' ? (
+                <div className="py-16 text-center">
+                   <span className="text-4xl block mb-2">🔒</span>
+                   <h3 className="text-xl font-black text-slate-800">Acceso Restringido</h3>
+                   <p className="text-slate-500 text-sm mt-1">Solo los administradores pueden modificar precios y catálogos.</p>
+                </div>
+             ) : adminSection === 'cotizaciones' ? (
                 <div>
                    <h2 className="text-2xl font-black text-slate-800 border-b pb-3 mb-6">Cotizaciones Guardadas</h2>
                    <div className="overflow-x-auto border border-slate-200 rounded-lg max-h-[70vh]">
