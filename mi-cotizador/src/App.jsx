@@ -738,9 +738,25 @@ function CotizadorNube() {
   const accesoriosSolaresFinal = (acople.cargadorSolar ? 2500 : 0) + (acople.cargador110 ? 1500 : 0);
   const totalAcople = costoJalon + costoCadena + costoSujetaCadenas + costoGatosFinal + accesoriosSolaresFinal;
 
+  // --- NUEVO: CALCULADOR INTELIGENTE DE LLANTAS ESTÁNDAR ---
+  // Identifica qué llanta trae "de fábrica" según la capacidad y el tipo de remolque
+  const getLlantaDefault = (cap, tipo) => {
+      if (tipo === 'cama_alta' && cap === '10t') return '17_5in';
+      if (['850kg', '1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return '700_15';
+      if (tipo === 'cama_baja' && cap === '3t') return '700_15';
+      if (tipo === 'cama_baja' && cap === '4t') return '225_75_15';
+      if (['3t', '2t_5200', '2t_6200', '4t_5200', '4t_6200'].includes(cap)) return '235_80_16';
+      return '16in_14'; // Por defecto para 6t, 7t, 9t
+  };
+
+  const llantaEstandarId = getLlantaDefault(rodado.capacidad, tipoRemolque);
+  const oLlantaEstandar = getObj(db.llantas, llantaEstandarId);
+
   const llantasPorEjeBase = (tipoRemolque === 'cama_alta' && rodado.capacidad === '10t') ? 4 : 2;
   const cantLlantasPiso = cantEjes * llantasPorEjeBase; 
-  const costoLlantasDinamico = getP(oLlantas) * cantLlantasPiso;
+  
+  // SOLO cobramos (o descontamos) la diferencia si el cliente elige una llanta diferente a la estándar
+  const costoLlantasDinamico = (getP(oLlantas) - getP(oLlantaEstandar)) * cantLlantasPiso;
 
   // --- NUEVO: CALCULADOR INTELIGENTE DE PISOS Y REDILAS ---
   // Calculamos la diferencia exacta si el piso elegido es distinto a la madera estándar
