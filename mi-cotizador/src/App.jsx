@@ -240,6 +240,13 @@ const DEFAULT_DB = {
   ],
   preciosFijos: [],
   extras: [
+    { id: 'luzOvalo', nombre: 'Luz Óvalo Roja (Unidad)', precio: 350 },
+    { id: 'luzTresCuartosRoja', nombre: 'Luz 3/4" Roja (Unidad)', precio: 85 },
+    { id: 'luzTresCuartosAmbar', nombre: 'Luz 3/4" Ámbar (Unidad)', precio: 85 },
+    { id: 'luzDosPulgadasRoja', nombre: 'Luz 2" Roja (Unidad)', precio: 120 },
+    { id: 'luzDosPulgadasAmbar', nombre: 'Luz 2" Ámbar (Unidad)', precio: 120 },
+    { id: 'precioPieExtra', nombre: 'Precio por Pie Extra (Medidas Especiales)', precio: 2500 },
+    { id: 'precioBase', nombre: 'Precio Base del Remolque', precio: 95000 },
     { id: 'precioPieExtra', nombre: 'Precio por Pie Extra (Medidas Especiales)', precio: 2500 },
     { id: 'precioBase', nombre: 'Precio Base del Remolque', precio: 95000 },
     { id: 'frenos', nombre: 'Frenos Eléctricos (Por Eje)', precio: 6800 },
