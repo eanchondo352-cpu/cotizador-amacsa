@@ -2143,14 +2143,24 @@ if (sectionDef?.isMatrizTecho || sectionDef?.isMatrizPiso) {
                           )}
                           
                           {sectionDef?.hasPrecioExtra && (
-                            <div className="w-36">
-                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Extra {isGeneral ? '(Base)' : ''}</label>
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
-                                <input type="number" value={item[activeExtraKey] ?? item.precioExtra ?? 0} onChange={e => handleDbChange(adminSection, index, activeExtraKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-bold ${!isGeneral && item[activeExtraKey] !== undefined ? 'border-green-400 bg-green-50 text-green-800' : 'border-slate-300'}`} />
-                              </div>
-                            </div>
-                          )}
+                                <div className="w-36">
+                                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Extra {isGeneral ? '(Base)' : ''}</label>
+                                  <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
+                                    <input type="number" value={item[activeExtraKey] ?? item.precioExtra ?? 0} onChange={e => handleDbChange(adminSection, index, activeExtraKey, parseFloat(e.target.value) || 0)} className={`w-full p-2.5 pl-7 border rounded-md font-bold ${!isGeneral && item[activeExtraKey] !== undefined ? 'border-green-400 bg-green-50 text-green-800' : 'border-slate-300'}`} />
+                                  </div>
+                                </div>
+                              )}
+
+                              {sectionDef?.isColor && (
+                                <div className="w-36">
+                                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Color (HEX)</label>
+                                  <div className="flex items-center space-x-2">
+                                    <input type="color" value={item.hex || '#000000'} onChange={e => handleDbChange(adminSection, index, 'hex', e.target.value)} className="w-10 h-10 p-0 border-0 rounded cursor-pointer shrink-0" />
+                                    <input type="text" value={item.hex || '#000000'} onChange={e => handleDbChange(adminSection, index, 'hex', e.target.value)} className="w-full p-2 border border-slate-300 rounded-md font-bold text-xs text-center uppercase" />
+                                  </div>
+                                </div>
+                              )}
                           
                           {!sectionDef?.isColor && !sectionDef?.isCatalog && (
                             <div className="w-36">
