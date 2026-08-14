@@ -392,7 +392,7 @@ function CotizadorNube() {
   const [carroceria, setCarroceria] = useState({ techo: 'completo', frente: 'cachucha', redila: 'ptr_abierta', puertasIntList: [{id: Date.now(), tipo: 'fija', distancia: 84}], puertaTras: 'libro', puertaPiloto: true, puertaPilotoAncho: 40, plexiglass: false, rackPacas: false, ventEst: false, ventCirc: false, polverasEspeciales: false, puertaPerroCachucha: false, aperturaEstribo: false, aperturaLimpieza: false });
   const [monturero, setMonturero] = useState({ tipo: 'ninguno', basesMontura: 3, tubosCobija: 1, puertaPerro: false, paredLarga: 85.5, paredCorta: 40 });
   const [acabados, setAcabados] = useState({ piso: 'madera', pintura: 'polvo', mismoColorTecho: false, color: 'gris', luces: 'estandar_usa', bodyLitros: 0, pinturaLitros: 0, techoLitros: 0, cajasPolvo: 0, cajaHtas: 'ninguna', cajaHtasLargo: 40 });
-  const [accesorios, setAccesorios] = useState({ lucesInteriores: 0 });
+  const [accesorios, setAccesorios] = useState({ lucesInteriores: 0, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, dosPulgadasRojo: 0, dosPulgadasAmbar: 0, luzPortaplaca: false });
   const [extrasCustom, setExtrasCustom] = useState([]); 
   const [inputExtra, setInputExtra] = useState({ nombre: '', precio: '' });  
   const [precioManual, setPrecioManual] = useState('');  
@@ -587,7 +587,7 @@ function CotizadorNube() {
     setRodado({ capacidad: '6t', suspension: 'torflex', llanta: '16in_14', cantFrenos: 2, llantaExtra: 0, portaExtra: 1 });
     setCarroceria({ techo: 'completo', frente: 'cachucha', redila: 'ptr_abierta', puertaInt: 'fija', cantPtasInt: 1, puertaTras: 'libro', puertaPiloto: true, puertaPilotoAncho: 40, plexiglass: false, rackPacas: false, ventEst: false, ventCirc: false, polverasEspeciales: false, puertaPerroCachucha: false });
     setMonturero({ tipo: 'ninguno', basesMontura: 3, tubosCobija: 1, puertaPerro: false, paredLarga: 85.5, paredCorta: 40 });
-    setAcabados({ piso: 'madera', pintura: 'polvo', mismoColorTecho: false, color: 'gris', luces: market === 'usa' ? 'estandar_usa' : 'estandar_mexico', bodyLitros: 0, pinturaLitros: 0, techoLitros: 0, cajasPolvo: 0, cajaHtas: 'ninguna' });    setAccesorios({ lucesInteriores: 0 });
+    setAcabados({ piso: 'madera', pintura: 'polvo', mismoColorTecho: false, color: 'gris', luces: market === 'usa' ? 'estandar_usa' : 'estandar_mexico', bodyLitros: 0, pinturaLitros: 0, techoLitros: 0, cajasPolvo: 0, cajaHtas: 'ninguna' });    setAccesorios({ lucesInteriores: 0, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, dosPulgadasRojo: 0, dosPulgadasAmbar: 0, luzPortaplaca: false });
     setCamaBajaOpts({ rampas: 'ninguna', fenderReforzado: false, ovaloRojo: 0, tresCuartosRojo: 0, tresCuartosAmbar: 0, luzPortaplaca: false });
     setNotification({ type: 'success', message: 'Cotizador listo para una nueva cotización.' });
   };
@@ -732,21 +732,38 @@ function CotizadorNube() {
 
   // Acoplamiento, Gatos y Llantas Dinámicas
   const costoJalon = getP(oJalon);
-  const costoCadena = getP(oCadena);
+  // --- NUEVO: CALCULADOR INTELIGENTE DE CADENAS ESTÁNDAR ---
+  const getCadenaDefault = (cap, tipo, ganadero) => {
+      if (tipo === 'cama_alta') return 'ganso_38';
+      if (tipo === 'ganadero' && ganadero === 'ganso') return 'ganso_38';
+      if (['6t', '7t', '9t', '10t'].includes(cap)) return 'ganso_38';
+      return 'seguridad_14'; // Por defecto para Cama Baja 1.5t/3t/4t, Redondo, etc.
+  };
+  
+  const oCadenaEstandar = getObj(db.cadenas, getCadenaDefault(rodado.capacidad, tipoRemolque, tipoGanadero));
+  // SOLO cobramos la diferencia si elige una cadena mejor a la estándar que le toca
+  const costoCadenaDinamico = getP(oCadena) - getP(oCadenaEstandar);
+
   const costoSujetaCadenas = acople.sujetaCadenas ? (getExtraPrice('sujetaCadenas') || 450) : 0;
   const costoGatosFinal = acople.gato === 'hidraulico_bomba' ? ((getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500) * acople.cantGatos) + (getP(oGato) - (getP(db.gatos?.find(g => g.id === 'hidraulico_sencillo')) || 6500)) : getP(oGato) * acople.cantGatos;
   const accesoriosSolaresFinal = (acople.cargadorSolar ? 2500 : 0) + (acople.cargador110 ? 1500 : 0);
-  const totalAcople = costoJalon + costoCadena + costoSujetaCadenas + costoGatosFinal + accesoriosSolaresFinal;
+  
+  const totalAcople = costoJalon + costoCadenaDinamico + costoSujetaCadenas + costoGatosFinal + accesoriosSolaresFinal;
 
   // --- NUEVO: CALCULADOR INTELIGENTE DE LLANTAS ESTÁNDAR ---
   // Identifica qué llanta trae "de fábrica" según la capacidad y el tipo de remolque
   const getLlantaDefault = (cap, tipo) => {
-      if (tipo === 'cama_alta' && cap === '10t') return '17_5in';
-      if (['850kg', '1_5t', '1_5t_3500', '1_5t_5200'].includes(cap)) return '700_15';
-      if (tipo === 'cama_baja' && cap === '3t') return '700_15';
+      // 1. Todas las de 3 Toneladas (y menores) llevan la 700R15 por defecto
+      if (['850kg', '1_5t', '1_5t_3500', '1_5t_5200', '3t'].includes(cap)) return '700_15';
+      
+      // 2. Excepción para cama baja de 4T
       if (tipo === 'cama_baja' && cap === '4t') return '225_75_15';
-      if (['3t', '2t_5200', '2t_6200', '4t_5200', '4t_6200'].includes(cap)) return '235_80_16';
-      return '16in_14'; // Por defecto para 6t, 7t, 9t
+      
+      // 3. Excepción para Cama Alta 10T (Si la 10T lleva rin 16 estándar, cámbialo a '235_80_16')
+      if (tipo === 'cama_alta' && cap === '10t') return '17_5in'; 
+      
+      // 4. Por defecto para remolques pesados (4T, 6T, 7T, 9T) asume la 235/80R16 Estándar
+      return '235_80_16'; 
   };
 
   const llantaEstandarId = getLlantaDefault(rodado.capacidad, tipoRemolque);
@@ -764,7 +781,24 @@ function CotizadorNube() {
   const extraPorPiso = costoPisoTotal > costoPisoMaderaBase ? (costoPisoTotal - costoPisoMaderaBase) : 0;
 
   // Integramos la Redila (que puede sumar o restar dinero) y el Piso a los upgrades estructurales
-const costoUpgradesBase = costoLlantasDinamico + getP(oSusp) + costoTecho + getP(oPint) + getP(oLuces);
+// --- PLAN DE RESCATE: INTELIGENCIA DE REDILA ---
+  // Verificamos si el tabulador ya trae la redila específica o si es el precio "Estándar"
+  const baseEncontrada = matchesTabulador[0];
+  const redilaYaIncluida = baseEncontrada && baseEncontrada.redila === carroceria.redila;
+  
+  // Si el tabulador ya la incluye, extra = $0. Si es una medida rara, cobra el recargo del catálogo general.
+  const costoRedilaInteligente = redilaYaIncluida ? 0 : getP(oRedila);
+
+  // --- CALCULADORA DE LUCES INDIVIDUALES (Paquete Especial México) ---
+  const costoLucesIndividuales = acabados.luces === 'especial_mexico' ? 
+    ((accesorios.ovaloRojo || 0) * (getExtraPrice('luzOvalo') || 350)) +
+    ((accesorios.tresCuartosRojo || 0) * (getExtraPrice('luzTresCuartosRoja') || 85)) +
+    ((accesorios.tresCuartosAmbar || 0) * (getExtraPrice('luzTresCuartosAmbar') || 85)) +
+    ((accesorios.dosPulgadasRojo || 0) * (getExtraPrice('luzDosPulgadasRoja') || 120)) +
+    ((accesorios.dosPulgadasAmbar || 0) * (getExtraPrice('luzDosPulgadasAmbar') || 120)) +
+    (accesorios.luzPortaplaca ? (getExtraPrice('luzPortaplaca') || 350) : 0) : 0;
+
+  const costoUpgradesBase = costoLlantasDinamico + getP(oSusp) + costoTecho + getP(oPint) + getP(oLuces) + costoRedilaInteligente + costoLucesIndividuales;
   // Sistema Hidráulico Extra y Carrocería (Lista Negra)
   const costoGatoExtra = acople.gatoExtra ? (getExtraPrice('gatoExtra') || 1500) : 0; 
   const costoPiston = acople.pistonHidraulico ? (getExtraPrice('pistonHidraulico') || 5000) : 0;
@@ -1200,6 +1234,20 @@ Tono: Formal, corporativo, directo y amable. Estrictamente prohíbe el uso de je
       setAcabados(prev => ({ ...prev, luces: 'estandar_mexico' }));
     }
   }, [market]);
+  // --- NUEVO: Auto-Selección Inteligente de Cadena ---
+  useEffect(() => {
+      // Si el mercado es USA, ya forzamos la 3/8 arriba, lo ignoramos para que no choque
+      if (market !== 'usa') {
+          const cadenaIdeal = (tipoRemolque === 'cama_alta' || (tipoRemolque === 'ganadero' && tipoGanadero === 'ganso') || ['6t', '7t', '9t', '10t'].includes(rodado.capacidad)) 
+              ? 'ganso_38' 
+              : 'seguridad_14';
+              
+          setAcople(prev => {
+              if (prev.cadena !== cadenaIdeal) return { ...prev, cadena: cadenaIdeal };
+              return prev;
+          });
+      }
+  }, [tipoRemolque, tipoGanadero, rodado.capacidad, market]);
 
   // 2. Control Inteligente para Frente, Gatos, Jalones y Monturero del Ganadero
   useEffect(() => {
@@ -2489,12 +2537,14 @@ if (sectionDef?.isMatrizTecho || sectionDef?.isMatrizPiso) {
                 </div>
               )}
 
-              {acabados.luces === 'especial' && ['cama_baja', 'cama_alta'].includes(tipoRemolque) && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div><label className="text-[11px] font-bold text-green-800 uppercase block mb-1">Óvalos Rojos</label><div className="flex bg-white border border-green-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-green-200">{camaBajaOpts.ovaloRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'ovaloRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
-                  <div><label className="text-[11px] font-bold text-green-800 uppercase block mb-1">3/4" Rojos</label><div className="flex bg-white border border-green-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-green-200">{camaBajaOpts.tresCuartosRojo}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosRojo', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
-                  <div><label className="text-[11px] font-bold text-green-800 uppercase block mb-1">3/4" Ámbar</label><div className="flex bg-white border border-green-300 rounded overflow-hidden"><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', -1)} className="px-3 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-green-200">{camaBajaOpts.tresCuartosAmbar}</span><button onClick={() => handleCant(setCamaBajaOpts, 'tresCuartosAmbar', 1)} className="px-3 py-1 font-bold hover:bg-slate-100">+</button></div></div>
-                  <div className="flex items-end pb-0.5"><label className="flex items-center space-x-2 cursor-pointer font-bold text-[13px] text-green-900 bg-white px-3 py-1.5 rounded border border-green-300 w-full justify-center shadow-sm"><input type="checkbox" checked={camaBajaOpts.luzPortaplaca} onChange={() => toggle(setCamaBajaOpts, 'luzPortaplaca')} className="w-4 h-4 text-green-600"/> <span>Luz Portaplaca</span></label></div>
+              {acabados.luces === 'especial_mexico' && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  <div><label className="text-[10px] font-bold text-green-800 uppercase block mb-1">Óvalos</label><div className="flex bg-white border border-green-300 rounded overflow-hidden"><button onClick={() => handleCant(setAccesorios, 'ovaloRojo', -1)} className="px-2 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-green-200 text-xs">{accesorios.ovaloRojo || 0}</span><button onClick={() => handleCant(setAccesorios, 'ovaloRojo', 1)} className="px-2 py-1 font-bold hover:bg-slate-100">+</button></div></div>
+                  <div><label className="text-[10px] font-bold text-green-800 uppercase block mb-1">3/4" Roja</label><div className="flex bg-white border border-green-300 rounded overflow-hidden"><button onClick={() => handleCant(setAccesorios, 'tresCuartosRojo', -1)} className="px-2 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-green-200 text-xs">{accesorios.tresCuartosRojo || 0}</span><button onClick={() => handleCant(setAccesorios, 'tresCuartosRojo', 1)} className="px-2 py-1 font-bold hover:bg-slate-100">+</button></div></div>
+                  <div><label className="text-[10px] font-bold text-green-800 uppercase block mb-1">3/4" Ámbar</label><div className="flex bg-white border border-green-300 rounded overflow-hidden"><button onClick={() => handleCant(setAccesorios, 'tresCuartosAmbar', -1)} className="px-2 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-green-200 text-xs">{accesorios.tresCuartosAmbar || 0}</span><button onClick={() => handleCant(setAccesorios, 'tresCuartosAmbar', 1)} className="px-2 py-1 font-bold hover:bg-slate-100">+</button></div></div>
+                  <div><label className="text-[10px] font-bold text-green-800 uppercase block mb-1">2" Roja</label><div className="flex bg-white border border-green-300 rounded overflow-hidden"><button onClick={() => handleCant(setAccesorios, 'dosPulgadasRojo', -1)} className="px-2 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-green-200 text-xs">{accesorios.dosPulgadasRojo || 0}</span><button onClick={() => handleCant(setAccesorios, 'dosPulgadasRojo', 1)} className="px-2 py-1 font-bold hover:bg-slate-100">+</button></div></div>
+                  <div><label className="text-[10px] font-bold text-green-800 uppercase block mb-1">2" Ámbar</label><div className="flex bg-white border border-green-300 rounded overflow-hidden"><button onClick={() => handleCant(setAccesorios, 'dosPulgadasAmbar', -1)} className="px-2 py-1 font-bold hover:bg-slate-100">-</button><span className="w-full text-center py-1 font-bold border-x border-green-200 text-xs">{accesorios.dosPulgadasAmbar || 0}</span><button onClick={() => handleCant(setAccesorios, 'dosPulgadasAmbar', 1)} className="px-2 py-1 font-bold hover:bg-slate-100">+</button></div></div>
+                  <div className="flex items-end pb-0.5"><label className="flex items-center space-x-2 cursor-pointer font-bold text-[11px] text-green-900 bg-white px-2 py-1.5 rounded border border-green-300 w-full justify-center shadow-sm"><input type="checkbox" checked={accesorios.luzPortaplaca || false} onChange={() => toggle(setAccesorios, 'luzPortaplaca')} className="w-3.5 h-3.5 text-green-600"/> <span>Portaplaca</span></label></div>
                 </div>
               )}
 
@@ -2698,7 +2748,7 @@ if (sectionDef?.isMatrizTecho || sectionDef?.isMatrizPiso) {
                           {rodado.llantaExtra > 0 && <li><span className="font-bold">{rodado.llantaExtra}x</span> Llanta de Refacción</li>}
                           {Number(rodado.portaExtra) > 0 && <li><span className="font-bold">{Number(rodado.portaExtra)}x</span> Porta Extra Especial</li>}
                           {carroceria.polverasEspeciales && <li>Polveras Estilo USA</li>}
-                          <li>Luces: <span className="font-bold">{oLuces.nombre}</span> {acabados.luces === 'especial' && ['cama_baja', 'cama_alta'].includes(tipoRemolque) ? `(${camaBajaOpts.ovaloRojo}x Óvalo, ${camaBajaOpts.tresCuartosRojo}x 3/4" R, ${camaBajaOpts.tresCuartosAmbar}x 3/4" A)` : ''} {camaBajaOpts.luzPortaplaca || volteoOpts.luzPortaplaca ? '+ Luz Portaplaca' : ''}</li>
+                          <li>Luces: <span className="font-bold">{oLuces.nombre}</span> {acabados.luces === 'especial_mexico' ? `(${accesorios.ovaloRojo||0}x Óvalo, ${accesorios.tresCuartosRojo||0}x 3/4" R, ${accesorios.tresCuartosAmbar||0}x 3/4" A, ${accesorios.dosPulgadasRojo||0}x 2" R, ${accesorios.dosPulgadasAmbar||0}x 2" A)` : ''} {accesorios.luzPortaplaca || camaBajaOpts.luzPortaplaca || volteoOpts.luzPortaplaca ? '+ Luz Portaplaca' : ''}</li>cd
                           {acabados.cajaHtas !== 'ninguna' && <li>Caja de Herramientas: <span className="font-bold">{acabados.cajaHtas === 'std' ? 'Estándar' : acabados.cajaHtas === 'grande' ? 'Grande Aluminio' : `Medida Especial (${acabados.cajaHtasLargo}" Pulgadas)`}</span></li>}
                           {((acabados.tipoBody || 'ninguno') !== 'ninguno' || (isSpecialClient && market === 'usa')) && <li>Aplicación de Body: <span className="font-bold">{(acabados.tipoBody === 'full') ? 'Full (Estándar + Fender y Defensa)' : 'Estándar (Chasis, Redila, Monturero, Llantas)'}</span></li>}
                           {extrasCustom.map(ext => (
