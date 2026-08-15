@@ -789,12 +789,12 @@ function CotizadorNube() {
   const extraPorPiso = costoPisoTotal > costoPisoMaderaBase ? (costoPisoTotal - costoPisoMaderaBase) : 0;
 
   // Integramos la Redila (que puede sumar o restar dinero) y el Piso a los upgrades estructurales
-// --- PLAN DE RESCATE: INTELIGENCIA DE REDILA ---
-  // Verificamos si el tabulador ya trae la redila específica o si es el precio "Estándar"
+// --- INTELIGENCIA DE REDILA REFORZADA (PLATAFORMA MÁS CARA) ---
   const baseEncontrada = matchesTabulador[0];
   const redilaYaIncluida = baseEncontrada && baseEncontrada.redila === carroceria.redila;
   
-  // Si el tabulador ya la incluye, extra = $0. Si es una medida rara, cobra el recargo del catálogo general.
+  // Si el tabulador ya tiene el precio exacto con esa redila, $0 extra. 
+  // Si es una medida general, sumamos el costo de la redila (o el recargo por hacerlo plataforma sin redila).
   const costoRedilaInteligente = redilaYaIncluida ? 0 : getP(oRedila);
 
   // --- CALCULADORA DE LUCES INDIVIDUALES (Paquete Especial México) ---
