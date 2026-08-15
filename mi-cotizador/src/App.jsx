@@ -822,10 +822,10 @@ function CotizadorNube() {
 
   // Sumatoria total blindada (Ahora declarada al final, cuando todas las variables ya existen)
   const totalExtrasBlindados = totalAcople + costoUpgradesBase + costoLlantasExtra + costoPortaExtra + costoFrenos + costoControlFreno + 
-                               costoGatoExtra + costoPiston + costoBomba + 
-                               costoPuertaLateral + costoPuertaCentral + costoPuertaRampa + 
-                               costoTechoFinal + costoCachucha + costoPieExtraRedila + 
-                               totalMonturero + totalExtrasCustom;
+                             costoGatoExtra + costoPiston + costoBomba + 
+                             costoPuertaLateral + costoPuertaCentral + costoPuertaRampa + 
+                             costoTechoFinal + costoCachucha + costoPieExtraRedila + 
+                             totalMonturero + totalAcabados + totalExtrasCustom;
 
 
   // --- 3. DECISIÓN DEL MOTOR (PLAN A vs PLAN B) ---
