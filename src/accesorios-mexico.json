@@ -1,0 +1,662 @@
+[
+  {
+    "id": "MX-CAJA-FRENOS",
+    "codigo": "MX-CAJA-FRENOS",
+    "nombre": "Frenos adicionales (importe de lista)",
+    "moneda": "MXN",
+    "precio": 3375.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "opción",
+    "categoria": "Rodado y suspensión",
+    "origen": {
+      "archivo": "8e7a4bbf-134f-4559-b5d3-89552017ada4.png",
+      "fechaLista": "2020-05-29",
+      "precioLista": 2500,
+      "ajustePct": 35,
+      "precioAplicado": 3375.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario. Aumento del 35% en la hoja de 2020."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-VOLTEO-FRENOS",
+    "codigo": "MX-VOLTEO-FRENOS",
+    "nombre": "Frenos adicionales (importe de lista)",
+    "moneda": "MXN",
+    "precio": 3500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "opción",
+    "categoria": "Rodado y suspensión",
+    "origen": {
+      "archivo": "0c177731-be62-46a8-a036-1d900de8c7bf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 3500,
+      "ajustePct": 0,
+      "precioAplicado": 3500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-ESPECIALES-FRENOS",
+    "codigo": "MX-ESPECIALES-FRENOS",
+    "nombre": "Frenos adicionales (importe de lista)",
+    "moneda": "MXN",
+    "precio": 3500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "opción",
+    "categoria": "Rodado y suspensión",
+    "origen": {
+      "archivo": "a32071f4-14f2-45d7-ae8c-016bd4238fe9.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 3500,
+      "ajustePct": 0,
+      "precioAplicado": 3500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-GANADERO-FRENOS",
+    "codigo": "MX-GANADERO-FRENOS",
+    "nombre": "Frenos adicionales (importe de lista)",
+    "moneda": "MXN",
+    "precio": 3500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "opción",
+    "categoria": "Rodado y suspensión",
+    "origen": {
+      "archivo": "b5604473-734b-4b1b-92c1-5ec7a3c65bcf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 3500,
+      "ajustePct": 0,
+      "precioAplicado": 3500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAMA-FRENOS",
+    "codigo": "MX-CAMA-FRENOS",
+    "nombre": "Frenos adicionales (importe de lista)",
+    "moneda": "MXN",
+    "precio": 3500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "opción",
+    "categoria": "Rodado y suspensión",
+    "origen": {
+      "archivo": "18742905-86b9-443a-8f04-de684b70e041.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 3500,
+      "ajustePct": 0,
+      "precioAplicado": 3500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAJA-GATO7",
+    "codigo": "MX-CAJA-GATO7",
+    "nombre": "Gato de 7,000 lbs",
+    "moneda": "MXN",
+    "precio": 945.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "8e7a4bbf-134f-4559-b5d3-89552017ada4.png",
+      "fechaLista": "2020-05-29",
+      "precioLista": 700,
+      "ajustePct": 35,
+      "precioAplicado": 945.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario. Aumento del 35% en la hoja de 2020."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAJA-PTARAMPA",
+    "codigo": "MX-CAJA-PTARAMPA",
+    "nombre": "Puerta rampa",
+    "moneda": "MXN",
+    "precio": 8100.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "8e7a4bbf-134f-4559-b5d3-89552017ada4.png",
+      "fechaLista": "2020-05-29",
+      "precioLista": 6000,
+      "ajustePct": 35,
+      "precioAplicado": 8100.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario. Aumento del 35% en la hoja de 2020."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAJA-PTALATERAL",
+    "codigo": "MX-CAJA-PTALATERAL",
+    "nombre": "Puerta lateral",
+    "moneda": "MXN",
+    "precio": 2025.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "8e7a4bbf-134f-4559-b5d3-89552017ada4.png",
+      "fechaLista": "2020-05-29",
+      "precioLista": 1500,
+      "ajustePct": 35,
+      "precioAplicado": 2025.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario. Aumento del 35% en la hoja de 2020."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAJA-LL750",
+    "codigo": "MX-CAJA-LL750",
+    "nombre": "Llanta y rin 750-16",
+    "moneda": "MXN",
+    "precio": 4050.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "juego",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "8e7a4bbf-134f-4559-b5d3-89552017ada4.png",
+      "fechaLista": "2020-05-29",
+      "precioLista": 3000,
+      "ajustePct": 35,
+      "precioAplicado": 4050.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario. Aumento del 35% en la hoja de 2020."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAJA-LL700",
+    "codigo": "MX-CAJA-LL700",
+    "nombre": "Llanta y rin 700-15",
+    "moneda": "MXN",
+    "precio": 2902.5,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "juego",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "8e7a4bbf-134f-4559-b5d3-89552017ada4.png",
+      "fechaLista": "2020-05-29",
+      "precioLista": 2150,
+      "ajustePct": 35,
+      "precioAplicado": 2902.5,
+      "nota": "Importes con IVA incluido, confirmado por el usuario. Aumento del 35% en la hoja de 2020."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAJA-CONTROL",
+    "codigo": "MX-CAJA-CONTROL",
+    "nombre": "Control de freno",
+    "moneda": "MXN",
+    "precio": 2430.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "8e7a4bbf-134f-4559-b5d3-89552017ada4.png",
+      "fechaLista": "2020-05-29",
+      "precioLista": 1800,
+      "ajustePct": 35,
+      "precioAplicado": 2430.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario. Aumento del 35% en la hoja de 2020."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAJA-PORTA",
+    "codigo": "MX-CAJA-PORTA",
+    "nombre": "Porta extra",
+    "moneda": "MXN",
+    "precio": 1080.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "8e7a4bbf-134f-4559-b5d3-89552017ada4.png",
+      "fechaLista": "2020-05-29",
+      "precioLista": 800,
+      "ajustePct": 35,
+      "precioAplicado": 1080.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario. Aumento del 35% en la hoja de 2020."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-VOLTEO-GATO12",
+    "codigo": "MX-VOLTEO-GATO12",
+    "nombre": "Gato de 12,000 lbs",
+    "moneda": "MXN",
+    "precio": 2500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "0c177731-be62-46a8-a036-1d900de8c7bf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 2500,
+      "ajustePct": 0,
+      "precioAplicado": 2500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-VOLTEO-LL750",
+    "codigo": "MX-VOLTEO-LL750",
+    "nombre": "Llanta y rin 750-16",
+    "moneda": "MXN",
+    "precio": 3500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "juego",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "0c177731-be62-46a8-a036-1d900de8c7bf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 3500,
+      "ajustePct": 0,
+      "precioAplicado": 3500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-VOLTEO-LL700",
+    "codigo": "MX-VOLTEO-LL700",
+    "nombre": "Llanta y rin 700-15",
+    "moneda": "MXN",
+    "precio": 2200.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "juego",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "0c177731-be62-46a8-a036-1d900de8c7bf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 2200,
+      "ajustePct": 0,
+      "precioAplicado": 2200.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-VOLTEO-CONTROL",
+    "codigo": "MX-VOLTEO-CONTROL",
+    "nombre": "Control de freno",
+    "moneda": "MXN",
+    "precio": 3000.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "0c177731-be62-46a8-a036-1d900de8c7bf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 3000,
+      "ajustePct": 0,
+      "precioAplicado": 3000.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-VOLTEO-REDILA",
+    "codigo": "MX-VOLTEO-REDILA",
+    "nombre": "Pie adicional de redila",
+    "moneda": "MXN",
+    "precio": 7500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pie adicional",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "0c177731-be62-46a8-a036-1d900de8c7bf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 7500,
+      "ajustePct": 0,
+      "precioAplicado": 7500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-VOLTEO-PISTON",
+    "codigo": "MX-VOLTEO-PISTON",
+    "nombre": "Pistón hidráulico",
+    "moneda": "MXN",
+    "precio": 6000.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "0c177731-be62-46a8-a036-1d900de8c7bf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 6000,
+      "ajustePct": 0,
+      "precioAplicado": 6000.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-VOLTEO-PISTON30",
+    "codigo": "MX-VOLTEO-PISTON30",
+    "nombre": "Pistón 30 x 30",
+    "moneda": "MXN",
+    "precio": 5500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "0c177731-be62-46a8-a036-1d900de8c7bf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 5500,
+      "ajustePct": 0,
+      "precioAplicado": 5500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-VOLTEO-BOMBA",
+    "codigo": "MX-VOLTEO-BOMBA",
+    "nombre": "Bomba eléctrica adicional",
+    "moneda": "MXN",
+    "precio": 11000.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "0c177731-be62-46a8-a036-1d900de8c7bf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 11000,
+      "ajustePct": 0,
+      "precioAplicado": 11000.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-VOLTEO-TIJERA",
+    "codigo": "MX-VOLTEO-TIJERA",
+    "nombre": "Tijera para pistón",
+    "moneda": "MXN",
+    "precio": 8000.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "0c177731-be62-46a8-a036-1d900de8c7bf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 8000,
+      "ajustePct": 0,
+      "precioAplicado": 8000.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-GANADERO-PTALATERAL",
+    "codigo": "MX-GANADERO-PTALATERAL",
+    "nombre": "Puerta lateral",
+    "moneda": "MXN",
+    "precio": 2500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "b5604473-734b-4b1b-92c1-5ec7a3c65bcf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 2500,
+      "ajustePct": 0,
+      "precioAplicado": 2500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-GANADERO-LL750",
+    "codigo": "MX-GANADERO-LL750",
+    "nombre": "Llanta y rin 750-16",
+    "moneda": "MXN",
+    "precio": 3500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "juego",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "b5604473-734b-4b1b-92c1-5ec7a3c65bcf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 3500,
+      "ajustePct": 0,
+      "precioAplicado": 3500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-GANADERO-LL700",
+    "codigo": "MX-GANADERO-LL700",
+    "nombre": "Llanta y rin 700-15",
+    "moneda": "MXN",
+    "precio": 2200.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "juego",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "b5604473-734b-4b1b-92c1-5ec7a3c65bcf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 2200,
+      "ajustePct": 0,
+      "precioAplicado": 2200.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-GANADERO-CONTROL",
+    "codigo": "MX-GANADERO-CONTROL",
+    "nombre": "Control de freno",
+    "moneda": "MXN",
+    "precio": 3000.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "b5604473-734b-4b1b-92c1-5ec7a3c65bcf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 3000,
+      "ajustePct": 0,
+      "precioAplicado": 3000.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-GANADERO-TECHO",
+    "codigo": "MX-GANADERO-TECHO",
+    "nombre": "Techo de lámina por pie lineal",
+    "moneda": "MXN",
+    "precio": 800.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pie lineal",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "b5604473-734b-4b1b-92c1-5ec7a3c65bcf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 800,
+      "ajustePct": 0,
+      "precioAplicado": 800.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-GANADERO-JALON",
+    "codigo": "MX-GANADERO-JALON",
+    "nombre": "Jalón cuello de ganso (adicional de lista)",
+    "moneda": "MXN",
+    "precio": 8500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "opción",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "b5604473-734b-4b1b-92c1-5ec7a3c65bcf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 8500,
+      "ajustePct": 0,
+      "precioAplicado": 8500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-GANADERO-CACHUCHA",
+    "codigo": "MX-GANADERO-CACHUCHA",
+    "nombre": "Cachucha de fibra de vidrio",
+    "moneda": "MXN",
+    "precio": 10000.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "b5604473-734b-4b1b-92c1-5ec7a3c65bcf.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 10000,
+      "ajustePct": 0,
+      "precioAplicado": 10000.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAMA-GATO7",
+    "codigo": "MX-CAMA-GATO7",
+    "nombre": "Gato de 7,000 lbs",
+    "moneda": "MXN",
+    "precio": 1450.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "18742905-86b9-443a-8f04-de684b70e041.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 1450,
+      "ajustePct": 0,
+      "precioAplicado": 1450.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAMA-LL750",
+    "codigo": "MX-CAMA-LL750",
+    "nombre": "Llanta y rin 750-16",
+    "moneda": "MXN",
+    "precio": 3500.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "juego",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "18742905-86b9-443a-8f04-de684b70e041.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 3500,
+      "ajustePct": 0,
+      "precioAplicado": 3500.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAMA-LL700",
+    "codigo": "MX-CAMA-LL700",
+    "nombre": "Llanta y rin 700-15",
+    "moneda": "MXN",
+    "precio": 2200.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "juego",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "18742905-86b9-443a-8f04-de684b70e041.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 2200,
+      "ajustePct": 0,
+      "precioAplicado": 2200.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAMA-CONTROL",
+    "codigo": "MX-CAMA-CONTROL",
+    "nombre": "Control de freno",
+    "moneda": "MXN",
+    "precio": 3000.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "18742905-86b9-443a-8f04-de684b70e041.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 3000,
+      "ajustePct": 0,
+      "precioAplicado": 3000.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  },
+  {
+    "id": "MX-CAMA-PORTA",
+    "codigo": "MX-CAMA-PORTA",
+    "nombre": "Porta extra",
+    "moneda": "MXN",
+    "precio": 800.0,
+    "basePrecio": "con_iva",
+    "ivaPct": 16,
+    "unidad": "pza",
+    "categoria": "Accesorios",
+    "origen": {
+      "archivo": "18742905-86b9-443a-8f04-de684b70e041.png",
+      "fechaLista": "2024-02-02",
+      "precioLista": 800,
+      "ajustePct": 0,
+      "precioAplicado": 800.0,
+      "nota": "Importes con IVA incluido, confirmado por el usuario."
+    },
+    "_revision": 1
+  }
+]

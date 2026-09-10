@@ -1,0 +1,11 @@
+import * as mexico from './reglas-mexico';
+import * as usa from './reglas-usa';
+import {USA_HABILITADO} from './mercados';
+export * from './reglas-mexico';
+export const limitesLargo = (q,db) => q.market==='usa' && USA_HABILITADO ? usa.limitesLargo(q,db) : mexico.limitesLargo({...q,market:'mexico',isSpecialClient:false,modeloUSA:null},db);
+export const opcionesReglas = (q,db) => q.market==='usa' && USA_HABILITADO ? usa.opcionesReglas(q,db) : mexico.opcionesReglas({...q,market:'mexico',isSpecialClient:false,modeloUSA:null},db);
+export const ejesReglas = (q,db) => q.market==='usa' && USA_HABILITADO ? usa.ejesReglas(q,db) : mexico.ejesReglas({...q,market:'mexico',isSpecialClient:false,modeloUSA:null},db);
+export const puertasReglas = (q,db) => q.market==='usa' && USA_HABILITADO ? usa.puertasReglas(q,db) : mexico.puertasReglas({...q,market:'mexico',isSpecialClient:false,modeloUSA:null},db);
+export const normalizarReglas = (q,db) => q.market==='usa' && USA_HABILITADO ? usa.normalizarReglas(q,db) : mexico.normalizarReglas({...q,market:'mexico',isSpecialClient:false,modeloUSA:null},db);
+export const validarReglas = (q,db) => q.market==='usa' && USA_HABILITADO ? usa.validarReglas(q,db) : mexico.validarReglas({...q,market:'mexico',isSpecialClient:false,modeloUSA:null},db);
+export const aplicarPredeterminados = (q,db) => q.market==='usa' && USA_HABILITADO ? usa.aplicarPredeterminados(q,db) : mexico.aplicarPredeterminados({...q,market:'mexico',isSpecialClient:false,modeloUSA:null},db);

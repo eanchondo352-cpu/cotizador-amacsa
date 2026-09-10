@@ -1,0 +1,732 @@
+[
+  {
+    "id": "DEAN-1",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 60\" X 14´ PISO HULE JALON DEFENSA 2\" 5/16, TECHADO LAMINA 1 EJES 7000 LBS CON FRENO EN 2 EJE CAP. 3 TON.",
+    "totalMXN": 127837.64,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D46",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-54",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 60\" X 16´ PUSO HULE  JALON DEFENSA 2\" 5/16, 1/2 TECH. LAM  CAJON PERROS FRENTE PICO2 EJES 7000 LBS CON FRENO EN 2 EJE CAP. 6 TON.",
+    "totalMXN": 188587.21,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D101",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-107",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 60\" X 16´ PISO HULE JALON DEFENSA 2\" 5/16, 1/2 TECHADO LAMINA 2 EJES 7000 LBS CON FRENO EN 2 EJE CAP. 6 TON.",
+    "totalMXN": 150804.72,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D154",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-160",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 60\" X 16´ PISO HULE JALON GANSO, 1/2 TECHADO LAMINA 2 EJES 7000 LBS CON FRENO EN 2 EJE CAP. 6 TON.",
+    "totalMXN": 183315.26,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D208",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-213",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 60\" X 19´ PISO HULE  JALON GANSO TECHADO, MONTURERO 36\"  1 GATO HIDRAULICO 2 EJES TORFLEX 8000 LBS C/F 2 EJE CAP. 7 TON.",
+    "totalMXN": 245653.71,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D262",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-266",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 60\" X 23´ PISO HULE  JALON GANSO  TECHADO, MONT. DIAGONAL  1 GATO HIDRAULICO 2 EJES TORFLEX 7000 LBS C/F 2 EJE CAP. 6 TON.",
+    "totalMXN": 245769.15,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D315",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-319",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 16´ PISO HULE  JALON GANSO TECHADO LAMINA 1 GATO HIDRAULICO 2 EJES TOFLEX C/FRENO EN 2 EJE CAP. 6 TON. TIPO USA",
+    "totalMXN": 209794.0,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D369",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-372",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 16´ PISO HULE  JALON DEFENSA TECHADO MONT. 48\" 1 GATO HIDRAULICO 2 EJES TOFLEX C/FRENO EN 2 EJE CAP. 6 TON. TIPO USA",
+    "totalMXN": 224056.88,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D420",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-425",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 16´ PISO HULE  JALON GANsO TECHADO MONT. DIAGONAL 1 GATO HIDRAULICO 2 EJES TOFLEX C/FRENO EN 2 EJE CAP. 7 TON. TIPO USA",
+    "totalMXN": 277482.48,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D475",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-478",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 17´ PISO MADERA JALON GANSO TECHADO MONT. 36\" 1 GATO MANUAL 1 EJE TOFLEX C/FRENO EN 1 EJE CAP. 3 TON. TIPO USA",
+    "totalMXN": 172586.72,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D528",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-531",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 17´ PISO HULE JALON GANSO TECHADO 1/2 MONT. 36\" 1 GATO HIDRAULICO 2 EJES TOFLEX C/FRENO EN 2 EJE CAP. 6 TON. TIPO USA",
+    "totalMXN": 231233.6,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D580",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-584",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 84\" X 18´ PISO HULE  JALON GANSO TECH 1/2 MONTURERO 36\" 1 GATO HIDRAULICO 2 EJES TORFLEX  7000 LBS C/F 2 EJE CAP. 6 TON.",
+    "totalMXN": 255500.44,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D635",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-637",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 19´ PISO HULE  JALON GANSO TECH 3/4 MONTURERO 48\" 1 GATO HIDRAULICO 2 EJES TORFLEX  7000 LBS C/F 2 EJE CAP. 7 TON.",
+    "totalMXN": 249009.76,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D688",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-690",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 19´ PISO HULE  JALON GANSO TECHADO CON MONTURERO 1 GATO HIDRAULICO 2 EJES TORFLEX  8000 LBS C/F 2 EJE CAP. 7 TON. RED. LISA",
+    "totalMXN": 287956.8,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D740",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-743",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 20´ PISO HULE  JALON GANsO TECHADO LAMINA 1 GATO HIDRAULICO 2 EJES TOFLEX C/FRENO EN 2 EJE CAP. 6 TON. TIPO USA",
+    "totalMXN": 245571.05,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D790",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-796",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 20´ PISO HULE  JALON GANsO TECH. MONT. 48\" 1 PTA 1 GATO HIDRAULICO 2 EJES TOFLEX C/FRENO EN 2 EJE CAP. 6 TON. TIPO USA",
+    "totalMXN": 248035.65,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D845",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-849",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 72\" X 20´ PISO HULE  JALON GANSO  12FT TECHO LAMINA 1 GATO HIDRAULICO 2 EJES TORLEX 60\"FRENO EN 2 EJE CAP. 6 TON. TIPO USA",
+    "totalMXN": 221491.04,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D898",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-902",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 72\" X 21´ PISO HULE  JALON GANSO C/ PERROS  TECH LAMINA 1 GATO HIDRAULICO 2 EJES MUELLES C/FRENO EN 2 EJE CAP. 6 TON. TIPO USA",
+    "totalMXN": 233956.14,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D952",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-955",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 72\" X 23´ PISO HULE JALON GANSO 1/2 TECHO MONT. 48\"  GATO HIDRAULICO 2 EJES TORFLEX 8,000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 272331.71,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1006",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1008",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 23´ PISO HULE JALON GANSO 1/2 TECHO MONT. 36 CAJAS 2 PERROS, GATO HIDRAULICO 2 EJES TORFLEX 8,000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 298923.22,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1057",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1061",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 84\" X 24´ PISO HULE JALON GANSO TECHADO LAMINA GATOS HIDRAULICOS 2 EJES TORFLEX 8,000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 277194.15,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1112",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1114",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 72\" X 24´ PISO HULE JALON GANSO TECHADO MONT. DIAGONAL GATOS HIDRAULICOS 2 EJES TORFLEX 8,000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 294656.69,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1166",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1167",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 24´ PISO HULE JALON GANSO TECHADO MONT. DIAGONAL GATOS HIDRAULICOS 2 EJES TORFLEX 8,000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 326734.11,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1217",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1220",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 24´ PISO HULE JALON GANSO TECHADO MONT. DIAGONAL FLEXIGLAS, RACK PACAS GATO HIDR. 2 EJES TORFLEX 8,000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 336004.86,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1271",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1273",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 24´ PISO HULE JALON GANSO TECHADO MONT. 36\"   CAJAS 2 PERROS GATOS HIDR. 2 EJES TORFLEX 8,000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 304281.36,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1325",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1326",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 25´ PISO HULE JALON GANSO TECHADO MONT. DIAGONAL GATOS HIDRAULICOS 2 EJES TORFLEX 8,000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 329086.59,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1377",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1379",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 72\" X 27´ PISO HULE JALON DE GANSO TECHADO C/MONTURERO GATO HIDR. FLEXIGLASS, RACK PACAS 2 EJES TORFLEX 8000 LBS C/F 2 CAP. 7 TON",
+    "totalMXN": 335992.48,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1429",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1432",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 26´ PISO HULE JALON DE GANSO TECHADO C/MONTURERO 1 GATO HIDRAULICO, 2 EJES TORFLEX 7000 LBS C/F 2 CAP. 7 TON.",
+    "totalMXN": 308520.06,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1483",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1485",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 28´ PISO HULE JALON GANSO TECHADO MONT. DIAGONAL GATOS HIDRAULICOS 2 EJES TORFLEX 8,000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 349323.01,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1534",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1538",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 28´ PISO HULE JALON GANSO TECHADO MONT. DIAGONAL 1 GATO HIDR FLEXI GLAS, RACK PACAS 2 EJES TORFLEX 8,000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 364413.74,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1587",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1591",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 84\" X 28´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS HIDRAULICOS 2 EJES TORFLEX 8000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 294512.64,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1641",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1644",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 84\" X 28´ PISO HULE JALON GANSO TECHADO MONT. DIAGONAL FLEXIGLAS GATOS HIDRAULICOS 2 EJES TORFLEX 8,000 LBS C/F CAP. 7 TON.",
+    "totalMXN": 341178.01,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1694",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1697",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 84\" X 28´ PISO HULE JALON GANSO TECHADO  GATOS MANUALES 2 EJES TORFLEX 10,000 LBS C/F CAP. 9 TON. RED. BORDOS",
+    "totalMXN": 307187.95,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1746",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1750",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 96\" X 28´ PISO HULE JALON GANSO TECHADO MONT. DIAGONAL GATOS HIDRAULICOS 2 EJES TORFLEX 10,000 LBS C/F CAP. 9 TON.",
+    "totalMXN": 409918.34,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1800",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1803",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 78\" X 32´ PISO HULE JALON GANSO TECHADO LAMINA GATOS HIDRAULICOS 3 EJES TORFLEX 8,000 LBS C/F CAP. 10 TON.",
+    "totalMXN": 377530.73,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1851",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1856",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 84\" X 32´ PISO HULE JALON GANSO TECHADO LAMINA GATOS HIDRAULICOS  3 EJES TORFLEX 8,000 LBS C/F CAP. 10 TON.",
+    "totalMXN": 390778.9,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1905",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1909",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 84\" X 32´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS HIDRAULICOS 2 EJES 12000 LBS MUELLES C/F 2 EJE CAP. 10 TON.",
+    "totalMXN": 420024.0,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D1959",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-1962",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 84\" X 34´ PISO HULE JALON GANSO TECHADO MONT DIAGONAL GATOS HIDRAULICOS 2 EJES TORFLEX 10,000 LBS C/F 2 EJE CAP. 9 TON.",
+    "totalMXN": 407595.39,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D2013",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-2015",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 84\" X 36´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS HIDRAULICOS 3 EJES TORFLEX 8,000 LBS C/F 3 EJE CAP. 10 TON.",
+    "totalMXN": 390842.42,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D2063",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-2068",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 84\" X 36´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS HIDRAULICOS 3 EJES TORFLEX 10,000 LBS C/F 3 EJE CAP. 10 TON.",
+    "totalMXN": 432534.44,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D2120",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-2121",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 84\" X 40´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS HIDRAULICOS 3 EJES TORFLEX 10,000 LBS C/F 3 EJE CAP. 10 TON.",
+    "totalMXN": 480828.44,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D2171",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-2174",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 96\" X 40´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS HIDRAULICOS 3 EJES TORFLEX 10,000 LBS C/F 3 EJE CAP. 10 TON.",
+    "totalMXN": 498142.66,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D2226",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-2227",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "GANADERO 96\" X 44´ PISO HULE JALON GANSO TECHADO LAMINA GATOS HIDRAULICOS 2 EJES MUELLE 12,000 LBS  DOBLE RODADO 2 EJE CAP. 10 TON.",
+    "totalMXN": 485597.41,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D2278",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DEAN-2280",
+    "cliente": "DEAN",
+    "perfil": "especial",
+    "descripcion": "CAJA SECA 78\" X 14´ CERRADO PISO HULE JALON GANSO REDILA 2 MTS PUERTA LIBRO 2 EJES TORFLEX DE 7000 LBS CAP. 6 TON.",
+    "totalMXN": 167004.58,
+    "hoja": "DEAN 26",
+    "celdaTotal": "D2315",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-1",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 75\" X 16´  PISO MADERA PTA EN MEDIO TECHADO AMERICANO 2 EJES CAP. 4 TON.",
+    "totalMXN": 108646.53,
+    "hoja": "WALL 26",
+    "celdaTotal": "D48",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-54",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 60\" X 24´ PISO HULE JALON GANSO TECHADO GATOS MANUALES 2 EJES TORFLEX 7,000 LBS C/F 2 EJE CAP. 6 TON.",
+    "totalMXN": 200663.46,
+    "hoja": "WALL 26",
+    "celdaTotal": "D102",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-107",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 16´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS MANUALES 2 EJES TORFLEX 7,000 LBS C/F 2 EJE CAP. 6 TON.",
+    "totalMXN": 144066.81,
+    "hoja": "WALL 26",
+    "celdaTotal": "D155",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-160",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 20´ PISO HULE JALON GANSO 1/2 TECHO SIN MONTURERO GATOS MANUALES 2 EJES TORFLEX 7,000 LBS C/F 2 EJE CAP. 6 TON.",
+    "totalMXN": 173750.92,
+    "hoja": "WALL 26",
+    "celdaTotal": "D205",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-213",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 20´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS MANUALES 2 EJES TORFLEX 7,000 LBS C/F 2 EJE CAP. 6 TON.",
+    "totalMXN": 182678.81,
+    "hoja": "WALL 26",
+    "celdaTotal": "D261",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-266",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 22´ PISO HULE JALON GANSO TECHADO  MONT. DIAGONAL 1 GATO HIDRAULICO 2 EJES TORFLEX 7,000 LBS C/F 2 EJE CAP. 6 TON.",
+    "totalMXN": 245653.08,
+    "hoja": "WALL 26",
+    "celdaTotal": "D316",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-319",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 24´ PISO HULE JALON GANSO TECHADO GATOS MANUALES 2 EJES TORFLEX 7,000 LBS C/F 2 EJE CAP. 6 TON.",
+    "totalMXN": 172458.46,
+    "hoja": "WALL 26",
+    "celdaTotal": "D368",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-372",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 96\" X 25´ PISO HULE JALON GANSO TECHADO MONT. 48\" GATOS MANUALES 2 EJES TORFLEX 8,000 LBS C/F 2 EJE CAP. 7 TON.",
+    "totalMXN": 245058.26,
+    "hoja": "WALL 26",
+    "celdaTotal": "D424",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-425",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 84\" X 24´ PISO HULE JALON GANSO TECHADO MONTURERO 48\" GATOS MANUALES 2 EJES TORFLEX 8,000 LBS C/F 2 EJE CAP. 7 TON.",
+    "totalMXN": 246027.31,
+    "hoja": "WALL 26",
+    "celdaTotal": "D472",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-478",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 26´ PISO HULE JALON GANSO TECHADO GATOS MANUALES 2 EJES TORFLEX 8,000 LBS C/F 2 EJE CAP. 7 TON.",
+    "totalMXN": 243033.78,
+    "hoja": "WALL 26",
+    "celdaTotal": "D527",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-531",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 84\" X 26´ PISO HULE JALON GANSO TECHADO GATOS MANUALES 2 EJES TORFLEX 8,000 LBS C/F 2 EJE CAP. 7 TON.",
+    "totalMXN": 244063.46,
+    "hoja": "WALL 26",
+    "celdaTotal": "D580",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-584",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 28´ PISO HULE JALON GANSO 3/4 TECHADO LAMINA GATOS HIDRAULICOS 2 EJES TORFLEX 8,000 LBS C/F 2 EJE CAP. 7 TON.",
+    "totalMXN": 269010.76,
+    "hoja": "WALL 26",
+    "celdaTotal": "D632",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-637",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 28´ PISO HULE JALON GANSO TECHADO LAMINA GATOS MANUALES 2 EJES TORFLEX 8,000 LBS C/F 2 EJE CAP. 7 TON.",
+    "totalMXN": 158375.16,
+    "hoja": "WALL 26",
+    "celdaTotal": "D684",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-690",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 28´ PISO HULE JALON GANSO TECHADO MONTURERO 48\" GATOS MANUALES 2 EJES TORFLEX 8,000 LBS C/F 2 EJE CAP. 7 TON.",
+    "totalMXN": 242549.48,
+    "hoja": "WALL 26",
+    "celdaTotal": "D740",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-743",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 84\" X 28´ PISO HULE JALON GANSO TECHADO LAMINA GATOS MANUALES 2 EJES TORFLEX 8,000 LBS C/F 2 EJE CAP. 7 TON.",
+    "totalMXN": 240010.82,
+    "hoja": "WALL 26",
+    "celdaTotal": "D790",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-796",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 28´ PISO HULE JALON GANSO TECHADO LAMINA GATOS MANUALES 3 EJES TORFLEX 7,000 LBS C/F 2 EJE CAP. 9 TON.",
+    "totalMXN": 259378.88,
+    "hoja": "WALL 26",
+    "celdaTotal": "D845",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-849",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 32´ PISO HULE JALON GANSO TECHADO LAMINA GATOS MANUALES 3 EJES TORFLEX 8,000 LBS C/F 2 EJE CAP. 10 TON.",
+    "totalMXN": 293477.05,
+    "hoja": "WALL 26",
+    "celdaTotal": "D897",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-902",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 84\" X 32´ PISO HULE JALON GANSO TECHADO LAMINA GATOS MANUALES 3 EJES TORFLEX 8,000 LBS C/F 2 EJE CAP. 10 TON.",
+    "totalMXN": 305835.05,
+    "hoja": "WALL 26",
+    "celdaTotal": "D949",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-955",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 96\" X 36´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS HIDRAULICOS 3 EJES TORFLEX 8,000 LBS C/F 3 EJE CAP. 10 TON.",
+    "totalMXN": 355691.07,
+    "hoja": "WALL 26",
+    "celdaTotal": "D1001",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-1008",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 96\" X 36´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS HIDRAULICOS 3 EJES TORFLEX 10,000 LBS C/F 3 EJE CAP. 10 TON.",
+    "totalMXN": 396097.89,
+    "hoja": "WALL 26",
+    "celdaTotal": "D1057",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-1061",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 96\" X 40´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS HIDRAULICOS 3 EJES TORFLEX 8,000 LBS C/F 3 EJE CAP. 10 TON.",
+    "totalMXN": 374175.38,
+    "hoja": "WALL 26",
+    "celdaTotal": "D1109",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-1114",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 40´ PISO HULE JALON GANSO TECHADO SIN MONTURERO GATOS MANUALES 3 EJES DOBLE RODADO 10,000 LBS C/F 3 EJE CAP. 13 TON.",
+    "totalMXN": 396116.01,
+    "hoja": "WALL 26",
+    "celdaTotal": "D1162",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "WALL-1167",
+    "cliente": "WALL",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 16´ PISO HULE JALON DEFENSA 2\" 5/16, 1/2 TECHADO LAMINA 2 EJES 7000 LBS CON FRENO EN 2 EJE CAP. 6 TON.",
+    "totalMXN": 140550.99,
+    "hoja": "WALL 26",
+    "celdaTotal": "D1213",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DH-1",
+    "cliente": "DH",
+    "perfil": "normal",
+    "descripcion": "GANADERO 75\" X 16´  PISO HULE PTA EN MEDIO TECHADO AMERICANO 2 EJES CAP. 4 TON.",
+    "totalMXN": 108277.27,
+    "hoja": "DH 26",
+    "celdaTotal": "D47",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DH-54",
+    "cliente": "DH",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 20´ PISO HULE JALON GANSO 1/2 TECHO LAMINA GATOS MANUALES 2 EJES TORFLEX 7,000 LBS C/F 2 EJE CAP. 6 TON.",
+    "totalMXN": 151490.4,
+    "hoja": "DH 26",
+    "celdaTotal": "D104",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DH-107",
+    "cliente": "DH",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 20´ PISO HULE JALON GANSO TECHADO  LAMINA GATOS MANUALES 2 EJES TORFLEX 7,000 LBS C/F 2 EJE CAP. 6 TON.",
+    "totalMXN": 162261.5,
+    "hoja": "DH 26",
+    "celdaTotal": "D154",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DH-160",
+    "cliente": "DH",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 24´ PISO HULE JALON GANSO TECHADO GATOS MANUALES 2 EJES TORFLEX 7,000 LBS C/F 2 EJE CAP. 6 TON.",
+    "totalMXN": 178976.22,
+    "hoja": "DH 26",
+    "celdaTotal": "D209",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DH-213",
+    "cliente": "DH",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 32´ PISO HULE JALON GANSO TECHADO LAMINA GATOS MANUALES 3 EJES TORFLEX 7,000 LBS C/F 2 EJE CAP. 10 TON.",
+    "totalMXN": 231757.36,
+    "hoja": "DH 26",
+    "celdaTotal": "D262",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  },
+  {
+    "id": "DH-266",
+    "cliente": "DH",
+    "perfil": "normal",
+    "descripcion": "GANADERO 78\" X 36´ PISO HULE JALON GANSO TECHADO LAMINA GATOS MANUALES 3 EJES TORFLEX 8,000 LBS C/F 2 EJE CAP. 10 TON.",
+    "totalMXN": 268117.84,
+    "hoja": "DH 26",
+    "celdaTotal": "D313",
+    "archivo": "COSTOS DEAN 2026.xlsx"
+  }
+]
