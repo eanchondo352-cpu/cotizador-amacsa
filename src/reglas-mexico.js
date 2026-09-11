@@ -148,7 +148,10 @@ export function validarReglas(q,db) {
  if(!op.anchos.includes(q.dim.ancho))errors.push('Ancho no autorizado para esta configuración de ejes.');
  if(!op.capacidades.includes(q.rodado.capacidad))errors.push('Capacidad no permitida para estas medidas.');
  if(!Number.isFinite(l)||l<lim.min||(lim.max&&l>lim.max))errors.push(`Largo permitido: desde ${lim.min}${lim.max?' hasta '+lim.max:''} pies.`);
- for(const [s,obj,k] of [['gatos',q.acople,'gato'],['jalones',q.acople,'jalon'],['cadenas',q.acople,'cadena'],['llantas',q.rodado,'llanta'],['suspension',q.rodado,'suspension'],['pisos',q.acabados,'piso'],['rampas',q.camaBajaOpts,'rampas']])if(!op[s].includes(obj[k]))errors.push(`Revisa ${s}: opción incompatible.`);
+ for(const [s,obj,k] of [['gatos',q.acople,'gato'],['jalones',q.acople,'jalon'],['cadenas',q.acople,'cadena'],['llantas',q.rodado,'llanta'],['suspension',q.rodado,'suspension'],['pisos',q.acabados,'piso'],['rampas',q.camaBajaOpts,'rampas']]){
+  const legado=s==='suspension'&&(/^(susp_|torflex_)/.test(String(obj[k]||''))||obj[k]==='eje_10000_46');
+  if(!legado&&!op[s].includes(obj[k]))errors.push(`Revisa ${s}: opción incompatible.`);
+ }
  if(q.tipoRemolque==='ganadero')errors.push(...puertasReglas(q,db).errores);
  return errors;
 }
@@ -182,8 +185,17 @@ export function precioPorLargo(filas,largo,referencia,tarifas=[]) {
  const g=grupoSeleccion||(grupos.length===1?grupos[0]:null);
  if(!g)throw new Error('Seleccione una referencia del mismo tipo, ancho, capacidad y equipo.');
  if(g.duplicados)throw new Error('Hay variantes con el mismo largo: complete el equipo que las diferencia antes de calcular una tarifa por pie.');
- const config=tarifaGrupo(g,tarifas,grupos),tarifa=config?(numeroPrecio(config.precio)?Number(config.precio):null):g.propuesta;
- const base=g.lista.filter(z=>z.l<largo&&numeroPrecio(z.precio)&&Number(z.precio)>0).at(-1);
+ const config=tarifaGrupo(g,tarifas,grupos);
+ let tarifa=config?(numeroPrecio(config.precio)?Number(config.precio):null):g.propuesta;
+ let puntos=g.lista.filter(z=>numeroPrecio(z.precio)&&Number(z.precio)>0&&Number.isFinite(z.l)&&z.l>0).sort((a,b)=>a.l-b.l);
+ let base=g.lista.filter(z=>z.l<largo&&numeroPrecio(z.precio)&&Number(z.precio)>0).at(-1);
+ // Cama baja y otros modelos con un solo largo de lista: el pie extra se
+ // estima como precio total ÷ pies de lista + 15 %. Nunca se permite cotizar
+ // por debajo de ese largo mínimo.
+ const largosUnicos=[...new Set(puntos.map(z=>z.l))];
+ if((tarifa===null||tarifa<0)&&largosUnicos.length===1&&puntos[0]){
+   base=puntos[0];tarifa=redondear((Number(base.precio)/base.l)*1.15);
+ }
  if(!base)throw new Error('No hay un modelo inferior comparable. Capture el precio de esta medida en el catálogo.');
  if(tarifa===null||tarifa<0)throw new Error('Falta precio por pie: se necesitan dos largos del mismo ancho, capacidad y equipo, o una tarifa manual.');
  return {base:redondear(Number(base.precio)+(largo-base.l)*tarifa),referencias:[...new Map([base,...(!config?g.lista:[])].map(z=>[z.id,z])).values()],estimado:true,avisos:[`Base ${base.l} pies + ${redondear(largo-base.l)} pies × $${tarifa.toFixed(2)} MXN. Mismo ancho, capacidad y equipo.${config?' Tarifa manual.':' Promedio automático ponderado.'}`],grupo:g.id,tarifa};

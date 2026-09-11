@@ -113,7 +113,14 @@ function mxEvaluar(db, q) {
       const importeEje=tarifa('suspension',ejeTorflex)*ejeCount;
       agregar(`Eje Torflex automático (${ejeCount} × ${ejeInfo.libras.toLocaleString('en-US')} lbs)`,importeEje,'Precio de eje Torflex según capacidad');
     } else avisos.push('Torflex no está disponible para esta capacidad; selecciona una capacidad de 6, 9 o 10 toneladas.');
-  } else diferencia('Cambio de suspensión','suspension',r.suspension,suspBase);
+  } else if(r.suspension==='muelle_drop'){
+    // Muelle estándar es parte del precio base; Drop solo se cobra si tiene
+    // una tarifa capturada en el Panel de Control.
+    const drop=db.suspension?.find(x=>x.id==='muelle_drop');
+    const precioDrop=drop?.[`${'precio'}_${tipoTarifa}`];
+    if(Number.isFinite(Number(precioDrop)))agregar('Cambio a Muelles Drop',Number(precioDrop),'Panel de Control');
+    else avisos.push('Muelles Drop: captura su tarifa en el Panel de Control para cotizar el cambio.');
+  }
   diferencia('Cambio de jalón','jalones',a.jalon,equipoComun('jalon',mxJalonBase(tipo,cap,ganso)));
   const gatoBase=tipo==='ganadero'&&tipoGanadero==='redondo'&&cap===6?'manual_7k':equipoComun('gato',tipo==='volteo'||tipo==='cama_alta'?'manual_12k':ganso?'manual_12k':cap<=.85?'tubo_2k':cap<=3?'normal_2k':'manual_7k');
   const gatosBase=equipoComun('cantGatos',1);
