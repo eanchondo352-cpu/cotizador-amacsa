@@ -96,10 +96,35 @@ function mxEvaluar(db, q) {
   const ejeInfo=ejesReglas(q);const ejeCount=ejeInfo.cantidad;
   const ejesBase=Number(equipoComun('cantEjes',cap<=2?1:cap===9?3:2));
   if(ejeCount!==ejesBase || cap===10&&r.cantEjesGanso===310)extra('Cambio de configuración de ejes',1,'cantidadEjes');
-  const frenosIncluidos=equipoComun('cantFrenos',ganso?(cap===9?2:1):0);
-  const frenosExtra=Math.max(0,cantidad(r.cantFrenos,'frenos')-frenosIncluidos);
-  if(frenosExtra && r.suspension!=='torflex'){extra('Frenos adicionales',frenosExtra,'frenos','FRENOS');avisos.push('Frenos: se conserva el cobro por eje del cotizador anterior; la lista no especifica la unidad del adicional.');esEstimacion=true;}
-  if(Number(r.cantFrenos)<frenosIncluidos){avisos.push('La lista incluye frenos. No se descuenta automáticamente su retiro porque no hay precio de retiro.');esEstimacion=true;}
+  const frenosIncluidos =
+  r.suspension === 'torflex'
+    ? equipoComun('cantFrenos', ganso ? (cap === 9 ? 2 : 1) : 0)
+    : 0;
+
+const frenosSeleccionados = Math.max(
+  0,
+  cantidad(r.cantFrenos, 'frenos')
+);
+
+const frenosExtra = Math.max(
+  0,
+  frenosSeleccionados - frenosIncluidos
+);
+
+if (frenosExtra > 0) {
+  extra(
+    'Frenos adicionales',
+    frenosExtra,
+    'frenos',
+    'FRENOS'
+  );
+}
+
+if (frenosSeleccionados > 0 && r.suspension !== 'torflex') {
+  avisos.push(
+    `Frenos seleccionados: ${frenosSeleccionados} eje(s) × $3,500 MXN`
+  );
+}
   const llantaBase=equipoComun('llanta',cap<=3?'700_15':tipo==='cama_alta'&&cap===10?'17_5in':'235_80_16');
   diferencia('Cambio de llantas','llantas',r.llanta,llantaBase,ejeCount*ejeInfo.llantasPorEje);
   if(r.llantaExtra){const pl=r.llanta==='700_15'?deLista('LL700'):r.llanta==='750_16'?deLista('LL750'):null;agregar(`Llanta de refacción × ${r.llantaExtra}`,cantidad(r.llantaExtra,'llantas')*(pl?Number(pl.precio):tarifa('llantas',r.llanta,'precioExtra')),pl?pl.origen:'Cargo adicional del Panel de Control');}
@@ -140,12 +165,50 @@ function mxEvaluar(db, q) {
     diferencia('Altura o tipo de redila','redilas',c.redila,redilaBase);
   } else if(tipo==='ganadero'&&tipoGanadero==='redondo'&&!['ptr_abierta','desmontable'].includes(c.redila))diferencia('Tipo de redila','redilas',c.redila,'ptr_abierta');
   else if(tipo==='ganadero'&&ganso)diferencia('Tipo de redila','redilas',c.redila,'ptr_abierta');
-  if(tipo==='ganadero'){
-    if(c.techo&&c.techo!==equipoComun('techo','sin_techo')){
-      if(c.techo==='media_especial' && (!(Number(c.techoEspecialLargo)>0)||Number(c.techoEspecialLargo)>largo))throw new Error('Captura el largo del techo especial entre 1 pie y el largo del remolque.');
-      const p=deLista('TECHO');const fraccion={medio:.5,media_especial:.5,tres_cuartos:.75,completo:1}[c.techo];
-      agregar('Techo',p&&fraccion?Number(p.precio)*(c.techo==='media_especial' ? cantidad(c.techoEspecialLargo,'largo de techo especial') : largo*fraccion):tarifa('techos',c.techo),p&&fraccion?'Lista por pie lineal (estimación de longitud cubierta)':'Cargo adicional del Panel de Control');
+  if (tipo === 'ganadero') {
+  if (
+    c.techo &&
+    c.techo !== equipoComun('techo', 'sin_techo')
+  ) {
+    if (
+      c.techo === 'media_especial' &&
+      (
+        Number(c.techoEspecialLargo) <= 0 ||
+        Number(c.techoEspecialLargo) > largo
+      )
+    ) {
+      throw new Error(
+        'Captura el largo del techo especial entre 1 pie y el largo del remolque.'
+      );
     }
+
+    const p = deLista('TECHO');
+
+    const fraccion = {
+      medio: 0.5,
+      media_especial: 0.5,
+      tres_cuartos: 0.75,
+      completo: 1
+    }[c.techo] || 0;
+
+    const largoCubierto =
+      c.techo === 'media_especial'
+        ? Number(c.techoEspecialLargo)
+        : Number(largo) * fraccion;
+
+    const precioPorPieTecho =
+      Number(p?.precio) > 0 ? Number(p.precio) : 800;
+
+    const precioTecho =
+      largoCubierto * precioPorPieTecho;
+
+    agregar(
+      'Techo',
+      precioTecho,
+      `Techo: ${largoCubierto} pies lineales × $${precioPorPieTecho.toLocaleString('es-MX')} MXN`
+    );
+  }
+}
     diferencia('Puerta trasera','puertasTraseras',c.puertaTras,equipoComun('puertaTras','corrediza'));
     const puertas=c.puertasIntList||[];
     puertas.forEach((p,i)=>{if(i<Number(equipoComun('puertasIncluidas',1))&&p.tipo===equipoComun('puertaCentralTipo',tipoGanadero==='redondo'?'corrediza':'fija'))return;const precio=tarifa('puertasInteriores',p.tipo);agregar(`Puerta interior ${i+1}: ${p.tipo}`,precio);if(precio===0){esEstimacion=true;avisos.push('Puerta interior adicional con tarifa cero: captura su precio para valorar el cambio.');}});
@@ -2558,12 +2621,68 @@ if (sectionDef?.isMatrizTecho || sectionDef?.isMatrizPiso) {
                 <div className="flex flex-col justify-end space-y-2 pb-1"><label className={`flex items-center space-x-2 font-medium text-sm text-slate-700 ${market === 'usa' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}><input type="checkbox" checked={acople.sujetaCadenas} disabled={market === 'usa'} onChange={() => toggle(setAcople, 'sujetaCadenas')} className="w-4 h-4 text-green-600"/> <span>Incluir Sujeta Cadenas</span></label></div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 pt-4 mt-4 border-t border-slate-100">
-                <div className="sm:col-span-6"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Gato Elevación</label><select value={acople.gato} onChange={e => setAcople({...acople, gato: e.target.value})} className="w-full p-2 border border-slate-300 rounded-md">{gatosDisponibles.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></div>
+                <div className="sm:col-span-6">
+  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
+    Gato Elevación
+  </label>
+
+  <select
+    value={acople.gato}
+    onChange={(e) => {
+      const nuevoGato = e.target.value;
+
+      setAcople((prev) => ({
+        ...prev,
+        gato: nuevoGato,
+
+        // Se activa automáticamente con gato hidráulico + kit y bomba
+        cargador110:
+          nuevoGato === 'hidraulico_sencillo'
+            ? true
+            : prev.cargador110
+      }));
+    }}
+    className="w-full p-2 border border-slate-300 rounded-md"
+  >
+    {gatosDisponibles.map((o) => (
+      <option key={o.id} value={o.id}>
+        {o.nombre}
+      </option>
+    ))}
+  </select>
+</div>
                 <div className="sm:col-span-2"><label className="text-xs font-bold text-slate-500 uppercase block mb-1">Cant.</label><div className="flex bg-slate-100 border border-slate-300 rounded h-[42px] items-center"><button onClick={() => handleCant(setAcople, 'cantGatos', -1, 1)} className="px-3 font-bold hover:bg-slate-200 h-full">-</button><span className="px-2 font-bold w-full text-center">{acople.cantGatos}</span><button onClick={() => handleCant(setAcople, 'cantGatos', 1)} className="px-3 font-bold hover:bg-slate-200 h-full">+</button></div></div>
                 {acople.gato.includes('hidraulico') && (
                   <div className="sm:col-span-4 flex flex-col justify-center space-y-1">
-                    <label className="flex items-center space-x-2 border rounded px-2 py-1 cursor-pointer"><input type="checkbox" checked={acople.cargadorSolar} disabled={isSpecialClient && market==='usa'} onChange={() => toggle(setAcople, 'cargadorSolar')} className="w-3.5 h-3.5"/><span className="text-xs font-medium">+ Cargador Solar</span></label>
-                    <label className="flex items-center space-x-2 border rounded px-2 py-1 cursor-pointer"><input type="checkbox" checked={acople.cargador110} disabled={isSpecialClient && market==='usa'} onChange={() => toggle(setAcople, 'cargador110')} className="w-3.5 h-3.5"/><span className="text-xs font-medium">+ Cargador 110v</span></label>
+                   <label className="flex items-center space-x-2 border rounded px-2 py-1 cursor-pointer">
+  <input
+    type="checkbox"
+    checked={!!acople.cargadorSolar}
+    onChange={(e) =>
+      setAcople((prev) => ({
+        ...prev,
+        cargadorSolar: e.target.checked
+      }))
+    }
+    className="w-3.5 h-3.5"
+  />
+  <span className="text-xs font-medium">+ Cargador Solar</span>
+</label>
+
+<label className="flex items-center space-x-2 border rounded px-2 py-1 cursor-pointer">
+  <input
+    type="checkbox"
+    checked={!!acople.cargador110}
+    onChange={(e) =>
+      setAcople((prev) => ({
+        ...prev,
+        cargador110: e.target.checked
+      }))
+    }
+    className="w-3.5 h-3.5"
+  />
+  <span className="text-xs font-medium">+ Cargador 110v</span>
+</label>
                   </div>
                 )}
               </div>

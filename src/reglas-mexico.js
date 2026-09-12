@@ -44,7 +44,13 @@ export function opcionesReglas(q,db) {
  // determina automáticamente por capacidad (9t = 3x8,000; 10t = 2x10,000).
  // No se muestran los ejes individuales como opciones separadas.
  const suspension=['muelle','torflex','muelle_drop'];
- let llantas=cap==='850kg'?['r13','ninguna']:['1_5t','3t'].includes(cap)?['700_15','225_75_15','235_80_16','ninguna']:cap.startsWith('4t')?['225_75_15','235_80_16','ninguna']:['235_80_16','16in_10','16in_14','235_80_16_14','750_16','ninguna'];
+let llantas=cap==='850kg'
+ ? ['r13','ninguna']
+ : ['1_5t','3t'].includes(cap)
+ ? ['700_15','225_75_15','235_80_16','ninguna']
+ : cap.startsWith('4t')
+ ? ['225_75_15','235_80_16','ninguna']
+ : ['235_80_16','235_80_16_14','17_5in','ninguna'];
  if(q.rodado.suspension==='torflex'||tipo==='cama_alta'&&cap==='10t')llantas.push('17_5in');
  const jalones=tipo==='cama_alta'?['ganso_normal','ganso_facil','argolla']:tipo==='ganadero'&&!red?['ganso_normal','ganso_facil']:tipo==='volteo'?all('jalones'):all('jalones').filter(id=>!id.includes('ganso'));
  const cadenas=tipo==='ganadero'&&!red?['ganso_38']:red?['seguridad_14']:['seguridad_14','ganso_38'];
@@ -153,6 +159,71 @@ export function validarReglas(q,db) {
   if(!legado&&!op[s].includes(obj[k]))errors.push(`Revisa ${s}: opción incompatible.`);
  }
  if(q.tipoRemolque==='ganadero')errors.push(...puertasReglas(q,db).errores);
+ if(q.tipoGanadero==='ganso'){
+  const hid=String(q.acople?.gato||'').includes('hidraulico');
+  if(hid&&q.acabados?.cargador110===false)errors.push('El cargador de 110 V es obligatorio con gato hidráulico con kit y bomba.');
+  if(hid&&q.carroceria?.frente==='canasta'&&q.acabados?.cajaHtas==='ninguna')errors.push('La canasta con gato hidráulico requiere caja de herramienta.');
+  if(q.carroceria?.techo&&q.carroceria.techo!=='sin_techo'&&q.carroceria?.frente!=='canasta'&&q.carroceria?.techo!=='lona')errors.push('Al seleccionar techo debe incluir cachucha, salvo lona o techo abierto.');
+  if(q.carroceria?.ventilacion==='estandar'&&(!q.carroceria?.techo||q.carroceria.techo==='sin_techo'))errors.push('La ventilación estándar solo está disponible con techo.');
+ }
+ if (q.tipoGanadero === 'ganso') {
+  const gato = String(q.acople?.gato || '');
+  const esHidraulicoKit = gato === 'hidraulico_sencillo';
+
+  if (
+  esHidraulicoKit &&
+  q.acabados?.cargador110 !== true &&
+  q.acople?.cargador110 !== true
+) {
+  errors.push(
+    'El cargador de 110 V es obligatorio con gato hidráulico con kit y bomba.'
+  );
+}
+
+  if (
+   esHidraulicoKit &&
+   q.carroceria?.frente === 'canasta' &&
+   q.acabados?.cajaHtas === 'ninguna'
+  ) {
+   errors.push(
+    'La canasta con gato hidráulico requiere una caja de herramienta.'
+   );
+  }
+
+  const techo = q.carroceria?.techo;
+  const frente = q.carroceria?.frente;
+
+  if (
+   techo &&
+   techo !== 'sin_techo' &&
+   techo !== 'lona' &&
+   frente !== 'cachucha'
+  ) {
+   errors.push(
+    'Al seleccionar techo debe incluir cachucha, salvo lona o techo abierto.'
+   );
+  }
+
+  const ventilacion = q.carroceria?.ventilacion;
+
+  if (
+   ventilacion === 'estandar' &&
+   (!techo || techo === 'sin_techo')
+  ) {
+   errors.push(
+    'La ventilación estándar solo está disponible cuando hay techo.'
+   );
+  }
+
+  if (
+   q.carroceria?.puertaPerro === true &&
+   ventilacion !== 'circular'
+  ) {
+   errors.push(
+    'La puerta para perro requiere ventilación circular.'
+   );
+  }
+ }
  return errors;
 }
 const firmaAnterior = z => [z.tipo,z.w,z.capacidadId||z.capacidad,z.variante||'',z.redila,z.piso,z.rampas||'',z.jalon,z.gato,z.suspension,z.llanta,z.cantFrenos,z.cantEjes,z.techo];
@@ -194,7 +265,7 @@ export function precioPorLargo(filas,largo,referencia,tarifas=[]) {
  // por debajo de ese largo mínimo.
  const largosUnicos=[...new Set(puntos.map(z=>z.l))];
  if((tarifa===null||tarifa<0)&&largosUnicos.length===1&&puntos[0]){
-   base=puntos[0];tarifa=redondear((Number(base.precio)/base.l)*1.15);
+  base=puntos[0];tarifa=redondear((Number(base.precio)/base.l)*1.15);
  }
  if(!base)throw new Error('No hay un modelo inferior comparable. Capture el precio de esta medida en el catálogo.');
  if(tarifa===null||tarifa<0)throw new Error('Falta precio por pie: se necesitan dos largos del mismo ancho, capacidad y equipo, o una tarifa manual.');
@@ -283,6 +354,30 @@ export function aplicarPredeterminados(q,db) {
  n.acople.gato=t==='cama_alta'?'manual_12k':t==='volteo'?(cap==='850kg'?'tubo_2k':'manual_12k'):t==='cama_baja'?(cap==='850kg'?'tubo_2k':cap==='1_5t'||cap==='3t'?'normal_2k':'manual_7k'):n.tipoGanadero==='ganso'?'manual_12k':['1_5t','3t'].includes(cap)?'normal_2k':'manual_7k';
  n.acople.cantGatos=1;
  n.rodado.llanta=cap==='850kg'?'r13':['1_5t','3t'].includes(cap)?'700_15':cap.startsWith('4t')?'225_75_15':t==='cama_alta'&&cap==='10t'?'17_5in':'235_80_16';
+ if (q.tipoGanadero === 'ganso') {
+  if (q.carroceria.frente === undefined) {
+   q.carroceria.frente = 'canasta';
+  }
+
+  if (q.carroceria.cachucha === undefined) {
+   q.carroceria.cachucha = false;
+  }
+
+  if (q.carroceria.ventilacion === undefined) {
+   q.carroceria.ventilacion = 'ninguna';
+  }
+
+  if (q.acople.gato === 'hidraulico_sencillo') {
+  q.acople.cargador110 = true;
+  q.acabados.cargador110 = true;
+}
+ }
+ if(q.tipoGanadero==='ganso'){
+  if(q.carroceria.frente===undefined)q.carroceria.frente='canasta';
+  if(q.carroceria.cachucha===undefined)q.carroceria.cachucha=false;
+  if(q.carroceria.ventilacion===undefined)q.carroceria.ventilacion='ninguna';
+  if(q.acople.gato==='hidraulico_sencillo')q.acabados.cargador110=true;
+ }
  n.rodado.suspension=t==='ganadero'||t==='cama_alta'?'muelle':opcionesReglas(n,db).suspension[0];
  n.rodado.cantFrenos=(esTorflex(n,db)||['4t_5200','4t_6000','4t_6200'].includes(cap))?ejesReglas(n).cantidad:0;
  return normalizarReglas(n,db);
